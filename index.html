@@ -128,6 +128,15 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 .field input,.field select{font:inherit;color:var(--ink);background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .err{color:var(--bad);font-size:13px;min-height:1em}
+.sync-pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sync-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync-pill[data-s="ok"]::before{background:var(--ok)}
+.sync-pill[data-s="busy"]::before{background:var(--accent)}
+.sync-pill[data-s="warn"]::before{background:var(--warn)}
+.sync-pill[data-s="err"]::before{background:var(--bad)}
+.panel .two{gap:10px}
+.panel .ok-line{font-size:14px}
+.panel code{font-family:var(--f-mono);font-size:13px;background:var(--sunken);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;font-weight:500;max-width:calc(100% - 32px)}
 @media (max-width:440px){.sum-grid{grid-template-columns:1fr 1fr}.sum-grid div:last-child{grid-column:1/-1}.month span{min-width:104px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -136,6 +145,7 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 <div class="wrap">
   <header class="top">
     <div class="brand"><i aria-hidden="true">€</i>Vaste Lasten</div>
+    <button class="sync-pill" id="syncPill" hidden data-s="ok">Gesynchroniseerd</button>
     <div class="month" role="group" aria-label="Maand kiezen">
       <button id="prev" aria-label="Vorige maand">‹</button>
       <span id="monthLabel">oktober 2026</span>
@@ -164,7 +174,18 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 
   <section id="v-maand"></section>
   <section id="v-alle" hidden></section>
-  <section id="v-overzicht" hidden></section>
+  <section id="v-overzicht" hidden>
+    <div id="ov-dyn"></div>
+    <div class="panel" id="syncPanel"></div>
+    <div class="panel">
+      <h4>Back-up</h4>
+      <div class="note">Een back-up bevat al je gegevens, onversleuteld. Bewaar hem op een veilige plek en nooit in een openbare repository.</div>
+      <div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button><button class="btn" id="dlBk" hidden>Download als bestand</button><label class="btn" for="fileBk" style="display:inline-block">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>
+      <textarea id="bkText" placeholder="Of plak hier een back-up en kies Terugzetten" aria-label="Back-up tekst"></textarea>
+      <div class="btns"><button class="btn" id="restoreBk">Terugzetten</button></div>
+    </div>
+    <div id="ov-install"></div>
+  </section>
 </div>
 
 <button class="fab" id="addBtn"><span aria-hidden="true" style="font-size:20px;line-height:1">+</span>Nieuwe last</button>
@@ -199,6 +220,7 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 <script>
 (function(){
 const KEY='vastelasten.v1';
+const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 const CATS=[
   {id:'wonen',name:'Wonen',c:'--c1'},
   {id:'verzekering',name:'Verzekeringen',c:'--c2'},
@@ -211,7 +233,7 @@ const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus
 const FREQ={m:'maandelijks',q:'per kwartaal',y:'jaarlijks'};
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
-const uid=()=>Math.random().toString(36).slice(2,10);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
 const EXAMPLES=[
   ['Hypotheek',1145,'wonen','m',1],['Zorgverzekering',152.35,'verzekering','m',1],
@@ -219,14 +241,53 @@ const EXAMPLES=[
   ['Water',22.10,'energie','m',15],['Internet & tv',58.50,'abonnement','m',20],
   ['Autoverzekering',61.20,'verzekering','m',25],['Gemeentelijke belastingen',78.25,'belasting','m',28],
   ['Motorrijtuigenbelasting',142,'belasting','q',10,1],['Doorlopende reisverzekering',39.50,'verzekering','y',12,3]
-].map(([name,amount,cat,freq,day,month])=>({id:uid(),name,amount,cat,freq,day,month:month||1,note:'',example:true}));
+].map(([name,amount,cat,freq,day,month],n)=>({id:'vb'+n,name,amount,cat,freq,day,month:month||1,note:'',example:true,u:0}));
 
+/* ---------- datamodel ----------
+   items: [{id,name,amount,cat,freq,day,month,note,example,u}]  u = laatst gewijzigd (ms)
+   del:   {id: ms}                 verwijderde lasten, zodat andere apparaten ze ook weghalen
+   paid:  {'2026-10': {id:{p,u}}}  afgevinkt per maand, met tijdstip per vinkje        */
+function migrate(d){
+  const s={items:[],del:{},paid:{}};
+  if(!d||!Array.isArray(d.items)) return null;
+  s.items=d.items.map(i=>({id:String(i.id),name:String(i.name||''),amount:+i.amount||0,cat:i.cat||'overig',freq:i.freq||'m',day:+i.day||1,month:+i.month||1,note:i.note||'',example:!!i.example,u:+i.u||0}));
+  s.del=d.del&&typeof d.del==='object'?d.del:{};
+  const p=d.paid||{};
+  for(const k in p){
+    s.paid[k]={};
+    if(Array.isArray(p[k])) p[k].forEach(id=>s.paid[k][id]={p:true,u:0});
+    else for(const id in p[k]) s.paid[k][id]={p:!!p[k][id].p,u:+p[k][id].u||0};
+  }
+  return s;
+}
 function load(){
-  try{const raw=localStorage.getItem(KEY); if(raw){const d=JSON.parse(raw); if(d&&Array.isArray(d.items)) return {items:d.items,paid:d.paid||{}};}}catch(e){}
-  return {items:EXAMPLES,paid:{}};
+  try{const raw=localStorage.getItem(KEY); if(raw){const s=migrate(JSON.parse(raw)); if(s) return s;}}catch(e){}
+  return {items:EXAMPLES.map(i=>({...i})),del:{},paid:{}};
 }
 let state=load();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function save(){saveLocal(); scheduleSync();}
+
+/* samenvoegen: per last en per vinkje wint de nieuwste wijziging */
+function merge(a,b){
+  const out={items:[],del:{},paid:{}};
+  for(const s of [a,b]) for(const id in s.del) out.del[id]=Math.max(out.del[id]||0,s.del[id]);
+  const map=new Map();
+  for(const s of [a,b]) for(const i of s.items){const cur=map.get(i.id); if(!cur||i.u>cur.u) map.set(i.id,i);}
+  for(const i of map.values()) if(!(out.del[i.id]>=i.u)) out.items.push({...i});
+  for(const s of [a,b]) for(const k in s.paid){
+    out.paid[k]=out.paid[k]||{};
+    for(const id in s.paid[k]){const v=s.paid[k][id], cur=out.paid[k][id]; if(!cur||v.u>cur.u) out.paid[k][id]={p:v.p,u:v.u};}
+  }
+  return out;
+}
+const withoutExamples=s=>({items:s.items.filter(i=>!i.example),del:s.del,paid:s.paid});
+function canon(v){
+  if(Array.isArray(v)) return '['+v.map(canon).join(',')+']';
+  if(v&&typeof v==='object') return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
+  return JSON.stringify(v);
+}
+const canonState=s=>canon({items:[...s.items].sort((x,y)=>x.id<y.id?-1:1),del:s.del,paid:s.paid});
 
 const now=new Date();
 let view={y:now.getFullYear(),m:now.getMonth()};
@@ -245,7 +306,7 @@ function due(){
   const dim=daysIn(view.y,view.m);
   return state.items.filter(i=>occurs(i,view.m)).map(i=>({...i,d:Math.min(i.day,dim)})).sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name));
 }
-function paidSet(){return new Set(state.paid[mkey(view.y,view.m)]||[]);}
+function paidSet(){const p=state.paid[mkey(view.y,view.m)]||{}; return new Set(Object.keys(p).filter(id=>p[id].p));}
 
 function render(){
   $('monthLabel').textContent=MONTHS[view.m]+' '+view.y;
@@ -288,7 +349,7 @@ function renderMonth(list,ps){
     return '<div class="row'+(p?' paid':'')+'">'+
       '<div class="day"><span class="num">'+i.d+'</span><small>'+MONTHS[view.m].slice(0,3)+'</small></div>'+
       '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span>'+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+statusChip(i,p)+exChip(i)+'</div></div>'+
-      '<div class="right"><span class="amt num">'+fmt(i.amount)+'</span><button class="check" data-toggle="'+i.id+'" aria-pressed="'+p+'" aria-label="'+esc(i.name)+(p?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
+      '<div class="right"><span class="amt num">'+fmt(i.amount)+'</span><button class="check" data-toggle="'+esc(i.id)+'" aria-pressed="'+p+'" aria-label="'+esc(i.name)+(p?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
   }).join('')+'</div>';
 }
 
@@ -296,7 +357,7 @@ function renderAll(){
   const el=$('v-alle');
   if(!state.items.length){el.innerHTML='<div class="empty">Nog geen vaste lasten toegevoegd.</div>';return;}
   let html='';
-  if(state.items.some(i=>i.example)) html+='<div class="panel" style="margin-top:0"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
+  if(state.items.some(i=>i.example)) html+='<div class="panel" style="margin-top:0"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
   CATS.forEach(c=>{
     const items=state.items.filter(i=>cat(i.cat).id===c.id).sort((a,b)=>monthly(b)-monthly(a));
     if(!items.length) return;
@@ -304,7 +365,7 @@ function renderAll(){
     html+='<div class="group"><h3><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span><span class="num">'+fmt(sum)+' p/m</span></h3><div class="list">'+
       items.map(i=>'<div class="row" style="grid-template-columns:1fr auto">'+
         '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+exChip(i)+'</div></div>'+
-        '<div class="right"><div style="text-align:right"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.freq!=='m'?'<div class="note num" style="font-size:12px">≈ '+fmt(monthly(i))+' p/m</div>':'')+'</div><button class="edit" data-edit="'+i.id+'" aria-label="'+esc(i.name)+' bewerken">'+PEN+'</button></div></div>').join('')+
+        '<div class="right"><div style="text-align:right"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.freq!=='m'?'<div class="note num" style="font-size:12px">≈ '+fmt(monthly(i))+' p/m</div>':'')+'</div><button class="edit" data-edit="'+esc(i.id)+'" aria-label="'+esc(i.name)+' bewerken">'+PEN+'</button></div></div>').join('')+
       '</div></div>';
   });
   el.innerHTML=html;
@@ -312,35 +373,225 @@ function renderAll(){
 
 let installEvt=null;
 function renderOverview(avg){
-  const el=$('v-overzicht');
   const rows=CATS.map(c=>({c,sum:state.items.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+monthly(i),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
   const max=rows.length?rows[0].sum:1;
-  // jaaroverzicht: hoogste maand
   let peak={m:0,v:0};
   for(let m=0;m<12;m++){const v=state.items.filter(i=>occurs(i,m)).reduce((s,i)=>s+i.amount,0); if(v>peak.v) peak={m,v};}
   let html='<div class="stats"><div><span class="lbl">Per jaar</span><span class="num">'+fmt(avg*12)+'</span></div><div><span class="lbl">Duurste maand</span><span class="num">'+(peak.v?MONTHS[peak.m]+'</span><span class="note num">'+fmt(peak.v):'–')+'</span></div></div>';
   html+=rows.length?'<div class="cats">'+rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'<div class="note">Bedragen per kwartaal en per jaar zijn omgerekend naar een maandbedrag.</div></div>':'<div class="empty">Voeg lasten toe om de verdeling per categorie te zien.</div>';
-  html+='<div class="panel"><h4>Back-up</h4><div class="note">Je gegevens staan alleen op dit apparaat. Maak af en toe een back-up, of zet je lasten over naar een ander apparaat door de back-up daar te plakken.</div>'+
-    '<div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button>'+(document.querySelector('link[rel="manifest"]')?'<button class="btn" id="dlBk">Download als bestand</button>':'')+'<label class="btn" for="fileBk" style="display:inline-block">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>'+
-    '<textarea id="bkText" placeholder="Of plak hier een back-up en kies Terugzetten" aria-label="Back-up tekst"></textarea><div class="btns"><button class="btn" id="restoreBk">Terugzetten</button></div></div>';
-  if(installEvt) html+='<div class="panel"><h4>Op je startscherm</h4><div class="note">Installeer Vaste Lasten als app, dan werkt hij ook offline.</div><div class="btns"><button class="btn primary" id="installBtn">Installeren</button></div></div>';
-  el.innerHTML=html;
+  $('ov-dyn').innerHTML=html;
+  $('ov-install').innerHTML=installEvt?'<div class="panel"><h4>Op je startscherm</h4><div class="note">Installeer Vaste Lasten als app, dan werkt hij ook offline.</div><div class="btns"><button class="btn primary" id="installBtn">Installeren</button></div></div>':'';
 }
 
-/* events */
-document.querySelector('.tabs').addEventListener('click',e=>{
-  const b=e.target.closest('.tab'); if(!b) return; tab=b.dataset.tab;
-  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t===b));
-  ['maand','alle','overzicht'].forEach(t=>$('v-'+t).hidden=t!==tab);
-  try{localStorage.setItem(KEY+'.tab',tab);}catch(e){}
-});
+/* ================= SYNC ================= */
+const FILE='vaste-lasten.json';
+const ITER=310000;
+const te=new TextEncoder(), td=new TextDecoder();
+let cfg=null;          // {owner,repo,token,salt}
+let syncKey=null;      // CryptoKey (niet exporteerbaar)
+let syncing=false, again=false, timer=null, lastSync=null;
+
+try{cfg=JSON.parse(localStorage.getItem(KEY+'.sync')||'null');}catch(e){}
+function saveCfg(){try{cfg?localStorage.setItem(KEY+'.sync',JSON.stringify(cfg)):localStorage.removeItem(KEY+'.sync');}catch(e){}}
+
+/* IndexedDB voor de sleutel: het wachtwoord zelf wordt nooit bewaard */
+function idb(mode,fn){return new Promise((res,rej)=>{
+  try{const r=indexedDB.open('vaste-lasten',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+    r.onerror=()=>rej(r.error);
+    r.onsuccess=()=>{const tx=r.result.transaction('kv',mode),st=tx.objectStore('kv'),q=fn(st);
+      tx.oncomplete=()=>res(q&&q.result);tx.onerror=()=>rej(tx.error);};
+  }catch(e){rej(e);}});}
+const keyGet=()=>idb('readonly',s=>s.get('key')).catch(()=>null);
+const keySet=k=>idb('readwrite',s=>s.put(k,'key')).catch(()=>null);
+const keyDel=()=>idb('readwrite',s=>s.delete('key')).catch(()=>null);
+
+function b64(bytes){let s='';const c=0x8000;for(let i=0;i<bytes.length;i+=c)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+c));return btoa(s);}
+function unb64(str){const s=atob(str.replace(/\s/g,''));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b;}
+async function deriveKey(pass,saltB64){
+  const base=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:unb64(saltB64),iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function seal(obj,key,saltB64){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,te.encode(JSON.stringify(obj))));
+  return {app:'vaste-lasten',v:1,kdf:{name:'PBKDF2',hash:'SHA-256',iter:ITER,salt:saltB64},alg:'AES-GCM',iv:b64(iv),ct:b64(ct)};
+}
+async function open_(env,key){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},key,unb64(env.ct));
+  return migrate(JSON.parse(td.decode(pt)));
+}
+
+class SyncError extends Error{}
+async function gh(method,path,body,c){
+  c=c||cfg;
+  let r;
+  try{r=await fetch('https://api.github.com'+path,{method,cache:'no-store',headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});}
+  catch(e){throw new SyncError(navigator.onLine?'GitHub is niet bereikbaar. Probeer het later opnieuw.':'offline');}
+  if(r.status===401) throw new SyncError('De token is ongeldig of verlopen. Maak een nieuwe token aan en koppel opnieuw.');
+  return r;
+}
+const contentsPath=c=>'/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/'+FILE;
+
+async function readRemote(c){
+  const r=await gh('GET',contentsPath(c),null,c);
+  if(r.status===404) return {env:null,sha:undefined};
+  if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository. Controleer of hij leesrechten heeft op Contents.');
+  if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
+  const j=await r.json();
+  let env; try{env=JSON.parse(atob(j.content.replace(/\s/g,'')));}catch(e){throw new SyncError('Het bestand '+FILE+' in de repository is beschadigd of niet door deze app gemaakt.');}
+  return {env,sha:j.sha};
+}
+async function writeRemote(obj,sha,c,key){
+  const env=await seal(obj,key,c.salt);
+  const r=await gh('PUT',contentsPath(c),{message:'Vaste lasten bijgewerkt',content:btoa(JSON.stringify(env)),...(sha?{sha}:{})},c);
+  if(r.status===409||r.status===422) return null; // iemand anders was net eerder: opnieuw samenvoegen
+  if(r.status===403||r.status===404) throw new SyncError('De token mag niet schrijven in deze repository. Geef hem schrijfrechten op Contents.');
+  if(!r.ok) throw new SyncError('Opslaan in GitHub mislukte ('+r.status+').');
+  return (await r.json()).content.sha;
+}
+
+function setPill(s,text,title){
+  const p=$('syncPill'); if(!cfg){p.hidden=true;return;}
+  p.hidden=false; p.dataset.s=s; p.textContent=text; p.title=title||'';
+}
+function pillIdle(){
+  if(!cfg) return setPill();
+  if(!syncKey) return setPill('warn','Wachtwoord nodig','Tik om de synchronisatie te ontgrendelen');
+  if(!navigator.onLine) return setPill('warn','Offline','Wijzigingen worden gesynchroniseerd zodra je weer online bent');
+  setPill('ok','Gesynchroniseerd',lastSync?'Laatst: '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'');
+}
+
+function scheduleSync(){ if(!cfg||!syncKey) return; clearTimeout(timer); timer=setTimeout(sync,1200); }
+
+async function sync(){
+  if(!cfg||!syncKey) return pillIdle();
+  if(syncing){again=true;return;}
+  if(!navigator.onLine) return pillIdle();
+  syncing=true; setPill('busy','Synchroniseren…');
+  try{
+    for(let attempt=0;attempt<4;attempt++){
+      const {env,sha}=await readRemote(cfg);
+      let remote={items:[],del:{},paid:{}};
+      if(env){
+        if(!env.kdf||env.kdf.salt!==cfg.salt) throw new SyncError('De gegevens in GitHub zijn met een ander wachtwoord versleuteld. Ontkoppel en koppel opnieuw.');
+        try{remote=await open_(env,syncKey);}catch(e){throw new SyncError('Ontsleutelen lukt niet. Ontkoppel en koppel opnieuw met het juiste wachtwoord.');}
+      }
+      const before=canonState(state);
+      state=merge(state,remote);
+      if(canonState(state)!==before){saveLocal(); render();}
+      const up=withoutExamples(state);
+      if(env&&canonState(up)===canonState(remote)) break;
+      const newSha=await writeRemote(up,sha,cfg,syncKey);
+      if(newSha) break;
+    }
+    lastSync=new Date(); pillIdle(); renderSyncPanel();
+  }catch(e){
+    if(e.message==='offline') pillIdle();
+    else{setPill('err','Sync-fout',e.message); syncError=e.message; renderSyncPanel();}
+  }finally{
+    syncing=false;
+    if(again){again=false; scheduleSync();}
+  }
+}
+let syncError='';
+
+function renderSyncPanel(){
+  const el=$('syncPanel');
+  if(!IS_PWA){el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="note">Synchroniseren tussen apparaten werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
+  if(!cfg){
+    el.innerHTML='<h4>Synchroniseren via GitHub</h4>'+
+      '<div class="note">Koppel een privé-repository om je lasten op al je apparaten te hebben. Alles wordt op dit apparaat versleuteld met jouw wachtwoord voordat het naar GitHub gaat.</div>'+
+      '<div class="two"><div class="field"><label for="s-owner">GitHub-gebruikersnaam</label><input id="s-owner" autocomplete="username" autocapitalize="off" spellcheck="false"></div>'+
+      '<div class="field"><label for="s-repo">Privé-repository</label><input id="s-repo" value="vaste-lasten-data" autocapitalize="off" spellcheck="false"></div></div>'+
+      '<div class="field"><label for="s-token">Token</label><input id="s-token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></div>'+
+      '<div class="two"><div class="field"><label for="s-pass">Wachtwoord voor versleuteling</label><input id="s-pass" type="password" autocomplete="new-password"></div>'+
+      '<div class="field"><label for="s-pass2">Herhaal wachtwoord</label><input id="s-pass2" type="password" autocomplete="new-password"></div></div>'+
+      '<div class="note">Gebruik op elk apparaat hetzelfde wachtwoord. Het wordt nergens opgeslagen; vergeet je het, dan is de kopie in GitHub onbruikbaar.</div>'+
+      '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-link">Koppelen</button></div>';
+    return;
+  }
+  const where='<code>'+esc(cfg.owner)+'/'+esc(cfg.repo)+'</code>';
+  if(!syncKey){
+    el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="ok-line">Gekoppeld met '+where+'. Vul je wachtwoord in om verder te synchroniseren.</div>'+
+      '<div class="field"><label for="s-unlock">Wachtwoord</label><input id="s-unlock" type="password" autocomplete="current-password"></div>'+
+      '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlockBtn">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>';
+    return;
+  }
+  el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="ok-line">Gekoppeld met '+where+'.'+(lastSync?' Laatst gesynchroniseerd om '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+'.':'')+'</div>'+
+    '<div class="err" id="s-err">'+esc($('syncPill').dataset.s==='err'?syncError:'')+'</div>'+
+    '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+
+    '<div class="note">Ontkoppelen haalt de token en sleutel van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>';
+}
+
+async function link(){
+  const err=m=>{$('s-err').textContent=m;};
+  const owner=$('s-owner').value.trim().replace(/^@/,''), repo=$('s-repo').value.trim(), token=$('s-token').value.trim(), pass=$('s-pass').value, pass2=$('s-pass2').value;
+  if(!owner||!repo) return err('Vul je GitHub-gebruikersnaam en de naam van de repository in.');
+  if(!token) return err('Plak de token die je op GitHub hebt aangemaakt.');
+  if(pass.length<8) return err('Kies een wachtwoord van minstens 8 tekens.');
+  if(pass!==pass2) return err('De twee wachtwoorden zijn niet gelijk.');
+  const btn=$('s-link'); btn.disabled=true; btn.textContent='Bezig met koppelen…'; err('');
+  const c={owner,repo,token,salt:null};
+  try{
+    const r=await gh('GET','/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),null,c);
+    if(r.status===404||r.status===403) throw new SyncError('Repository '+owner+'/'+repo+' niet gevonden, of de token heeft er geen toegang toe.');
+    if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
+    const info=await r.json();
+    if(!info.private) throw new SyncError('Deze repository is openbaar. Gebruik een privé-repository voor je gegevens.');
+    const {env,sha}=await readRemote(c);
+    let key;
+    if(env){
+      c.salt=env.kdf.salt; key=await deriveKey(pass,c.salt);
+      let remote;
+      try{remote=await open_(env,key);}catch(e){throw new SyncError('Het wachtwoord klopt niet met de gegevens die al in GitHub staan. Gebruik hetzelfde wachtwoord als op je andere apparaat.');}
+      if(remote.items.length) state.items=state.items.filter(i=>!i.example);
+      state=merge(state,remote);
+      saveLocal(); render();
+      const up=withoutExamples(state);
+      if(canonState(up)!==canonState(remote)) await writeRemote(up,sha,c,key);
+    }else{
+      c.salt=b64(crypto.getRandomValues(new Uint8Array(16))); key=await deriveKey(pass,c.salt);
+      await writeRemote(withoutExamples(state),undefined,c,key);
+    }
+    cfg=c; syncKey=key; saveCfg(); await keySet(key);
+    lastSync=new Date(); pillIdle(); renderSyncPanel(); toast('Gekoppeld. Je lasten worden nu gesynchroniseerd');
+  }catch(e){
+    err(e.message==='offline'?'Je bent offline. Koppelen kan alleen met internet.':e.message||'Koppelen mislukt.');
+    btn.disabled=false; btn.textContent='Koppelen';
+  }
+}
+async function unlock(){
+  const pass=$('s-unlock').value, btn=$('s-unlockBtn');
+  btn.disabled=true; $('s-err').textContent='';
+  try{
+    const key=await deriveKey(pass,cfg.salt);
+    const {env}=await readRemote(cfg);
+    if(env){try{await open_(env,key);}catch(e){throw new SyncError('Dit wachtwoord klopt niet.');}}
+    syncKey=key; await keySet(key); renderSyncPanel(); sync();
+  }catch(e){$('s-err').textContent=e.message==='offline'?'Je bent offline. Probeer het opnieuw met internet.':e.message; btn.disabled=false;}
+}
+async function unlink(){
+  cfg=null; syncKey=null; saveCfg(); await keyDel(); pillIdle(); renderSyncPanel(); toast('Ontkoppeld op dit apparaat');
+}
+
+/* ================= events ================= */
+function showTab(name){
+  tab=name;
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===name));
+  ['maand','alle','overzicht'].forEach(t=>$('v-'+t).hidden=t!==name);
+  try{localStorage.setItem(KEY+'.tab',name);}catch(e){}
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(b) showTab(b.dataset.tab);});
 $('prev').onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--;} render();};
 $('next').onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++;} render();};
+$('syncPill').onclick=()=>{showTab('overzicht'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
 
+let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-toggle]');
-  if(t){const k=mkey(view.y,view.m), s=new Set(state.paid[k]||[]), id=t.dataset.toggle;
-    s.has(id)?s.delete(id):s.add(id); state.paid[k]=[...s]; save(); render(); return;}
+  if(t){const k=mkey(view.y,view.m), id=t.dataset.toggle; state.paid[k]=state.paid[k]||{};
+    const cur=!!(state.paid[k][id]&&state.paid[k][id].p); state.paid[k][id]={p:!cur,u:Date.now()}; save(); render(); return;}
   const ed=e.target.closest('[data-edit]'); if(ed){openForm(state.items.find(i=>i.id===ed.dataset.edit)); return;}
   const id=e.target.id;
   if(id==='clearEx'){state.items=state.items.filter(i=>!i.example); save(); render(); toast('Voorbeelden gewist');}
@@ -348,17 +599,26 @@ document.addEventListener('click',e=>{
     const fb=()=>{$('bkText').value=txt;$('bkText').select();toast('Back-up staat in het tekstvak, kopieer hem daar');};
     try{navigator.clipboard.writeText(txt).then(()=>toast('Back-up gekopieerd'),fb);}catch(err){fb();}}
   if(id==='dlBk'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
-    a.download='vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
-    toast('Lukt downloaden niet? Gebruik Kopieer back-up');}
+    a.download='vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();}
   if(id==='restoreBk') restore($('bkText').value);
-  if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;}
+  if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
+  if(id==='s-link') link();
+  if(id==='s-unlockBtn') unlock();
+  if(id==='s-now') sync();
+  if(id==='s-unlink'){
+    if(!unlinkArmed){unlinkArmed=true;e.target.classList.add('armed');e.target.textContent='Zeker weten? Tik nogmaals';setTimeout(()=>{unlinkArmed=false;},4000);}
+    else{unlinkArmed=false;unlink();}
+  }
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='fileBk'&&e.target.files[0]){const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(e.target.files[0]);}
 });
 function restore(txt){
-  try{const d=JSON.parse(txt); if(!d||!Array.isArray(d.items)) throw 0;
-    state={items:d.items,paid:d.paid||{}}; save(); render(); toast('Back-up teruggezet: '+state.items.length+' lasten');}
+  try{const s=migrate(JSON.parse(txt)); if(!s) throw 0;
+    const t=Date.now(); s.items.forEach(i=>{i.u=t; i.example=false;});
+    state=merge({items:[],del:state.del,paid:state.paid},s);
+    state.items.forEach(i=>{if(state.del[i.id]) delete state.del[i.id];});
+    save(); render(); toast('Back-up teruggezet: '+state.items.length+' lasten');}
   catch(e){toast('Dit is geen geldige back-up. Plak de volledige tekst die je eerder kopieerde.');}
 }
 
@@ -370,7 +630,7 @@ function openForm(item){
   editing=item||null;
   $('formTitle').textContent=item?'Vaste last bewerken':'Nieuwe vaste last';
   $('f-name').value=item?item.name:'';
-  $('f-amount').value=item?String(item.amount.toFixed(2)).replace('.',','):'';
+  $('f-amount').value=item?item.amount.toFixed(2).replace('.',','):'';
   $('f-cat').value=item?cat(item.cat).id:'wonen';
   $('f-freq').value=item?item.freq:'m';
   $('f-day').value=item?item.day:1;
@@ -391,7 +651,7 @@ $('delBtn').onclick=()=>{
   const b=$('delBtn');
   if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Zeker weten? Tik nogmaals';return;}
   state.items=state.items.filter(i=>i.id!==editing.id);
-  Object.keys(state.paid).forEach(k=>state.paid[k]=state.paid[k].filter(x=>x!==editing.id));
+  if(!editing.example) state.del[editing.id]=Date.now();
   const n=editing.name; save(); closeForm(); render(); toast(n+' verwijderd');
 };
 $('form').addEventListener('submit',e=>{
@@ -400,21 +660,31 @@ $('form').addEventListener('submit',e=>{
   if(!name){$('formErr').textContent='Vul een omschrijving in, bijvoorbeeld "Hypotheek".';return;}
   if(!(amount>0)){$('formErr').textContent='Vul een bedrag groter dan 0 in, bijvoorbeeld 152,35.';return;}
   if(!(day>=1&&day<=31)){$('formErr').textContent='Kies een dag tussen 1 en 31.';return;}
-  const data={name,amount,cat:$('f-cat').value,freq:$('f-freq').value,day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false};
+  const data={name,amount,cat:$('f-cat').value,freq:$('f-freq').value,day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false,u:Date.now()};
   const wasEdit=!!editing;
-  if(editing){Object.assign(editing,data);} else state.items.push({id:uid(),...data});
+  if(editing){
+    if(editing.example){ // een aangepast voorbeeld wordt een echte last met eigen id
+      state.items=state.items.filter(i=>i!==editing); state.items.push({id:uid(),...data});
+    } else Object.assign(editing,data);
+  } else state.items.push({id:uid(),...data});
   save(); closeForm(); render(); toast(wasEdit?'Opgeslagen':name+' toegevoegd');
 });
 
-let tt; function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600);}
+let tt; function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800);}
 
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;render();});
-if(document.querySelector('link[rel="manifest"]')&&'serviceWorker' in navigator){
-  try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}
+if(IS_PWA){
+  $('dlBk').hidden=false;
+  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}}
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') sync();});
+  window.addEventListener('online',sync);
+  window.addEventListener('offline',pillIdle);
 }
 
-try{const t=localStorage.getItem(KEY+'.tab'); if(t&&$('t-'+t)) $('t-'+t).click();}catch(e){}
-render();
+try{const t=localStorage.getItem(KEY+'.tab'); if(t&&$('t-'+t)) showTab(t);}catch(e){}
+render(); renderSyncPanel(); pillIdle();
+if(IS_PWA&&cfg){keyGet().then(k=>{if(k){syncKey=k;} renderSyncPanel(); sync();});}
+
 })();
 </script>
 
