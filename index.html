@@ -86,7 +86,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .chip{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;letter-spacing:.02em}
 .chip.ok{background:var(--ok-soft);color:var(--ok)}
 .chip.warn{background:var(--warn-soft);color:var(--warn)}
-.chip.ex{background:var(--accent-soft);color:var(--accent)}
+.chip.ex{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+.chip.samen{background:var(--accent-soft);color:var(--accent)}
 .right{display:flex;align-items:center;gap:10px}
 .amt{font-size:15px;text-align:right;white-space:nowrap}
 .check{width:36px;height:36px;border-radius:10px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
@@ -137,6 +138,23 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 .panel .two{gap:10px}
 .panel .ok-line{font-size:14px}
 .panel code{font-family:var(--f-mono);font-size:13px;background:var(--sunken);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 12px}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--muted)}
+.filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.flabel{font-size:13px;font-weight:600;color:var(--muted)}
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.field .seg label{text-align:center;padding:9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.field .seg input:checked+label{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.field .seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:12px;color:var(--muted)}
+.amt-wrap{text-align:right}
+.sub{font-size:12px;color:var(--muted);white-space:nowrap}
+.inleg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inleg div{background:var(--sunken);border-radius:9px;padding:10px 12px;min-width:0}
+.inleg .num{display:block;font-size:18px;margin-top:2px}
+.who{display:grid;gap:8px}
+.who label{display:flex;align-items:center;gap:10px;background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:600;cursor:pointer}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;font-weight:500;max-width:calc(100% - 32px)}
 @media (max-width:440px){.sum-grid{grid-template-columns:1fr 1fr}.sum-grid div:last-child{grid-column:1/-1}.month span{min-width:104px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -155,14 +173,14 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 
   <section class="summary" aria-live="polite">
     <div class="sum-main">
-      <div><div class="lbl" id="dueLbl">Af te schrijven deze maand</div><div class="big" id="dueTotal">€ 0,00</div></div>
+      <div><div class="lbl" id="dueLbl">Af te schrijven deze maand</div><div class="big" id="dueTotal">€ 0,00</div><div class="note num" id="myNote"></div></div>
       <div class="note" id="countNote"></div>
     </div>
     <div class="bar" aria-hidden="true"><b id="paidBar" style="width:0%"></b></div>
     <div class="sum-grid">
       <div><span class="lbl">Betaald</span><span class="num" id="paidAmt">€ 0,00</span></div>
       <div><span class="lbl">Nog open</span><span class="num" id="openAmt">€ 0,00</span></div>
-      <div><span class="lbl">Gem. per maand</span><span class="num" id="avgAmt">€ 0,00</span></div>
+      <div><span class="lbl">Jouw deel p/m</span><span class="num" id="avgAmt">€ 0,00</span></div>
     </div>
   </section>
 
@@ -171,11 +189,18 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
     <button class="tab" role="tab" id="t-alle" aria-selected="false" data-tab="alle">Alle lasten</button>
     <button class="tab" role="tab" id="t-overzicht" aria-selected="false" data-tab="overzicht">Overzicht</button>
   </nav>
+  <div class="filters" id="filters" role="group" aria-label="Toon lasten">
+    <button data-filter="alle" aria-pressed="true">Alles</button>
+    <button data-filter="samen" aria-pressed="false">Gezamenlijk</button>
+    <button data-filter="eigen" aria-pressed="false">Eigen</button>
+  </div>
 
   <section id="v-maand"></section>
   <section id="v-alle" hidden></section>
   <section id="v-overzicht" hidden>
     <div id="ov-dyn"></div>
+    <div class="panel" id="inlegPanel" hidden></div>
+    <div class="panel" id="splitPanel"></div>
     <div class="panel" id="syncPanel"></div>
     <div class="panel">
       <h4>Back-up</h4>
@@ -193,6 +218,12 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 <div class="scrim" id="scrim" hidden>
   <form class="sheet" id="form" novalidate>
     <h2 id="formTitle">Nieuwe vaste last</h2>
+    <div class="field"><span class="flabel" id="typeLbl">Soort</span>
+      <div class="seg" role="radiogroup" aria-labelledby="typeLbl">
+        <input type="radio" name="f-type" id="f-type-e" value="eigen" checked><label for="f-type-e">Eigen</label>
+        <input type="radio" name="f-type" id="f-type-s" value="samen"><label for="f-type-s">Gezamenlijk</label>
+      </div>
+    </div>
     <div class="field"><label for="f-name">Omschrijving</label><input id="f-name" placeholder="Bijv. Hypotheek" autocomplete="off"></div>
     <div class="two">
       <div class="field"><label for="f-amount">Bedrag (€)</label><input id="f-amount" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
@@ -203,6 +234,7 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
         <select id="f-freq"><option value="m">Elke maand</option><option value="q">Per kwartaal</option><option value="y">Per jaar</option></select></div>
       <div class="field"><label for="f-day">Dag van afschrijving</label><input id="f-day" type="number" min="1" max="31" inputmode="numeric" value="1"></div>
     </div>
+    <div class="field" id="splitField" hidden><label for="f-split">Jouw deel (%)</label><input id="f-split" type="number" min="0" max="100" inputmode="numeric"><span class="hint" id="splitHint"></span></div>
     <div class="field" id="monthField" hidden><label for="f-month">Eerste maand van afschrijving</label><select id="f-month"></select></div>
     <div class="field"><label for="f-note">Notitie (optioneel)</label><input id="f-note" placeholder="Bijv. polisnummer of looptijd" autocomplete="off"></div>
     <div class="err" id="formErr"></div>
@@ -219,7 +251,10 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 
 <script>
 (function(){
-const KEY='vastelasten.v1';
+const BASE='vastelasten';
+const DKEY=BASE+'.v2', OLDKEY=BASE+'.v1';
+const CFGKEY=BASE+'.v2.sync', OLDCFG=BASE+'.v1.sync';
+const UIKEY=BASE+'.ui';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 const CATS=[
   {id:'wonen',name:'Wonen',c:'--c1'},
@@ -231,46 +266,68 @@ const CATS=[
   {id:'overig',name:'Overig',c:'--c7'}];
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const FREQ={m:'maandelijks',q:'per kwartaal',y:'jaarlijks'};
+const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const clampPct=v=>{v=Math.round(+v); return isFinite(v)?Math.min(100,Math.max(0,v)):50;};
 
-const EXAMPLES=[
-  ['Hypotheek',1145,'wonen','m',1],['Zorgverzekering',152.35,'verzekering','m',1],
-  ['Opstal- en inboedelverzekering',28.40,'verzekering','m',5],['Energie (termijnbedrag)',165,'energie','m',15],
-  ['Water',22.10,'energie','m',15],['Internet & tv',58.50,'abonnement','m',20],
-  ['Autoverzekering',61.20,'verzekering','m',25],['Gemeentelijke belastingen',78.25,'belasting','m',28],
-  ['Motorrijtuigenbelasting',142,'belasting','q',10,1],['Doorlopende reisverzekering',39.50,'verzekering','y',12,3]
-].map(([name,amount,cat,freq,day,month],n)=>({id:'vb'+n,name,amount,cat,freq,day,month:month||1,note:'',example:true,u:0}));
+/* ---------- voorbeelden ---------- */
+const mk=(arr,prefix)=>arr.map(([name,amount,cat,freq,day,month],n)=>({id:prefix+n,name,amount,cat,freq,day,month:month||1,note:'',example:true,u:0,split:null}));
+const EX_SAMEN=[['Hypotheek',1145,'wonen','m',1],['Opstal- en inboedelverzekering',28.40,'verzekering','m',5],['Energie (termijnbedrag)',165,'energie','m',15],
+  ['Water',22.10,'energie','m',15],['Internet & tv',58.50,'abonnement','m',20],['Gemeentelijke belastingen',78.25,'belasting','m',28],['Doorlopende reisverzekering',39.50,'verzekering','y',12,3]];
+const EX_EIGEN=[['Zorgverzekering',152.35,'verzekering','m',1],['Telefoonabonnement',18.50,'abonnement','m',8],['Autoverzekering',61.20,'verzekering','m',25],
+  ['Sportschool',34.95,'abonnement','m',27],['Motorrijtuigenbelasting',142,'belasting','q',10,1]];
 
 /* ---------- datamodel ----------
-   items: [{id,name,amount,cat,freq,day,month,note,example,u}]  u = laatst gewijzigd (ms)
-   del:   {id: ms}                 verwijderde lasten, zodat andere apparaten ze ook weghalen
-   paid:  {'2026-10': {id:{p,u}}}  afgevinkt per maand, met tijdstip per vinkje        */
-function migrate(d){
-  const s={items:[],del:{},paid:{}};
+   state = {samen: Store, eigen: Store}
+   Store = {items, del, paid, meta}
+     items: [{id,name,amount,cat,freq,day,month,note,example,u,split}]
+            u = laatst gewijzigd (ms); split = deel van persoon 1 in % (null = standaard)
+     del:   {id: ms}               verwijderd of verplaatst
+     paid:  {'2026-10': {id:{p,u}}}
+     meta:  alleen in samen: {p1,p2,split,u}  namen en standaardverdeling   */
+const EMPTY=()=>({items:[],del:{},paid:{},meta:null});
+const DEFAULT_META={p1:'Ik',p2:'Partner',split:50,u:0};
+
+function migStore(d){
   if(!d||!Array.isArray(d.items)) return null;
-  s.items=d.items.map(i=>({id:String(i.id),name:String(i.name||''),amount:+i.amount||0,cat:i.cat||'overig',freq:i.freq||'m',day:+i.day||1,month:+i.month||1,note:i.note||'',example:!!i.example,u:+i.u||0}));
-  s.del=d.del&&typeof d.del==='object'?d.del:{};
+  const s=EMPTY();
+  s.items=d.items.map(i=>({id:String(i.id),name:String(i.name||''),amount:+i.amount||0,cat:i.cat||'overig',freq:i.freq||'m',day:+i.day||1,month:+i.month||1,note:i.note||'',example:!!i.example,u:+i.u||0,
+    split:(i.split==null||i.split==='')?null:clampPct(i.split)}));
+  if(d.del&&typeof d.del==='object') for(const id in d.del) s.del[id]=+d.del[id]||0;
   const p=d.paid||{};
   for(const k in p){
     s.paid[k]={};
     if(Array.isArray(p[k])) p[k].forEach(id=>s.paid[k][id]={p:true,u:0});
     else for(const id in p[k]) s.paid[k][id]={p:!!p[k][id].p,u:+p[k][id].u||0};
   }
+  if(d.meta&&typeof d.meta==='object') s.meta={p1:String(d.meta.p1||'Ik'),p2:String(d.meta.p2||'Partner'),split:clampPct(d.meta.split),u:+d.meta.u||0};
   return s;
 }
+function migrateAll(d){
+  if(!d||typeof d!=='object') return null;
+  if(d.samen||d.eigen) return {samen:migStore(d.samen)||EMPTY(),eigen:migStore(d.eigen)||EMPTY()};
+  const e=migStore(d); // oude versie: alles was één lijst, wordt "eigen"
+  return e?{samen:EMPTY(),eigen:e}:null;
+}
 function load(){
-  try{const raw=localStorage.getItem(KEY); if(raw){const s=migrate(JSON.parse(raw)); if(s) return s;}}catch(e){}
-  return {items:EXAMPLES.map(i=>({...i})),del:{},paid:{}};
+  for(const k of [DKEY,OLDKEY]){
+    try{const r=localStorage.getItem(k); if(r){const s=migrateAll(JSON.parse(r)); if(s) return s;}}catch(e){}
+  }
+  return {samen:{...EMPTY(),items:mk(EX_SAMEN,'vbs')},eigen:{...EMPTY(),items:mk(EX_EIGEN,'vbe')}};
 }
 let state=load();
-function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function saveLocal(){try{localStorage.setItem(DKEY,JSON.stringify(state));}catch(e){}}
 function save(){saveLocal(); scheduleSync();}
 
-/* samenvoegen: per last en per vinkje wint de nieuwste wijziging */
+let ui={tab:'maand',filter:'alle',me:'p1'};
+try{Object.assign(ui,JSON.parse(localStorage.getItem(UIKEY)||'{}'));}catch(e){}
+function saveUi(){try{localStorage.setItem(UIKEY,JSON.stringify(ui));}catch(e){}}
+
+/* samenvoegen: per last, per vinkje en voor de verdeling wint de nieuwste wijziging */
 function merge(a,b){
-  const out={items:[],del:{},paid:{}};
+  const out=EMPTY();
   for(const s of [a,b]) for(const id in s.del) out.del[id]=Math.max(out.del[id]||0,s.del[id]);
   const map=new Map();
   for(const s of [a,b]) for(const i of s.items){const cur=map.get(i.id); if(!cur||i.u>cur.u) map.set(i.id,i);}
@@ -279,20 +336,24 @@ function merge(a,b){
     out.paid[k]=out.paid[k]||{};
     for(const id in s.paid[k]){const v=s.paid[k][id], cur=out.paid[k][id]; if(!cur||v.u>cur.u) out.paid[k][id]={p:v.p,u:v.u};}
   }
+  const ma=a.meta, mb=b.meta;
+  out.meta=!ma?(mb?{...mb}:null):!mb?{...ma}:(mb.u>ma.u?{...mb}:{...ma});
   return out;
 }
-const withoutExamples=s=>({items:s.items.filter(i=>!i.example),del:s.del,paid:s.paid});
+const withoutExamples=s=>({...s,items:s.items.filter(i=>!i.example)});
 function canon(v){
   if(Array.isArray(v)) return '['+v.map(canon).join(',')+']';
   if(v&&typeof v==='object') return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
-  return JSON.stringify(v);
+  return JSON.stringify(v===undefined?null:v);
 }
-const canonState=s=>canon({items:[...s.items].sort((x,y)=>x.id<y.id?-1:1),del:s.del,paid:s.paid});
+const canonStore=s=>canon({items:[...s.items].sort((x,y)=>x.id<y.id?-1:1),del:s.del,paid:s.paid,meta:s.meta||null});
 
+/* ---------- afgeleide waarden ---------- */
 const now=new Date();
 let view={y:now.getFullYear(),m:now.getMonth()};
-let tab='maand';
 let editing=null;
+let cfg=null;
+try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}
 
 const mkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
 const daysIn=(y,m)=>new Date(y,m+1,0).getDate();
@@ -302,34 +363,52 @@ const cat=id=>CATS.find(c=>c.id===id)||CATS[CATS.length-1];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>eur.format(n);
 
-function due(){
-  const dim=daysIn(view.y,view.m);
-  return state.items.filter(i=>occurs(i,view.m)).map(i=>({...i,d:Math.min(i.day,dim)})).sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name));
-}
-function paidSet(){const p=state.paid[mkey(view.y,view.m)]||{}; return new Set(Object.keys(p).filter(id=>p[id].p));}
+const meta=()=>state.samen.meta||DEFAULT_META;
+const me=()=>cfg&&cfg.me?cfg.me:(ui.me==='p2'?'p2':'p1');
+const other=()=>me()==='p1'?'p2':'p1';
+const nameOf=p=>meta()[p]||(p==='p1'?'Ik':'Partner');
+const p1pct=i=>i.split!=null?i.split:meta().split;
+const myPct=i=>!i.joint?100:(me()==='p1'?p1pct(i):100-p1pct(i));
+const myDefault=()=>me()==='p1'?meta().split:100-meta().split;
+const myAmt=(i,a)=>a*myPct(i)/100;
+const stOf=i=>i.joint?'samen':'eigen';
+function all(){return state.samen.items.map(i=>({...i,joint:true})).concat(state.eigen.items.map(i=>({...i,joint:false})));}
+function shown(){const f=ui.filter; return all().filter(i=>f==='alle'||(f==='samen')===i.joint);}
+function findItem(id){for(const st of STORES){const item=state[st].items.find(i=>i.id===id); if(item) return {st,item};} return null;}
+function isPaid(i,k){const p=state[stOf(i)].paid[k]; return !!(p&&p[i.id]&&p[i.id].p);}
 
+/* ---------- weergave ---------- */
 function render(){
   $('monthLabel').textContent=MONTHS[view.m]+' '+view.y;
-  const list=due(), ps=paidSet();
+  document.querySelectorAll('#filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===ui.filter)));
+  const items=shown(), k=mkey(view.y,view.m), dim=daysIn(view.y,view.m);
+  const list=items.filter(i=>occurs(i,view.m)).map(i=>({...i,d:Math.min(i.day,dim),paid:isPaid(i,k)}))
+    .sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name));
   const total=list.reduce((s,i)=>s+i.amount,0);
-  const paid=list.filter(i=>ps.has(i.id)).reduce((s,i)=>s+i.amount,0);
-  const avg=state.items.reduce((s,i)=>s+monthly(i),0);
+  const paid=list.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0);
+  const mine=list.reduce((s,i)=>s+myAmt(i,i.amount),0);
+  const avgMine=items.reduce((s,i)=>s+myAmt(i,monthly(i)),0);
+  $('dueLbl').textContent={alle:'Af te schrijven deze maand',samen:'Gezamenlijk deze maand',eigen:'Eigen lasten deze maand'}[ui.filter];
   $('dueTotal').textContent=fmt(total);
+  $('myNote').textContent=list.some(i=>i.joint)?'Jouw deel: '+fmt(mine):'';
   $('paidAmt').textContent=fmt(paid);
   $('openAmt').textContent=fmt(total-paid);
-  $('avgAmt').textContent=fmt(avg);
+  $('avgAmt').textContent=fmt(avgMine);
   $('paidBar').style.width=(total?paid/total*100:0)+'%';
-  const nPaid=list.filter(i=>ps.has(i.id)).length;
+  const nPaid=list.filter(i=>i.paid).length;
   $('countNote').textContent=list.length?nPaid+' van '+list.length+' afgevinkt':'';
-  renderMonth(list,ps); renderAll(); renderOverview(avg);
+  renderMonth(list); renderAll(items); renderOverview(items,avgMine); renderInleg();
+  if(!$('splitPanel').contains(document.activeElement)) renderSplitPanel();
 }
 
 const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const PEN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
 const exChip=i=>i.example?'<span class="chip ex">Voorbeeld</span>':'';
+const jointChip=i=>i.joint?'<span class="chip samen">Samen · jij '+myPct(i)+'%</span>':'';
+const catTag=i=>{const c=cat(i.cat); return '<span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span>';};
 
-function statusChip(i,paid){
-  if(paid) return '<span class="chip ok">Betaald</span>';
+function statusChip(i){
+  if(i.paid) return '<span class="chip ok">Betaald</span>';
   const t=new Date();
   if(view.y===t.getFullYear()&&view.m===t.getMonth()){
     const diff=i.d-t.getDate();
@@ -339,62 +418,101 @@ function statusChip(i,paid){
   }
   return '';
 }
+const emptyMsg=()=>({alle:'Nog geen vaste lasten. Tik op <b>Nieuwe last</b> om je hypotheek, verzekeringen of abonnementen toe te voegen.',
+  samen:'Nog geen gezamenlijke lasten. Voeg er een toe en kies <b>Gezamenlijk</b>.',
+  eigen:'Nog geen eigen lasten. Voeg er een toe en kies <b>Eigen</b>.'}[ui.filter]);
 
-function renderMonth(list,ps){
+function renderMonth(list){
   const el=$('v-maand');
-  if(!state.items.length){el.innerHTML='<div class="empty">Nog geen vaste lasten. Tik op <b>Nieuwe last</b> om je hypotheek, verzekeringen of abonnementen toe te voegen.</div>';return;}
+  if(!shown().length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
   if(!list.length){el.innerHTML='<div class="empty">Geen afschrijvingen in '+MONTHS[view.m]+'.</div>';return;}
-  el.innerHTML='<div class="list">'+list.map(i=>{
-    const p=ps.has(i.id), c=cat(i.cat);
-    return '<div class="row'+(p?' paid':'')+'">'+
+  el.innerHTML='<div class="list">'+list.map(i=>
+    '<div class="row'+(i.paid?' paid':'')+'">'+
       '<div class="day"><span class="num">'+i.d+'</span><small>'+MONTHS[view.m].slice(0,3)+'</small></div>'+
-      '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span>'+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+statusChip(i,p)+exChip(i)+'</div></div>'+
-      '<div class="right"><span class="amt num">'+fmt(i.amount)+'</span><button class="check" data-toggle="'+esc(i.id)+'" aria-pressed="'+p+'" aria-label="'+esc(i.name)+(p?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
-  }).join('')+'</div>';
+      '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta">'+catTag(i)+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+jointChip(i)+statusChip(i)+exChip(i)+'</div></div>'+
+      '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+'</div>'+
+      '<button class="check" data-toggle="'+esc(i.id)+'" aria-pressed="'+i.paid+'" aria-label="'+esc(i.name)+(i.paid?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>'
+  ).join('')+'</div>';
 }
 
-function renderAll(){
+function renderAll(items){
   const el=$('v-alle');
-  if(!state.items.length){el.innerHTML='<div class="empty">Nog geen vaste lasten toegevoegd.</div>';return;}
+  if(!items.length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
   let html='';
-  if(state.items.some(i=>i.example)) html+='<div class="panel" style="margin-top:0"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
+  if(all().some(i=>i.example)) html+='<div class="panel" style="margin-top:0"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
   CATS.forEach(c=>{
-    const items=state.items.filter(i=>cat(i.cat).id===c.id).sort((a,b)=>monthly(b)-monthly(a));
-    if(!items.length) return;
-    const sum=items.reduce((s,i)=>s+monthly(i),0);
+    const g=items.filter(i=>cat(i.cat).id===c.id).sort((a,b)=>monthly(b)-monthly(a));
+    if(!g.length) return;
+    const sum=g.reduce((s,i)=>s+monthly(i),0);
     html+='<div class="group"><h3><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span><span class="num">'+fmt(sum)+' p/m</span></h3><div class="list">'+
-      items.map(i=>'<div class="row" style="grid-template-columns:1fr auto">'+
-        '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+exChip(i)+'</div></div>'+
-        '<div class="right"><div style="text-align:right"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.freq!=='m'?'<div class="note num" style="font-size:12px">≈ '+fmt(monthly(i))+' p/m</div>':'')+'</div><button class="edit" data-edit="'+esc(i.id)+'" aria-label="'+esc(i.name)+' bewerken">'+PEN+'</button></div></div>').join('')+
+      g.map(i=>'<div class="row" style="grid-template-columns:1fr auto">'+
+        '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+jointChip(i)+exChip(i)+'</div></div>'+
+        '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+
+          (i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+
+          (i.freq!=='m'?'<div class="sub num">≈ '+fmt(monthly(i))+' p/m</div>':'')+
+        '</div><button class="edit" data-edit="'+esc(i.id)+'" aria-label="'+esc(i.name)+' bewerken">'+PEN+'</button></div></div>').join('')+
       '</div></div>';
   });
   el.innerHTML=html;
 }
 
 let installEvt=null;
-function renderOverview(avg){
-  const rows=CATS.map(c=>({c,sum:state.items.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+monthly(i),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
+function renderOverview(items,avgMine){
+  const rows=CATS.map(c=>({c,sum:items.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+myAmt(i,monthly(i)),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
   const max=rows.length?rows[0].sum:1;
   let peak={m:0,v:0};
-  for(let m=0;m<12;m++){const v=state.items.filter(i=>occurs(i,m)).reduce((s,i)=>s+i.amount,0); if(v>peak.v) peak={m,v};}
-  let html='<div class="stats"><div><span class="lbl">Per jaar</span><span class="num">'+fmt(avg*12)+'</span></div><div><span class="lbl">Duurste maand</span><span class="num">'+(peak.v?MONTHS[peak.m]+'</span><span class="note num">'+fmt(peak.v):'–')+'</span></div></div>';
-  html+=rows.length?'<div class="cats">'+rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'<div class="note">Bedragen per kwartaal en per jaar zijn omgerekend naar een maandbedrag.</div></div>':'<div class="empty">Voeg lasten toe om de verdeling per categorie te zien.</div>';
+  for(let m=0;m<12;m++){const v=items.filter(i=>occurs(i,m)).reduce((s,i)=>s+myAmt(i,i.amount),0); if(v>peak.v) peak={m,v};}
+  let html='<div class="stats"><div><span class="lbl">Jouw kosten per jaar</span><span class="num">'+fmt(avgMine*12)+'</span></div><div><span class="lbl">Duurste maand</span><span style="display:block;font-size:18px;margin-top:2px;font-weight:600">'+(peak.v?MONTHS[peak.m]+'</span><span class="note num">'+fmt(peak.v):'–')+'</span></div></div>';
+  html+=rows.length?'<div class="cats">'+rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avgMine*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+
+    '<div class="note">Bedragen zijn jouw deel per maand. Kwartaal- en jaarbedragen zijn omgerekend naar een maandbedrag.</div></div>'
+    :'<div class="empty">'+emptyMsg()+'</div>';
   $('ov-dyn').innerHTML=html;
   $('ov-install').innerHTML=installEvt?'<div class="panel"><h4>Op je startscherm</h4><div class="note">Installeer Vaste Lasten als app, dan werkt hij ook offline.</div><div class="btns"><button class="btn primary" id="installBtn">Installeren</button></div></div>':'';
 }
 
+function renderInleg(){
+  const el=$('inlegPanel');
+  const js=state.samen.items.map(i=>({...i,joint:true}));
+  if(!js.length||ui.filter==='eigen'){el.hidden=true;return;}
+  const tot=js.reduce((s,i)=>s+monthly(i),0);
+  const a=js.reduce((s,i)=>s+monthly(i)*p1pct(i)/100,0), b=tot-a;
+  const tag=p=>esc(nameOf(p))+(p===me()?' (jij)':'');
+  el.hidden=false;
+  el.innerHTML='<h4>Gezamenlijke rekening</h4>'+
+    '<div class="note">Gezamenlijke lasten gemiddeld <b class="num">'+fmt(tot)+'</b> per maand. Dit maakt ieder maandelijks over:</div>'+
+    '<div class="inleg"><div><span class="lbl">'+tag('p1')+'</span><span class="num">'+fmt(a)+'</span></div><div><span class="lbl">'+tag('p2')+'</span><span class="num">'+fmt(b)+'</span></div></div>'+
+    '<div class="note">Kwartaal- en jaarbedragen zijn over het jaar gespreid, zodat er genoeg op de rekening staat als ze worden afgeschreven.</div>';
+}
+
+function renderSplitPanel(){
+  const m=meta(), linked=!!cfg;
+  $('splitPanel').innerHTML='<h4>Verdeling gezamenlijke lasten</h4>'+
+    '<div class="two"><div class="field"><label for="m-p1">Naam persoon 1</label><input id="m-p1" value="'+esc(m.p1)+'" autocomplete="off"></div>'+
+    '<div class="field"><label for="m-p2">Naam persoon 2</label><input id="m-p2" value="'+esc(m.p2)+'" autocomplete="off"></div></div>'+
+    '<div class="two"><div class="field"><label for="m-split">Standaard deel persoon 1 (%)</label><input id="m-split" type="number" min="0" max="100" inputmode="numeric" value="'+m.split+'"></div>'+
+    '<div class="field"><label for="m-me">Dit apparaat is van</label><select id="m-me"'+(linked?' disabled':'')+'><option value="p1"'+(me()==='p1'?' selected':'')+'>'+esc(m.p1)+'</option><option value="p2"'+(me()==='p2'?' selected':'')+'>'+esc(m.p2)+'</option></select></div></div>'+
+    '<div class="note">Persoon 2 betaalt de rest. Bij een last kun je van de standaard afwijken.'+(linked?' Van wie dit apparaat is, ligt vast sinds het koppelen.':'')+' Namen en verdeling worden gedeeld met je partner.</div>'+
+    '<div class="err" id="m-err"></div><div class="btns"><button class="btn" id="m-save">Verdeling opslaan</button></div>';
+}
+function saveSplit(){
+  const p1=$('m-p1').value.trim(), p2=$('m-p2').value.trim(), sp=$('m-split').value.trim();
+  if(!p1||!p2){$('m-err').textContent='Vul voor beide personen een naam in.';return;}
+  if(sp===''||!(+sp>=0&&+sp<=100)){$('m-err').textContent='Kies een percentage tussen 0 en 100.';return;}
+  state.samen.meta={p1,p2,split:clampPct(sp),u:Date.now()};
+  if(!cfg){ui.me=$('m-me').value; saveUi();}
+  $('m-err').textContent='';
+  document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  save(); render(); toast('Verdeling opgeslagen');
+}
+
 /* ================= SYNC ================= */
-const FILE='vaste-lasten.json';
 const ITER=310000;
 const te=new TextEncoder(), td=new TextDecoder();
-let cfg=null;          // {owner,repo,token,salt}
-let syncKey=null;      // CryptoKey (niet exporteerbaar)
-let syncing=false, again=false, timer=null, lastSync=null;
+const fileOf=(st,c)=>st==='samen'?'samen.json':'eigen-'+(c||cfg).me+'.json';
+let keys={samen:null,eigen:null};
+let syncing=false, again=false, timer=null, lastSync=null, syncError='';
+function saveCfg(){try{cfg?localStorage.setItem(CFGKEY,JSON.stringify(cfg)):localStorage.removeItem(CFGKEY);}catch(e){}}
 
-try{cfg=JSON.parse(localStorage.getItem(KEY+'.sync')||'null');}catch(e){}
-function saveCfg(){try{cfg?localStorage.setItem(KEY+'.sync',JSON.stringify(cfg)):localStorage.removeItem(KEY+'.sync');}catch(e){}}
-
-/* IndexedDB voor de sleutel: het wachtwoord zelf wordt nooit bewaard */
 function idb(mode,fn){return new Promise((res,rej)=>{
   try{const r=indexedDB.open('vaste-lasten',1);
     r.onupgradeneeded=()=>r.result.createObjectStore('kv');
@@ -402,12 +520,13 @@ function idb(mode,fn){return new Promise((res,rej)=>{
     r.onsuccess=()=>{const tx=r.result.transaction('kv',mode),st=tx.objectStore('kv'),q=fn(st);
       tx.oncomplete=()=>res(q&&q.result);tx.onerror=()=>rej(tx.error);};
   }catch(e){rej(e);}});}
-const keyGet=()=>idb('readonly',s=>s.get('key')).catch(()=>null);
-const keySet=k=>idb('readwrite',s=>s.put(k,'key')).catch(()=>null);
-const keyDel=()=>idb('readwrite',s=>s.delete('key')).catch(()=>null);
+const keyGet=n=>idb('readonly',s=>s.get(n)).catch(()=>null);
+const keySet=(n,k)=>idb('readwrite',s=>s.put(k,n)).catch(()=>null);
+const keyDel=n=>idb('readwrite',s=>s.delete(n)).catch(()=>null);
 
 function b64(bytes){let s='';const c=0x8000;for(let i=0;i<bytes.length;i+=c)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+c));return btoa(s);}
 function unb64(str){const s=atob(str.replace(/\s/g,''));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b;}
+const newSalt=()=>b64(crypto.getRandomValues(new Uint8Array(16)));
 async function deriveKey(pass,saltB64){
   const base=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:unb64(saltB64),iterations:ITER,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
@@ -415,36 +534,36 @@ async function deriveKey(pass,saltB64){
 async function seal(obj,key,saltB64){
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,te.encode(JSON.stringify(obj))));
-  return {app:'vaste-lasten',v:1,kdf:{name:'PBKDF2',hash:'SHA-256',iter:ITER,salt:saltB64},alg:'AES-GCM',iv:b64(iv),ct:b64(ct)};
+  return {app:'vaste-lasten',v:2,kdf:{name:'PBKDF2',hash:'SHA-256',iter:ITER,salt:saltB64},alg:'AES-GCM',iv:b64(iv),ct:b64(ct)};
 }
-async function open_(env,key){
+async function openEnv(env,key){
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},key,unb64(env.ct));
-  return migrate(JSON.parse(td.decode(pt)));
+  return migStore(JSON.parse(td.decode(pt)))||EMPTY();
 }
 
 class SyncError extends Error{}
 async function gh(method,path,body,c){
-  c=c||cfg;
   let r;
   try{r=await fetch('https://api.github.com'+path,{method,cache:'no-store',headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});}
   catch(e){throw new SyncError(navigator.onLine?'GitHub is niet bereikbaar. Probeer het later opnieuw.':'offline');}
   if(r.status===401) throw new SyncError('De token is ongeldig of verlopen. Maak een nieuwe token aan en koppel opnieuw.');
   return r;
 }
-const contentsPath=c=>'/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/'+FILE;
+const cpath=(c,file)=>'/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/'+file;
 
-async function readRemote(c){
-  const r=await gh('GET',contentsPath(c),null,c);
+async function readRemote(c,file){
+  const r=await gh('GET',cpath(c,file),null,c);
   if(r.status===404) return {env:null,sha:undefined};
   if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository. Controleer of hij leesrechten heeft op Contents.');
   if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
   const j=await r.json();
-  let env; try{env=JSON.parse(atob(j.content.replace(/\s/g,'')));}catch(e){throw new SyncError('Het bestand '+FILE+' in de repository is beschadigd of niet door deze app gemaakt.');}
+  let env; try{env=JSON.parse(atob(j.content.replace(/\s/g,'')));}catch(e){throw new SyncError('Het bestand '+file+' in de repository is beschadigd of niet door deze app gemaakt.');}
+  if(!env||!env.kdf||!env.kdf.salt||!env.iv||!env.ct) throw new SyncError('Het bestand '+file+' in de repository is niet door deze app gemaakt.');
   return {env,sha:j.sha};
 }
-async function writeRemote(obj,sha,c,key){
-  const env=await seal(obj,key,c.salt);
-  const r=await gh('PUT',contentsPath(c),{message:'Vaste lasten bijgewerkt',content:btoa(JSON.stringify(env)),...(sha?{sha}:{})},c);
+async function writeRemote(obj,sha,c,file,key,salt){
+  const env=await seal(obj,key,salt);
+  const r=await gh('PUT',cpath(c,file),{message:'Vaste lasten bijgewerkt',content:btoa(JSON.stringify(env)),...(sha?{sha}:{})},c);
   if(r.status===409||r.status===422) return null; // iemand anders was net eerder: opnieuw samenvoegen
   if(r.status===403||r.status===404) throw new SyncError('De token mag niet schrijven in deze repository. Geef hem schrijfrechten op Contents.');
   if(!r.ok) throw new SyncError('Opslaan in GitHub mislukte ('+r.status+').');
@@ -455,134 +574,216 @@ function setPill(s,text,title){
   const p=$('syncPill'); if(!cfg){p.hidden=true;return;}
   p.hidden=false; p.dataset.s=s; p.textContent=text; p.title=title||'';
 }
+const hasKeys=()=>!!(keys.samen&&keys.eigen);
 function pillIdle(){
   if(!cfg) return setPill();
-  if(!syncKey) return setPill('warn','Wachtwoord nodig','Tik om de synchronisatie te ontgrendelen');
+  if(!hasKeys()) return setPill('warn','Wachtwoord nodig','Tik om de synchronisatie te ontgrendelen');
   if(!navigator.onLine) return setPill('warn','Offline','Wijzigingen worden gesynchroniseerd zodra je weer online bent');
   setPill('ok','Gesynchroniseerd',lastSync?'Laatst: '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'');
 }
+function scheduleSync(){ if(!cfg||!hasKeys()) return; clearTimeout(timer); timer=setTimeout(sync,1200); }
 
-function scheduleSync(){ if(!cfg||!syncKey) return; clearTimeout(timer); timer=setTimeout(sync,1200); }
-
+async function syncStore(st){
+  const file=fileOf(st);
+  for(let attempt=0;attempt<4;attempt++){
+    const {env,sha}=await readRemote(cfg,file);
+    let remote=EMPTY();
+    if(env){
+      if(env.kdf.salt!==cfg.salt[st]) throw new SyncError('De '+(st==='samen'?'gezamenlijke':'eigen')+' gegevens in GitHub zijn met een ander wachtwoord versleuteld. Ontkoppel en koppel opnieuw.');
+      try{remote=await openEnv(env,keys[st]);}catch(e){throw new SyncError('Ontsleutelen lukt niet. Ontkoppel en koppel opnieuw met het juiste wachtwoord.');}
+    }
+    const before=canonStore(state[st]);
+    state[st]=merge(state[st],remote);
+    if(canonStore(state[st])!==before){saveLocal(); render();}
+    const up=withoutExamples(state[st]);
+    if(env&&canonStore(up)===canonStore(remote)) return;
+    if(await writeRemote(up,sha,cfg,file,keys[st],cfg.salt[st])) return;
+  }
+}
 async function sync(){
-  if(!cfg||!syncKey) return pillIdle();
+  if(!cfg||!hasKeys()) return pillIdle();
   if(syncing){again=true;return;}
   if(!navigator.onLine) return pillIdle();
   syncing=true; setPill('busy','Synchroniseren…');
   try{
-    for(let attempt=0;attempt<4;attempt++){
-      const {env,sha}=await readRemote(cfg);
-      let remote={items:[],del:{},paid:{}};
-      if(env){
-        if(!env.kdf||env.kdf.salt!==cfg.salt) throw new SyncError('De gegevens in GitHub zijn met een ander wachtwoord versleuteld. Ontkoppel en koppel opnieuw.');
-        try{remote=await open_(env,syncKey);}catch(e){throw new SyncError('Ontsleutelen lukt niet. Ontkoppel en koppel opnieuw met het juiste wachtwoord.');}
-      }
-      const before=canonState(state);
-      state=merge(state,remote);
-      if(canonState(state)!==before){saveLocal(); render();}
-      const up=withoutExamples(state);
-      if(env&&canonState(up)===canonState(remote)) break;
-      const newSha=await writeRemote(up,sha,cfg,syncKey);
-      if(newSha) break;
-    }
-    lastSync=new Date(); pillIdle(); renderSyncPanel();
+    for(const st of STORES) await syncStore(st);
+    lastSync=new Date(); syncError=''; pillIdle(); renderSyncPanel();
   }catch(e){
     if(e.message==='offline') pillIdle();
-    else{setPill('err','Sync-fout',e.message); syncError=e.message; renderSyncPanel();}
+    else{syncError=e.message; setPill('err','Sync-fout',e.message); renderSyncPanel();}
   }finally{
     syncing=false;
     if(again){again=false; scheduleSync();}
   }
 }
-let syncError='';
+
+/* ---------- koppelen ---------- */
+let oldCfg=null;
+try{oldCfg=JSON.parse(localStorage.getItem(OLDCFG)||'null');}catch(e){}
+let lk={step:1,c:null};
+
+const fieldHtml=(id,label,attrs,val)=>'<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" '+(attrs||'')+(val!=null?' value="'+esc(val)+'"':'')+'></div>';
+const PW='type="password" autocomplete="new-password"';
 
 function renderSyncPanel(){
   const el=$('syncPanel');
-  if(!IS_PWA){el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="note">Synchroniseren tussen apparaten werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
-  if(!cfg){
-    el.innerHTML='<h4>Synchroniseren via GitHub</h4>'+
-      '<div class="note">Koppel een privé-repository om je lasten op al je apparaten te hebben. Alles wordt op dit apparaat versleuteld met jouw wachtwoord voordat het naar GitHub gaat.</div>'+
-      '<div class="two"><div class="field"><label for="s-owner">GitHub-gebruikersnaam</label><input id="s-owner" autocomplete="username" autocapitalize="off" spellcheck="false"></div>'+
-      '<div class="field"><label for="s-repo">Privé-repository</label><input id="s-repo" value="vaste-lasten-data" autocapitalize="off" spellcheck="false"></div></div>'+
-      '<div class="field"><label for="s-token">Token</label><input id="s-token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"></div>'+
-      '<div class="two"><div class="field"><label for="s-pass">Wachtwoord voor versleuteling</label><input id="s-pass" type="password" autocomplete="new-password"></div>'+
-      '<div class="field"><label for="s-pass2">Herhaal wachtwoord</label><input id="s-pass2" type="password" autocomplete="new-password"></div></div>'+
-      '<div class="note">Gebruik op elk apparaat hetzelfde wachtwoord. Het wordt nergens opgeslagen; vergeet je het, dan is de kopie in GitHub onbruikbaar.</div>'+
-      '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-link">Koppelen</button></div>';
+  const h='<h4>Synchroniseren via GitHub</h4>';
+  if(!IS_PWA){el.innerHTML=h+'<div class="note">Synchroniseren tussen apparaten en met je partner werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
+  if(cfg){
+    const where='<code>'+esc(cfg.owner)+'/'+esc(cfg.repo)+'</code>';
+    if(!hasKeys()){
+      el.innerHTML=h+'<div class="ok-line">Gekoppeld met '+where+' als '+esc(nameOf(cfg.me))+'. Vul je wachtwoorden in om verder te synchroniseren.</div>'+
+        '<div class="two">'+fieldHtml('u-s','Gezamenlijk wachtwoord','type="password" autocomplete="off"')+fieldHtml('u-e','Eigen wachtwoord','type="password" autocomplete="current-password"')+'</div>'+
+        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>';
+      return;
+    }
+    el.innerHTML=h+'<div class="ok-line">Gekoppeld met '+where+' als <b>'+esc(nameOf(cfg.me))+'</b>.'+(lastSync?' Laatst gesynchroniseerd om '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+'.':'')+'</div>'+
+      '<div class="note">Gezamenlijke lasten staan in <code>samen.json</code> en zie je allebei. Je eigen lasten staan in <code>'+esc(fileOf('eigen'))+'</code>, versleuteld met jouw eigen wachtwoord.</div>'+
+      '<div class="err" id="s-err">'+esc(syncError)+'</div>'+
+      '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+
+      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>';
     return;
   }
-  const where='<code>'+esc(cfg.owner)+'/'+esc(cfg.repo)+'</code>';
-  if(!syncKey){
-    el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="ok-line">Gekoppeld met '+where+'. Vul je wachtwoord in om verder te synchroniseren.</div>'+
-      '<div class="field"><label for="s-unlock">Wachtwoord</label><input id="s-unlock" type="password" autocomplete="current-password"></div>'+
-      '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlockBtn">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>';
+  const c=lk.c||(oldCfg?{owner:oldCfg.owner,repo:oldCfg.repo,token:oldCfg.token}:{owner:'',repo:'vaste-lasten-data',token:''});
+  if(lk.step===1){
+    el.innerHTML=h+
+      (oldCfg?'<div class="note"><b>De synchronisatie is vernieuwd.</b> Gezamenlijke en eigen lasten krijgen nu elk een eigen bestand en wachtwoord. Koppel opnieuw; je gegevens van GitHub staan al ingevuld. Je huidige lasten staan onder Eigen; zet de gezamenlijke daarna om.</div>'
+        :'<div class="note">Koppel een privé-repository om je lasten op al je apparaten en met je partner te delen. Alles wordt op dit apparaat versleuteld voordat het naar GitHub gaat.</div>')+
+      '<div class="two">'+fieldHtml('s-owner','GitHub-gebruikersnaam (eigenaar van de repo)','autocapitalize="off" spellcheck="false" autocomplete="off"',c.owner)+fieldHtml('s-repo','Privé-repository','autocapitalize="off" spellcheck="false"',c.repo)+'</div>'+
+      fieldHtml('s-token','Token','type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"',c.token)+
+      '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-next1">Verder</button></div>';
     return;
   }
-  el.innerHTML='<h4>Synchroniseren via GitHub</h4><div class="ok-line">Gekoppeld met '+where+'.'+(lastSync?' Laatst gesynchroniseerd om '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+'.':'')+'</div>'+
-    '<div class="err" id="s-err">'+esc($('syncPill').dataset.s==='err'?syncError:'')+'</div>'+
-    '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+
-    '<div class="note">Ontkoppelen haalt de token en sleutel van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>';
+  const back='<button class="btn" id="s-back">Terug</button>';
+  if(lk.step==='new'){
+    el.innerHTML=h+'<div class="note">Er staan nog geen gezamenlijke lasten in deze repository. Je richt de synchronisatie nu voor jullie allebei in.</div>'+
+      '<div class="two">'+fieldHtml('n-me','Jouw naam','autocomplete="given-name"',meta().p1==='Ik'?'':meta().p1)+fieldHtml('n-partner','Naam partner','autocomplete="off"',meta().p2==='Partner'?'':meta().p2)+'</div>'+
+      '<div class="two">'+fieldHtml('n-s1','Gezamenlijk wachtwoord',PW)+fieldHtml('n-s2','Herhaal gezamenlijk wachtwoord',PW)+'</div>'+
+      '<div class="hint">Dit wachtwoord geef je ook aan je partner.</div>'+
+      '<div class="two">'+fieldHtml('n-e1','Eigen wachtwoord',PW)+fieldHtml('n-e2','Herhaal eigen wachtwoord',PW)+'</div>'+
+      '<div class="hint">Alleen voor jou. Kies een ander wachtwoord dan het gezamenlijke.</div>'+
+      '<div class="err" id="s-err"></div><div class="btns">'+back+'<button class="btn primary" id="s-linkNew">Koppelen</button></div>';
+    return;
+  }
+  if(lk.step==='join'){
+    el.innerHTML=h+'<div class="note">Deze repository bevat al gezamenlijke lasten. Vul het gezamenlijke wachtwoord in.</div>'+
+      fieldHtml('j-s','Gezamenlijk wachtwoord','type="password" autocomplete="off"')+
+      '<div class="err" id="s-err"></div><div class="btns">'+back+'<button class="btn primary" id="s-next2">Verder</button></div>';
+    return;
+  }
+  if(lk.step==='who'){
+    const m=lk.meta;
+    el.innerHTML=h+'<div class="field"><span class="flabel">Wie ben jij?</span><div class="who">'+
+      ['p1','p2'].map(p=>'<label><input type="radio" name="w-me" value="'+p+'"'+(p===(lk.guess||'p2')?' checked':'')+'> '+esc(m[p])+'</label>').join('')+'</div></div>'+
+      '<div class="two">'+fieldHtml('w-e1','Eigen wachtwoord',PW)+fieldHtml('w-e2','Herhaal eigen wachtwoord',PW)+'</div>'+
+      '<div class="hint">Heb je op een ander apparaat al een eigen wachtwoord gekozen? Gebruik dan hetzelfde.</div>'+
+      '<div class="err" id="s-err"></div><div class="btns">'+back+'<button class="btn primary" id="s-linkJoin">Koppelen</button></div>';
+  }
+}
+const sErr=m=>{const e=$('s-err'); if(e) e.textContent=m==='offline'?'Je bent offline. Koppelen kan alleen met internet.':m;};
+async function busy(id,label,fn){
+  const b=$(id), t=b.textContent; b.disabled=true; b.textContent=label; sErr('');
+  try{await fn();}catch(e){sErr(e.message||'Er ging iets mis.'); if(document.body.contains(b)){b.disabled=false;b.textContent=t;}}
+}
+function checkPw(a,b,what){
+  if(a.length<8) throw new SyncError('Kies een '+what+' van minstens 8 tekens.');
+  if(a!==b) throw new SyncError('De twee '+what+'en zijn niet gelijk.');
 }
 
-async function link(){
-  const err=m=>{$('s-err').textContent=m;};
-  const owner=$('s-owner').value.trim().replace(/^@/,''), repo=$('s-repo').value.trim(), token=$('s-token').value.trim(), pass=$('s-pass').value, pass2=$('s-pass2').value;
-  if(!owner||!repo) return err('Vul je GitHub-gebruikersnaam en de naam van de repository in.');
-  if(!token) return err('Plak de token die je op GitHub hebt aangemaakt.');
-  if(pass.length<8) return err('Kies een wachtwoord van minstens 8 tekens.');
-  if(pass!==pass2) return err('De twee wachtwoorden zijn niet gelijk.');
-  const btn=$('s-link'); btn.disabled=true; btn.textContent='Bezig met koppelen…'; err('');
-  const c={owner,repo,token,salt:null};
-  try{
-    const r=await gh('GET','/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),null,c);
-    if(r.status===404||r.status===403) throw new SyncError('Repository '+owner+'/'+repo+' niet gevonden, of de token heeft er geen toegang toe.');
-    if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
-    const info=await r.json();
-    if(!info.private) throw new SyncError('Deze repository is openbaar. Gebruik een privé-repository voor je gegevens.');
-    const {env,sha}=await readRemote(c);
-    let key;
+async function next1(){
+  const owner=$('s-owner').value.trim().replace(/^@/,''), repo=$('s-repo').value.trim(), token=$('s-token').value.trim();
+  if(!owner||!repo) throw new SyncError('Vul de gebruikersnaam van de eigenaar en de naam van de repository in.');
+  if(!token) throw new SyncError('Plak de token die je op GitHub hebt aangemaakt.');
+  const c={owner,repo,token};
+  const r=await gh('GET','/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),null,c);
+  if(r.status===404||r.status===403) throw new SyncError('Repository '+owner+'/'+repo+' niet gevonden, of de token heeft er geen toegang toe.');
+  if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
+  if(!(await r.json()).private) throw new SyncError('Deze repository is openbaar. Gebruik een privé-repository voor je gegevens.');
+  const {env}=await readRemote(c,'samen.json');
+  lk={step:env?'join':'new',c,env};
+  renderSyncPanel();
+}
+async function linkNew(){
+  const n=$('n-me').value.trim(), p=$('n-partner').value.trim();
+  if(!n||!p) throw new SyncError('Vul jouw naam en die van je partner in.');
+  checkPw($('n-s1').value,$('n-s2').value,'gezamenlijk wachtwoord');
+  checkPw($('n-e1').value,$('n-e2').value,'eigen wachtwoord');
+  if($('n-s1').value===$('n-e1').value) throw new SyncError('Kies voor je eigen lasten een ander wachtwoord dan het gezamenlijke.');
+  const c={...lk.c,me:'p1'};
+  await finishLink(c,$('n-s1').value,$('n-e1').value,{p1:n,p2:p,split:meta().split,u:Date.now()});
+}
+async function next2(){
+  const pass=$('j-s').value;
+  if(!pass) throw new SyncError('Vul het gezamenlijke wachtwoord in.');
+  const key=await deriveKey(pass,lk.env.kdf.salt);
+  let remote; try{remote=await openEnv(lk.env,key);}catch(e){throw new SyncError('Dit gezamenlijke wachtwoord klopt niet.');}
+  lk={...lk,step:'who',passS:pass,meta:remote.meta||DEFAULT_META,guess:oldCfg?'p1':'p2'};
+  renderSyncPanel();
+}
+async function linkJoin(){
+  const sel=document.querySelector('input[name="w-me"]:checked');
+  if(!sel) throw new SyncError('Kies wie je bent.');
+  checkPw($('w-e1').value,$('w-e2').value,'eigen wachtwoord');
+  if($('w-e1').value===lk.passS) throw new SyncError('Kies voor je eigen lasten een ander wachtwoord dan het gezamenlijke.');
+  await finishLink({...lk.c,me:sel.value},lk.passS,$('w-e1').value,null);
+}
+async function finishLink(c,passS,passE,newMeta){
+  c.salt={}; const ks={};
+  const next={samen:state.samen,eigen:state.eigen};
+  const writes=[];
+  for(const st of STORES){
+    const file=fileOf(st,c), pass=st==='samen'?passS:passE;
+    const {env,sha}=await readRemote(c,file);
     if(env){
-      c.salt=env.kdf.salt; key=await deriveKey(pass,c.salt);
+      c.salt[st]=env.kdf.salt; ks[st]=await deriveKey(pass,c.salt[st]);
       let remote;
-      try{remote=await open_(env,key);}catch(e){throw new SyncError('Het wachtwoord klopt niet met de gegevens die al in GitHub staan. Gebruik hetzelfde wachtwoord als op je andere apparaat.');}
-      if(remote.items.length) state.items=state.items.filter(i=>!i.example);
-      state=merge(state,remote);
-      saveLocal(); render();
-      const up=withoutExamples(state);
-      if(canonState(up)!==canonState(remote)) await writeRemote(up,sha,c,key);
+      try{remote=await openEnv(env,ks[st]);}
+      catch(e){throw new SyncError(st==='samen'?'Het gezamenlijke wachtwoord klopt niet.':'Je eigen wachtwoord klopt niet met de gegevens die al in GitHub staan. Gebruik hetzelfde wachtwoord als op je andere apparaat.');}
+      let local=next[st];
+      if(remote.items.length) local={...local,items:local.items.filter(i=>!i.example)};
+      next[st]=merge(local,remote);
+      const up=withoutExamples(next[st]);
+      if(canonStore(up)!==canonStore(remote)) writes.push([st,up,sha,file]);
     }else{
-      c.salt=b64(crypto.getRandomValues(new Uint8Array(16))); key=await deriveKey(pass,c.salt);
-      await writeRemote(withoutExamples(state),undefined,c,key);
+      c.salt[st]=newSalt(); ks[st]=await deriveKey(pass,c.salt[st]);
+      if(st==='samen'&&newMeta) next.samen={...next.samen,meta:newMeta};
+      writes.push([st,withoutExamples(next[st]),undefined,file]);
     }
-    cfg=c; syncKey=key; saveCfg(); await keySet(key);
-    lastSync=new Date(); pillIdle(); renderSyncPanel(); toast('Gekoppeld. Je lasten worden nu gesynchroniseerd');
-  }catch(e){
-    err(e.message==='offline'?'Je bent offline. Koppelen kan alleen met internet.':e.message||'Koppelen mislukt.');
-    btn.disabled=false; btn.textContent='Koppelen';
   }
+  for(const [st,up,sha,file] of writes) await writeRemote(up,sha,c,file,ks[st],c.salt[st]);
+  state=next; saveLocal();
+  cfg=c; keys=ks; saveCfg(); ui.me=c.me; saveUi();
+  await keySet('kSamen',ks.samen); await keySet('kEigen',ks.eigen);
+  if(oldCfg){try{localStorage.removeItem(OLDCFG);}catch(e){} keyDel('key'); oldCfg=null;}
+  lk={step:1,c:null}; lastSync=new Date(); syncError='';
+  render(); renderSplitPanel(); pillIdle(); renderSyncPanel();
+  toast('Gekoppeld als '+nameOf(c.me));
 }
 async function unlock(){
-  const pass=$('s-unlock').value, btn=$('s-unlockBtn');
-  btn.disabled=true; $('s-err').textContent='';
-  try{
-    const key=await deriveKey(pass,cfg.salt);
-    const {env}=await readRemote(cfg);
-    if(env){try{await open_(env,key);}catch(e){throw new SyncError('Dit wachtwoord klopt niet.');}}
-    syncKey=key; await keySet(key); renderSyncPanel(); sync();
-  }catch(e){$('s-err').textContent=e.message==='offline'?'Je bent offline. Probeer het opnieuw met internet.':e.message; btn.disabled=false;}
+  const ps=$('u-s').value, pe=$('u-e').value;
+  if(!ps||!pe) throw new SyncError('Vul beide wachtwoorden in.');
+  const ks={};
+  for(const st of STORES){
+    ks[st]=await deriveKey(st==='samen'?ps:pe,cfg.salt[st]);
+    const {env}=await readRemote(cfg,fileOf(st));
+    if(env){try{await openEnv(env,ks[st]);}catch(e){throw new SyncError((st==='samen'?'Het gezamenlijke':'Je eigen')+' wachtwoord klopt niet.');}}
+  }
+  keys=ks; await keySet('kSamen',ks.samen); await keySet('kEigen',ks.eigen);
+  renderSyncPanel(); sync();
 }
 async function unlink(){
-  cfg=null; syncKey=null; saveCfg(); await keyDel(); pillIdle(); renderSyncPanel(); toast('Ontkoppeld op dit apparaat');
+  cfg=null; keys={samen:null,eigen:null}; syncError=''; saveCfg(); await keyDel('kSamen'); await keyDel('kEigen');
+  pillIdle(); renderSyncPanel(); renderSplitPanel(); toast('Ontkoppeld op dit apparaat');
 }
 
 /* ================= events ================= */
 function showTab(name){
-  tab=name;
-  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===name));
+  ui.tab=name; saveUi();
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.tab===name)));
   ['maand','alle','overzicht'].forEach(t=>$('v-'+t).hidden=t!==name);
-  try{localStorage.setItem(KEY+'.tab',name);}catch(e){}
 }
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(b) showTab(b.dataset.tab);});
+$('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]'); if(!b) return; ui.filter=b.dataset.filter; saveUi(); render();});
 $('prev').onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--;} render();};
 $('next').onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++;} render();};
 $('syncPill').onclick=()=>{showTab('overzicht'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
@@ -590,20 +791,26 @@ $('syncPill').onclick=()=>{showTab('overzicht'); $('syncPanel').scrollIntoView({
 let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-toggle]');
-  if(t){const k=mkey(view.y,view.m), id=t.dataset.toggle; state.paid[k]=state.paid[k]||{};
-    const cur=!!(state.paid[k][id]&&state.paid[k][id].p); state.paid[k][id]={p:!cur,u:Date.now()}; save(); render(); return;}
-  const ed=e.target.closest('[data-edit]'); if(ed){openForm(state.items.find(i=>i.id===ed.dataset.edit)); return;}
+  if(t){const f=findItem(t.dataset.toggle); if(!f) return;
+    const k=mkey(view.y,view.m), P=state[f.st].paid; P[k]=P[k]||{};
+    const cur=!!(P[k][f.item.id]&&P[k][f.item.id].p); P[k][f.item.id]={p:!cur,u:Date.now()}; save(); render(); return;}
+  const ed=e.target.closest('[data-edit]'); if(ed){const f=findItem(ed.dataset.edit); if(f) openForm(f); return;}
   const id=e.target.id;
-  if(id==='clearEx'){state.items=state.items.filter(i=>!i.example); save(); render(); toast('Voorbeelden gewist');}
-  if(id==='copyBk'){const txt=JSON.stringify(state);
+  if(id==='clearEx'){STORES.forEach(st=>state[st].items=state[st].items.filter(i=>!i.example)); save(); render(); toast('Voorbeelden gewist');}
+  if(id==='copyBk'){const txt=JSON.stringify({v:2,samen:state.samen,eigen:state.eigen});
     const fb=()=>{$('bkText').value=txt;$('bkText').select();toast('Back-up staat in het tekstvak, kopieer hem daar');};
     try{navigator.clipboard.writeText(txt).then(()=>toast('Back-up gekopieerd'),fb);}catch(err){fb();}}
-  if(id==='dlBk'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));
+  if(id==='dlBk'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({v:2,samen:state.samen,eigen:state.eigen},null,2)],{type:'application/json'}));
     a.download='vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();}
   if(id==='restoreBk') restore($('bkText').value);
   if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
-  if(id==='s-link') link();
-  if(id==='s-unlockBtn') unlock();
+  if(id==='m-save') saveSplit();
+  if(id==='s-next1') busy(id,'Controleren…',next1);
+  if(id==='s-next2') busy(id,'Controleren…',next2);
+  if(id==='s-linkNew') busy(id,'Bezig met koppelen…',linkNew);
+  if(id==='s-linkJoin') busy(id,'Bezig met koppelen…',linkJoin);
+  if(id==='s-unlock') busy(id,'Controleren…',unlock);
+  if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now') sync();
   if(id==='s-unlink'){
     if(!unlinkArmed){unlinkArmed=true;e.target.classList.add('armed');e.target.textContent='Zeker weten? Tik nogmaals';setTimeout(()=>{unlinkArmed=false;},4000);}
@@ -614,21 +821,36 @@ document.addEventListener('change',e=>{
   if(e.target.id==='fileBk'&&e.target.files[0]){const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(e.target.files[0]);}
 });
 function restore(txt){
-  try{const s=migrate(JSON.parse(txt)); if(!s) throw 0;
-    const t=Date.now(); s.items.forEach(i=>{i.u=t; i.example=false;});
-    state=merge({items:[],del:state.del,paid:state.paid},s);
-    state.items.forEach(i=>{if(state.del[i.id]) delete state.del[i.id];});
-    save(); render(); toast('Back-up teruggezet: '+state.items.length+' lasten');}
+  try{const s=migrateAll(JSON.parse(txt)); if(!s) throw 0;
+    const t=Date.now(); let n=0;
+    for(const st of STORES){
+      s[st].items.forEach(i=>{i.u=t; i.example=false; n++;});
+      const cur=state[st];
+      state[st]=merge({items:[],del:cur.del,paid:cur.paid,meta:cur.meta},s[st]);
+      state[st].items.forEach(i=>{delete state[st].del[i.id];});
+    }
+    save(); render(); toast('Back-up teruggezet: '+n+' lasten');}
   catch(e){toast('Dit is geen geldige back-up. Plak de volledige tekst die je eerder kopieerde.');}
 }
 
-/* form */
+/* ---------- formulier ---------- */
 $('f-cat').innerHTML=CATS.map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
 $('f-month').innerHTML=MONTHS.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
 $('f-freq').onchange=()=>{$('monthField').hidden=$('f-freq').value==='m';};
-function openForm(item){
-  editing=item||null;
+const typeVal=()=>$('f-type-s').checked?'samen':'eigen';
+function syncTypeUi(){
+  const j=typeVal()==='samen';
+  $('splitField').hidden=!j;
+  $('f-split').placeholder=String(myDefault());
+  $('splitHint').textContent='Leeg laten voor de standaard ('+myDefault()+'%). '+nameOf(other())+' betaalt de rest.';
+}
+$('f-type-e').onchange=syncTypeUi; $('f-type-s').onchange=syncTypeUi;
+
+function openForm(f){
+  editing=f||null; const item=f&&f.item;
   $('formTitle').textContent=item?'Vaste last bewerken':'Nieuwe vaste last';
+  const st=f?f.st:(ui.filter==='samen'?'samen':'eigen');
+  $('f-type-s').checked=st==='samen'; $('f-type-e').checked=st!=='samen';
   $('f-name').value=item?item.name:'';
   $('f-amount').value=item?item.amount.toFixed(2).replace('.',','):'';
   $('f-cat').value=item?cat(item.cat).id:'wonen';
@@ -636,7 +858,9 @@ function openForm(item){
   $('f-day').value=item?item.day:1;
   $('f-month').value=item?item.month:(view.m+1);
   $('f-note').value=item?item.note||'':'';
+  $('f-split').value=item&&item.split!=null?(me()==='p1'?item.split:100-item.split):'';
   $('monthField').hidden=$('f-freq').value==='m';
+  syncTypeUi();
   $('delBtn').hidden=!item; $('delBtn').classList.remove('armed'); $('delBtn').textContent='Verwijderen';
   $('formErr').textContent='';
   $('scrim').hidden=false; setTimeout(()=>$('f-name').focus(),50);
@@ -650,23 +874,33 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('scrim').hidden)
 $('delBtn').onclick=()=>{
   const b=$('delBtn');
   if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Zeker weten? Tik nogmaals';return;}
-  state.items=state.items.filter(i=>i.id!==editing.id);
-  if(!editing.example) state.del[editing.id]=Date.now();
-  const n=editing.name; save(); closeForm(); render(); toast(n+' verwijderd');
+  const {st,item}=editing;
+  state[st].items=state[st].items.filter(i=>i.id!==item.id);
+  if(!item.example) state[st].del[item.id]=Date.now();
+  save(); closeForm(); render(); toast(item.name+' verwijderd');
 };
 $('form').addEventListener('submit',e=>{
   e.preventDefault();
   const name=$('f-name').value.trim(), amount=parseAmount($('f-amount').value), day=parseInt($('f-day').value,10);
+  const target=typeVal(), sv=$('f-split').value.trim();
   if(!name){$('formErr').textContent='Vul een omschrijving in, bijvoorbeeld "Hypotheek".';return;}
   if(!(amount>0)){$('formErr').textContent='Vul een bedrag groter dan 0 in, bijvoorbeeld 152,35.';return;}
   if(!(day>=1&&day<=31)){$('formErr').textContent='Kies een dag tussen 1 en 31.';return;}
-  const data={name,amount,cat:$('f-cat').value,freq:$('f-freq').value,day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false,u:Date.now()};
+  if(target==='samen'&&sv!==''&&!(+sv>=0&&+sv<=100)){$('formErr').textContent='Jouw deel moet tussen 0 en 100 procent liggen.';return;}
+  const split=target==='samen'&&sv!==''?(me()==='p1'?clampPct(sv):100-clampPct(sv)):null;
+  const t=Date.now();
+  const data={name,amount,cat:$('f-cat').value,freq:$('f-freq').value,day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false,u:t,split};
   const wasEdit=!!editing;
   if(editing){
-    if(editing.example){ // een aangepast voorbeeld wordt een echte last met eigen id
-      state.items=state.items.filter(i=>i!==editing); state.items.push({id:uid(),...data});
-    } else Object.assign(editing,data);
-  } else state.items.push({id:uid(),...data});
+    const {st,item}=editing;
+    if(item.example){ // een aangepast voorbeeld wordt een echte last met eigen id
+      state[st].items=state[st].items.filter(i=>i!==item); state[target].items.push({id:uid(),...data});
+    }else if(st!==target){ // verplaatsen tussen eigen en gezamenlijk
+      state[st].items=state[st].items.filter(i=>i!==item); state[st].del[item.id]=t;
+      for(const k in state[st].paid){const v=state[st].paid[k][item.id]; if(v){state[target].paid[k]=state[target].paid[k]||{}; state[target].paid[k][item.id]={p:v.p,u:t};}}
+      state[target].items.push({id:item.id,...data});
+    }else Object.assign(item,data);
+  }else state[target].items.push({id:uid(),...data});
   save(); closeForm(); render(); toast(wasEdit?'Opgeslagen':name+' toegevoegd');
 });
 
@@ -681,10 +915,10 @@ if(IS_PWA){
   window.addEventListener('offline',pillIdle);
 }
 
-try{const t=localStorage.getItem(KEY+'.tab'); if(t&&$('t-'+t)) showTab(t);}catch(e){}
-render(); renderSyncPanel(); pillIdle();
-if(IS_PWA&&cfg){keyGet().then(k=>{if(k){syncKey=k;} renderSyncPanel(); sync();});}
-
+if(['maand','alle','overzicht'].includes(ui.tab)) showTab(ui.tab);
+if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
+saveLocal(); render(); renderSyncPanel(); pillIdle();
+if(IS_PWA&&cfg){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(([s,e])=>{keys={samen:s||null,eigen:e||null}; renderSyncPanel(); sync();});}
 })();
 </script>
 
