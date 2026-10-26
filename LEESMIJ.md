@@ -9,6 +9,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `index.html` | De app zelf |
 | `manifest.webmanifest` | Naam, kleuren en iconen voor installatie |
 | `sw.js` | Service worker: laat de app offline werken |
+| `version.json` | Het actuele versienummer; hiermee ziet de app dat er een update is |
 | `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
@@ -104,8 +105,10 @@ Een tweede apparaat van dezelfde persoon koppel je op dezelfde manier: kies deze
 
 ## App bijwerken
 
-Elke versie heeft een eigen versienummer; zie `CHANGELOG.md` of in de app *Overzicht → Versie*.
+Elke versie heeft een eigen versienummer. Je ziet het klein naast de naam, linksboven; tik erop voor de lijst met wijzigingen. Alles staat ook in `CHANGELOG.md`.
 
-1. Upload de nieuwe `index.html` en `sw.js` naar de publieke repo (bij een nieuwe versie altijd allebei).
-2. Open de app; sluit hem zo nodig helemaal af en open hem opnieuw. Onder *Overzicht → Versie* zie je of de nieuwe versie actief is.
+1. Upload bij een nieuwe versie altijd deze drie bestanden naar de publieke repo: `index.html`, `sw.js` en `version.json`.
+2. Op je apparaten verandert het label linksboven binnen een paar minuten in **Update beschikbaar** (op de iPhone: **Update**). Tik erop en de app werkt zichzelf bij.
 3. Werk ook de apparaten van je partner bij, zeker bij een versie met *Let op* in de changelog.
+
+De app controleert op updates bij openen, als je hem weer naar voren haalt en als je weer online komt.

@@ -235,13 +235,20 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .log{display:grid;gap:14px;margin-top:10px}
 .log-h{display:flex;gap:10px;align-items:baseline}
 .log ul{margin:4px 0 0;padding-left:18px;display:grid;gap:3px;font-size:14px}
+.ver{border:1px solid transparent;background:transparent;color:var(--muted);font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:0;padding:3px 7px;border-radius:999px;align-self:center;white-space:nowrap}
+.ver:hover{border-color:var(--line);color:var(--ink)}
+.ver[data-update]{background:var(--accent);color:var(--accent-ink);font-family:var(--f-body);font-weight:600;padding:4px 10px}
+.ver[data-update]:hover{color:var(--accent-ink)}
+.update-line{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:9px;padding:10px 12px}
+.pill-short{display:none}
+@media (max-width:719.98px){.ver-long,.pill-long{display:none}.pill-short{display:inline}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap" lang="nl">
  <div class="side">
   <header class="top">
-    <div class="brand"><i aria-hidden="true">€</i>Vaste Lasten</div>
+    <div class="brand"><i aria-hidden="true">€</i>Vaste Lasten<button class="ver" id="verBtn">v2.3.0</button></div>
     <button class="sync-pill" id="syncPill" hidden data-s="ok">Gesynchroniseerd</button>
     <div class="month" role="group" aria-label="Maand kiezen">
       <button id="prev" aria-label="Vorige maand">‹</button>
@@ -350,8 +357,8 @@ const CATS=[
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks'};
 const PERIOD={m:1,q:3,h:6,y:12};   // aantal maanden tussen twee afschrijvingen
-const APP_VERSION='2.2.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
-const CHANGELOG=/*CHANGELOG*/[{"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
+const APP_VERSION='2.3.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
+const CHANGELOG=/*CHANGELOG*/[{"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
 const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
@@ -564,13 +571,65 @@ function renderOverview(items,avgMine){
 }
 
 function renderAbout(){
-  const el=$('aboutPanel'); if(!el||el.dataset.v===APP_VERSION) return;
-  el.dataset.v=APP_VERSION;
+  const el=$('aboutPanel'), key=APP_VERSION+'|'+(newVersion||'');
+  if(!el||el.dataset.v===key) return;
+  const wasOpen=!!el.querySelector('details[open]');
+  el.dataset.v=key;
   el.innerHTML='<h4>Versie '+esc(APP_VERSION)+'</h4>'+
-    (CHANGELOG[0]?'<div class="note">Bijgewerkt op '+esc(CHANGELOG[0].date)+'.</div>':'')+
+    (newVersion?'<div class="update-line"><span>Versie <b class="num">'+esc(newVersion)+'</b> staat klaar.</span><button class="btn primary" data-update>Nu bijwerken</button></div>'
+      :(CHANGELOG[0]?'<div class="note">Bijgewerkt op '+esc(CHANGELOG[0].date)+'.</div>':''))+
     '<details><summary>Wat is er veranderd</summary><div class="log">'+
     CHANGELOG.map(r=>'<div><div class="log-h"><b class="num">'+esc(r.version)+'</b><span class="note">'+esc(r.date)+'</span></div><ul>'+r.items.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>').join('')+
     '</div></details>';
+  if(wasOpen) el.querySelector('details').open=true;
+}
+
+/* ---------- versielabel en updates ---------- */
+let newVersion=null, lastCheck=0, updating=false;
+function cmpVer(a,b){
+  a=String(a).split('.').map(Number); b=String(b).split('.').map(Number);
+  for(let i=0;i<3;i++){const d=(a[i]||0)-(b[i]||0); if(d) return d;}
+  return 0;
+}
+function renderVer(){
+  const b=$('verBtn');
+  if(newVersion){
+    b.dataset.update='1';
+    b.innerHTML='<span aria-hidden="true">↑</span> Update<span class="ver-long"> beschikbaar</span>';
+    b.title='Versie '+newVersion+' staat klaar. Tik om bij te werken.';
+    b.setAttribute('aria-label','Versie '+newVersion+' staat klaar, tik om bij te werken');
+  }else{
+    delete b.dataset.update;
+    b.textContent='v'+APP_VERSION;
+    b.title='Versie '+APP_VERSION+'. Tik om te zien wat er veranderde.';
+    b.setAttribute('aria-label','Versie '+APP_VERSION+', bekijk wat er veranderde');
+  }
+  renderAbout();
+}
+async function checkUpdate(force){
+  if(!IS_PWA||!navigator.onLine) return;
+  if(!force&&Date.now()-lastCheck<5*60*1000) return;
+  lastCheck=Date.now();
+  try{
+    // de tijd in de url zorgt dat ook een oudere service worker het bestand niet uit de cache haalt
+    const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const j=await r.json();
+    const v=j&&typeof j.version==='string'&&cmpVer(j.version,APP_VERSION)>0?j.version:null;
+    if(v!==newVersion){newVersion=v; renderVer();}
+  }catch(e){}
+}
+async function applyUpdate(){
+  if(updating) return; updating=true;
+  const b=$('verBtn'); b.disabled=true; b.textContent='Bijwerken…';
+  if(timer&&cfg&&hasKeys()){clearTimeout(timer); try{await sync();}catch(e){}}   // openstaande wijzigingen eerst wegschrijven
+  try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration(); if(reg) await reg.update();}catch(e){}
+  location.reload();
+}
+function showVersionInfo(){
+  showTab('overzicht');
+  const d=$('aboutPanel').querySelector('details'); if(d) d.open=true;
+  $('aboutPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderInleg(){
   const el=$('inlegPanel');
@@ -672,9 +731,12 @@ async function writeRemote(obj,sha,c,file,key,salt){
   return (await r.json()).content.sha;
 }
 
+const PILL_SHORT={'Wachtwoord nodig':'Slot','Offline':'Offline','Gesynchroniseerd':'Sync','Synchroniseren…':'Sync…','Sync-fout':'Fout'};
 function setPill(s,text,title){
   const p=$('syncPill'); if(!cfg){p.hidden=true;return;}
-  p.hidden=false; p.dataset.s=s; p.textContent=text; p.title=title||'';
+  p.hidden=false; p.dataset.s=s; p.title=title||text;
+  p.setAttribute('aria-label',text+(title?'. '+title:''));
+  p.innerHTML='<span class="pill-long">'+esc(text)+'</span><span class="pill-short" aria-hidden="true">'+esc(PILL_SHORT[text]||text)+'</span>';
 }
 const hasKeys=()=>!!(keys.samen&&keys.eigen);
 function pillIdle(){
@@ -900,6 +962,7 @@ document.addEventListener('keydown',e=>{
 $('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]'); if(!b) return; ui.filter=b.dataset.filter; saveUi(); render();});
 $('prev').onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--;} render();};
 $('next').onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++;} render();};
+$('verBtn').onclick=()=>{newVersion?applyUpdate():showVersionInfo();};
 $('syncPill').onclick=()=>{showTab('overzicht'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
 
 let unlinkArmed=false;
@@ -919,6 +982,7 @@ document.addEventListener('click',e=>{
   if(id==='restoreBk') restore($('bkText').value);
   if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
   if(id==='m-save') saveSplit();
+  if(e.target.closest('[data-update]')) applyUpdate();
   if(id==='s-next1') busy(id,'Controleren…',next1);
   if(id==='s-next2') busy(id,'Controleren…',next2);
   if(id==='s-linkNew') busy(id,'Bezig met koppelen…',linkNew);
@@ -1024,14 +1088,14 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=
 if(IS_PWA){
   $('dlBk').hidden=false;
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}}
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') sync();});
-  window.addEventListener('online',sync);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){sync(); checkUpdate();}});
+  window.addEventListener('online',()=>{sync(); checkUpdate(true);});
   window.addEventListener('offline',pillIdle);
 }
 
 if(['maand','alle','overzicht'].includes(ui.tab)) showTab(ui.tab);
 if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
-saveLocal(); render(); renderSyncPanel(); pillIdle();
+saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
 if(IS_PWA&&cfg){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(([s,e])=>{keys={samen:s||null,eigen:e||null}; renderSyncPanel(); sync();});}
 })();
 </script>

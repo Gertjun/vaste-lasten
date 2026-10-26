@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.3.0 — 26 oktober 2026
+- Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.
+- Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.
+- Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee.
+
 ## 2.2.0 — 26 oktober 2026
 - Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.
 - Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.
