@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.4.1 — 26 oktober 2026
+- Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is.
+
 ## 2.4.0 — 26 oktober 2026
 - Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.
 - Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.

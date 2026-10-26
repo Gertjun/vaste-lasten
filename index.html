@@ -406,8 +406,8 @@ const CATS=[
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks'};
 const PERIOD={m:1,q:3,h:6,y:12};   // aantal maanden tussen twee afschrijvingen
-const APP_VERSION='2.4.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
-const CHANGELOG=/*CHANGELOG*/[{"version": "2.4.0", "date": "26 oktober 2026", "items": ["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.", "Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.", "Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.", "Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.", "Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.", "Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]}, {"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
+const APP_VERSION='2.4.1';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
+const CHANGELOG=/*CHANGELOG*/[{"version": "2.4.1", "date": "26 oktober 2026", "items": ["Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is."]}, {"version": "2.4.0", "date": "26 oktober 2026", "items": ["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.", "Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.", "Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.", "Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.", "Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.", "Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]}, {"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
 const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
@@ -619,7 +619,7 @@ function niceStep(v){
   const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e;
   return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e;
 }
-function chartHtml(vals,avg,T){
+function chartHtml(vals,avg,T,title){
   const max=Math.max(...vals); if(!(max>0)) return '';
   const step=niceStep(max/3), top=step*Math.ceil(max/step-1e-9);
   const ticks=[]; for(let v=0;v<=top+1e-6;v+=step) ticks.push(v);
@@ -628,7 +628,7 @@ function chartHtml(vals,avg,T){
     '<div class="yax" aria-hidden="true">'+ticks.map(v=>'<span style="bottom:'+pc(v)+'">'+eur0.format(v)+'</span>').join('')+'</div>'+
     '<div class="plot">'+ticks.slice(1).map(v=>'<i class="gl" style="bottom:'+pc(v)+'"></i>').join('')+
       '<i class="avg" style="bottom:'+pc(avg)+'"></i>'+
-      '<div class="bars" role="group" aria-label="Jouw kosten per maand in '+T.y+'">'+vals.map((v,m)=>
+      '<div class="bars" role="group" aria-label="'+title+' per maand in '+T.y+'">'+vals.map((v,m)=>
         '<button data-month="'+m+'" style="--h:'+pc(v)+'"'+(m===T.m?' aria-current="date"':'')+(m<2?' class="tl"':m>9?' class="tr"':'')+
         ' aria-label="'+MONTHS[m]+': '+fmt(v)+'. Open deze maand."><b></b><span class="tip" aria-hidden="true">'+MONTHS[m].slice(0,3)+' · '+fmt(v)+'</span></button>').join('')+
       '</div></div>'+
@@ -656,16 +656,24 @@ function renderOverview(items){
     (nxt.length?'<div class="list">'+nxt.map(i=>rowHtml(i,T.y,T.m)).join('')+'</div>'+
        (open.length>nxt.length?'<button class="link" data-goto="maand">Nog '+(open.length-nxt.length)+' meer in '+mName+' →</button>':'')
       :'<div class="empty small">Alles voor '+mName+' is betaald.</div>')+'</div>';
-  /* jouw kosten + jaargrafiek */
-  const vals=MONTHS.map((_,m)=>items.filter(i=>occurs(i,m)).reduce((s,i)=>s+myAmt(i,i.amount),0));
+  /* kosten + jaargrafiek: titel en bedragen volgen het filter */
+  const full=ui.filter!=='eigen';                       // bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee
+  const perMonth=f=>MONTHS.map((_,m)=>items.filter(i=>occurs(i,m)).reduce((s,i)=>s+f(i),0));
+  const vals=perMonth(i=>full?i.amount:myAmt(i,i.amount));
   const year=vals.reduce((a,b)=>a+b,0), avg=year/12;
+  const myAvg=items.reduce((s,i)=>s+myAmt(i,monthly(i)),0);
   let pk=0; vals.forEach((v,m)=>{if(v>vals[pk]) pk=m;});
-  h+='<div class="card ov-cost"><h3>Jouw kosten <span class="note">'+T.y+'</span></h3>'+
+  const costTitle={alle:'Totale kosten',samen:'Gezamenlijke kosten',eigen:'Jouw kosten'}[ui.filter];
+  const costNote={alle:'Gezamenlijke lasten tellen volledig mee, plus je eigen lasten.',
+    samen:'De volledige bedragen van jullie gezamenlijke lasten.',
+    eigen:'Alleen je eigen lasten.'}[ui.filter];
+  h+='<div class="card ov-cost"><h3>'+costTitle+' <span class="note">'+T.y+'</span></h3>'+
     '<div class="tiles"><div><span class="lbl">Gemiddeld per maand</span><span class="num">'+fmt(avg)+'</span></div>'+
     '<div><span class="lbl">Per jaar</span><span class="num">'+fmt(year)+'</span></div>'+
     '<div><span class="lbl">Duurste maand</span><span class="val">'+(vals[pk]>0?MONTHS[pk]+' <span class="num" style="display:inline;font-weight:500;color:var(--muted)">'+eur0.format(vals[pk])+'</span>':'–')+'</span></div></div>'+
-    chartHtml(vals,avg,T)+
-    '<div class="note">Jouw deel per maand. De stippellijn is het gemiddelde. Tik op een maand om hem te openen.</div></div>';
+    (full&&Math.abs(myAvg-avg)>0.005?'<div class="note">Jouw deel hiervan: <b class="num">'+fmt(myAvg)+'</b> per maand, <span class="num">'+fmt(myAvg*12)+'</span> per jaar.</div>':'')+
+    chartHtml(vals,avg,T,costTitle)+
+    '<div class="note">'+costNote+' De stippellijn is het gemiddelde. Tik op een maand om hem te openen.</div></div>';
   /* gezamenlijke rekening */
   let hInleg='';
   const js=state.samen.items.map(i=>({...i,joint:true}));
@@ -681,7 +689,7 @@ function renderOverview(items){
   const rows=CATS.map(c=>({c,sum:items.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+myAmt(i,monthly(i)),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
   const max=rows.length?rows[0].sum:1;
   h+='<div class="card ov-cats"><h3>Per categorie <span class="note">jouw deel per maand</span></h3>'+
-    rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'</div>';
+    rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/myAvg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'</div>';
   el.innerHTML='<div class="ov"><div class="ov-left">'+hMonth+hInleg+'</div>'+h+'</div>';
 }
 
