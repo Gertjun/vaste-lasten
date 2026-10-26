@@ -9,6 +9,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `index.html` | De app zelf |
 | `manifest.webmanifest` | Naam, kleuren en iconen voor installatie |
 | `sw.js` | Service worker: laat de app offline werken |
+| `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
 ## Indeling per apparaat
@@ -103,4 +104,8 @@ Een tweede apparaat van dezelfde persoon koppel je op dezelfde manier: kies deze
 
 ## App bijwerken
 
-Upload een nieuwe `index.html` naar de publieke repo; de app haalt hem vanzelf op. Verander je iconen of het manifest, verhoog dan `CACHE` in `sw.js`.
+Elke versie heeft een eigen versienummer; zie `CHANGELOG.md` of in de app *Overzicht → Versie*.
+
+1. Upload de nieuwe `index.html` en `sw.js` naar de publieke repo (bij een nieuwe versie altijd allebei).
+2. Open de app; sluit hem zo nodig helemaal af en open hem opnieuw. Onder *Overzicht → Versie* zie je of de nieuwe versie actief is.
+3. Werk ook de apparaten van je partner bij, zeker bij een versie met *Let op* in de changelog.
