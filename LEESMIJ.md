@@ -11,6 +11,15 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `sw.js` | Service worker: laat de app offline werken |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
+## Indeling per apparaat
+
+De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of een smaller laptopvenster.
+
+- **iPhone**: één kolom, tabbladen in een balk onderin binnen bereik van je duim, grotere tikvlakken.
+- **iPad staand**: samenvatting als brede band, *Nog te betalen* en *Betaald* naast elkaar, categorieën in twee kolommen.
+- **iPad liggend en laptop**: vaste zijbalk met maand, samenvatting, navigatie en *Nieuwe last*; het werkvlak gebruikt twee tot drie kolommen.
+- **Laptop-sneltoetsen**: `N` nieuwe last, `←` `→` vorige of volgende maand, `1` `2` `3` tabbladen, `Esc` sluit het formulier.
+
 ## Hoe de gegevens zijn verdeeld
 
 In de privé-repository staan drie bestanden, die de app zelf aanmaakt:
