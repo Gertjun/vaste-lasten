@@ -13,6 +13,13 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
+## Onderdelen
+
+- **Overzicht** (startscherm): de stand van deze maand, de eerstvolgende afschrijvingen om af te vinken, jouw kosten met een jaargrafiek, de gezamenlijke rekening en de verdeling per categorie.
+- **Maand**: de afvinklijst per maand, met *Nog te betalen* en *Betaald*.
+- **Lasten**: al je vaste lasten per categorie, om toe te voegen en te bewerken.
+- **Instellingen**: huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up, en informatie over de app.
+
 ## Indeling per apparaat
 
 De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of een smaller laptopvenster.
@@ -62,15 +69,15 @@ Geef je partner de tweede token op een veilige manier, bijvoorbeeld via een gede
 
 ## 4. Koppelen: eerste persoon
 
-1. Open de app → **Overzicht → Synchroniseren via GitHub**.
+1. Open de app → **Instellingen → Synchroniseren via GitHub**.
 2. Vul je GitHub-gebruikersnaam, `vaste-lasten-data` en je token in → **Verder**.
 3. Vul jouw naam, de naam van je partner, een **gezamenlijk wachtwoord** (2×) en een **eigen wachtwoord** (2×) in → **Koppelen**.
-4. Zet daarna bij *Alle lasten* de gedeelde lasten om naar **Gezamenlijk** (potloodje → Soort → Gezamenlijk → Opslaan).
+4. Zet daarna bij *Lasten* de gedeelde lasten om naar **Gezamenlijk** (tik op de last → Soort → Gezamenlijk → Opslaan).
 
 ## 5. Koppelen: partner
 
 1. Partner installeert de app vanaf dezelfde link.
-2. **Overzicht → Synchroniseren via GitHub**: vul **jouw** GitHub-gebruikersnaam in (de eigenaar), `vaste-lasten-data` en de partner-token → **Verder**.
+2. **Instellingen → Synchroniseren via GitHub**: vul **jouw** GitHub-gebruikersnaam in (de eigenaar), `vaste-lasten-data` en de partner-token → **Verder**.
 3. Vul het gezamenlijke wachtwoord in → **Verder**.
 4. Kies de eigen naam, kies een eigen wachtwoord (2×) → **Koppelen**.
 
@@ -78,7 +85,7 @@ Een tweede apparaat van dezelfde persoon koppel je op dezelfde manier: kies deze
 
 ## Verdeling en inleg
 
-- Onder **Overzicht → Verdeling gezamenlijke lasten** stel je de namen en de standaardverdeling in (bijvoorbeeld 60/40). Dat geldt voor jullie allebei.
+- Onder **Instellingen → Huishouden** stel je de namen en de standaardverdeling in (bijvoorbeeld 60/40). Dat geldt voor jullie allebei.
 - Per gezamenlijke last kun je afwijken via *Jouw deel (%)*. Leeg laten = standaard.
 - **Gezamenlijke rekening** toont wat ieder maandelijks moet overmaken. Kwartaal- en jaarbedragen zijn over het jaar gespreid.
 - Met de knoppen *Alles · Gezamenlijk · Eigen* filter je alle schermen.

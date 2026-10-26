@@ -7,6 +7,14 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.4.0 — 26 oktober 2026
+- Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.
+- Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.
+- Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.
+- Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.
+- Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.
+- Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet.
+
 ## 2.3.0 — 26 oktober 2026
 - Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.
 - Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.

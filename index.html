@@ -19,10 +19,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: telefoon = één kolom met tabbalk onderin; tablet = brede samenvatting + twee kolommen; laptop = vaste zijbalk + werkvlak met 2-3 kolommen */
+/* Layout: vier onderdelen (Overzicht start, Maand, Lasten, Instellingen). Telefoon = één kolom met tabbalk onderin; tablet = twee kolommen; laptop = vaste zijbalk + werkvlak */
 :root{
   --bg:#eaeff2; --surface:#ffffff; --sunken:#f3f6f8; --ink:#15212a; --muted:#5a6a76; --line:#d3dce2;
-  --accent:#0d6570; --accent-ink:#ffffff; --accent-soft:#d9ecee;
+  --accent:#0d6570; --accent-ink:#ffffff; --accent-soft:#d9ecee; --bar:#93c4ca;
   --ok:#2c7a4b; --ok-soft:#dcefe3; --warn:#a25f00; --warn-soft:#f7e8d0; --bad:#b0322a;
   --c1:#0d6570; --c2:#7a4fc4; --c3:#c27a12; --c4:#2f7fc1; --c5:#b0432f; --c6:#6b7d3a; --c7:#7d8a94;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
@@ -32,13 +32,13 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1418; --surface:#162027; --sunken:#121a20; --ink:#e4ebef; --muted:#94a3ad; --line:#26333c;
-  --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f;
+  --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f; --bar:#2d6870;
   --ok:#5cc58a; --ok-soft:#173527; --warn:#e7a54a; --warn-soft:#3a2b14; --bad:#ef7a70;
   --c1:#4cb0bb; --c2:#a888e6; --c3:#e0a243; --c4:#6eaee6; --c5:#e47f6a; --c6:#a3b86a; --c7:#9aa7b0;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1418; --surface:#162027; --sunken:#121a20; --ink:#e4ebef; --muted:#94a3ad; --line:#26333c;
-  --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f;
+  --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f; --bar:#2d6870;
   --ok:#5cc58a; --ok-soft:#173527; --warn:#e7a54a; --warn-soft:#3a2b14; --bad:#ef7a70;
   --c1:#4cb0bb; --c2:#a888e6; --c3:#e0a243; --c4:#6eaee6; --c5:#e47f6a; --c6:#a3b86a; --c7:#9aa7b0;
   color-scheme:dark}
@@ -157,7 +157,7 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;bac
 .who{display:grid;gap:8px}
 .who label{display:flex;align-items:center;gap:10px;background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:600;cursor:pointer}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;font-weight:500;max-width:calc(100% - 32px)}
-@media (max-width:440px){.sum-grid{grid-template-columns:1fr 1fr}.sum-grid div:last-child{grid-column:1/-1}.month span{min-width:104px}}
+@media (max-width:440px){.sum-grid{grid-template-columns:1fr 1fr}.sum-grid div:last-child{grid-column:1/-1}.mhead .month span{min-width:120px}}
 
 /* ---------- indeling per schermgrootte ---------- */
 html{-webkit-text-size-adjust:100%}
@@ -171,9 +171,51 @@ kbd{font-family:var(--f-mono);font-size:11.5px;background:var(--surface);border:
 .colh .num{font-size:13px;color:var(--muted)}
 .empty.small{padding:16px;font-size:14px}
 .groups .group{break-inside:avoid}
-#v-alle>.panel{margin:0 0 16px}
-#v-overzicht>*{break-inside:avoid;margin:0 0 12px}
-#v-overzicht .stats{margin-bottom:12px}
+#v-lasten>.panel{margin:0 0 16px}
+.set-group{break-inside:avoid;display:grid;gap:10px;margin:0 0 22px}
+.set-group .panel{margin:0}
+.set-h{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.mhead .month span{min-width:150px;font-size:16px}
+#v-maand .summary{margin-bottom:18px}
+.link{border:0;background:none;color:var(--accent);font-weight:600;padding:4px 0;justify-self:start;text-align:left}
+.link:hover{text-decoration:underline}
+button.info{border:0;background:none;padding:0;margin:0;text-align:left;color:inherit;font:inherit;cursor:pointer;display:block;width:100%}
+button.info .name{display:block}
+@media (hover:hover){button.info:hover .name{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}}
+/* overzicht */
+.ov{display:grid;gap:12px;align-items:start}
+.ov-left{display:contents}
+.ov-month{order:1}.ov-next{order:2}.ov-cost{order:3}.ov-inleg{order:4}.ov-cats{order:5}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:12px;min-width:0;align-content:start}
+.card h3{margin:0;font-family:var(--f-display);font-size:16px;font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.card h3 .note{font-family:var(--f-body);font-weight:400}
+.ov-month .big{font-size:clamp(30px,8vw,38px)}
+.ov-next .row{padding:10px 12px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tiles div{background:var(--sunken);border-radius:9px;padding:9px 11px;min-width:0}
+.tiles .num,.tiles .val{display:block;font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles .val{font-weight:600;text-transform:capitalize}
+.ov-cats .cat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}
+/* jaargrafiek */
+.chart{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:8px;row-gap:6px;padding-top:8px}
+.yax{position:relative;height:150px;min-width:48px}
+.yax span{position:absolute;right:0;transform:translateY(50%);font-family:var(--f-mono);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.plot{position:relative;height:150px;border-bottom:1px solid var(--line)}
+.plot .gl{position:absolute;left:0;right:0;border-top:1px solid var(--line);opacity:.7}
+.plot .avg{position:absolute;left:0;right:0;border-top:2px dashed var(--muted);opacity:.75;z-index:2;pointer-events:none}
+.bars{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;align-items:end}
+.bars button{height:100%;border:0;background:transparent;padding:0;display:flex;align-items:flex-end;justify-content:center;position:relative;cursor:pointer;min-width:0}
+.bars b{display:block;width:72%;max-width:30px;height:var(--h);min-height:2px;background:var(--bar);border-radius:4px 4px 0 0}
+.bars button[aria-current] b,.bars button:hover b,.bars button:focus-visible b{background:var(--accent)}
+.bars button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:4px}
+.tip{position:absolute;bottom:calc(var(--h) + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;z-index:3;font-variant-numeric:tabular-nums}
+.bars button.tl .tip{left:0;transform:none}.bars button.tr .tip{left:auto;right:0;transform:none}
+@media (hover:hover){.bars button:hover .tip{opacity:1}}
+.bars button:focus-visible .tip{opacity:1}
+.xax{grid-column:2;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;text-align:center;font-size:11px;color:var(--muted)}
+.xax .cur{color:var(--ink);font-weight:600}
+.x3{display:none}
 @media (hover:hover){.check:hover{border-color:var(--ok)}.tab:hover{color:var(--ink)}.filters button:hover{border-color:var(--muted)}}
 @media (pointer:coarse){
   .check{width:44px;height:44px}
@@ -186,9 +228,9 @@ kbd{font-family:var(--f-mono);font-size:11.5px;background:var(--surface);border:
 /* telefoon: tabbladen als balk onderin, binnen bereik van de duim */
 @media (max-width:719.98px){
   .wrap{padding-block:0 170px}
-  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border-top:1px solid var(--line);border-bottom:0;
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;margin:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border-top:1px solid var(--line);border-bottom:0;
     padding:4px max(8px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 4px) max(8px,env(safe-area-inset-left,0px))}
-  .tab{flex-direction:column;justify-content:center;gap:3px;font-size:11.5px;padding:6px 4px;border:0;margin:0;min-height:54px;border-radius:10px}
+  .tab{flex-direction:column;justify-content:center;gap:3px;font-size:11px;padding:6px 2px;border:0;margin:0;min-height:54px;border-radius:10px}
   .tab[aria-selected="true"]{color:var(--accent);background:var(--accent-soft)}
   .filters{margin:16px 0 12px}
   .fab{bottom:calc(env(safe-area-inset-bottom,0px) + 78px)}
@@ -198,8 +240,6 @@ kbd{font-family:var(--f-mono);font-size:11.5px;background:var(--surface);border:
 /* tablet en groter: samenvatting als brede band */
 @media (min-width:720px){
   .wrap{max-width:1040px}
-  .summary{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);grid-template-areas:"main stats" "bar bar";align-items:center;column-gap:28px;padding:20px 22px}
-  .sum-main{grid-area:main}.sum-grid{grid-area:stats}.summary .bar{grid-area:bar}
 }
 
 /* laptop en iPad liggend: vaste zijbalk met navigatie, werkvlak rechts */
@@ -207,12 +247,6 @@ kbd{font-family:var(--f-mono);font-size:11.5px;background:var(--surface);border:
   .wrap{max-width:1480px;padding-block:0;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:32px;align-items:start}
   .side{display:flex;flex-direction:column;gap:14px;position:sticky;top:env(safe-area-inset-top,0px);max-height:100vh;max-height:100dvh;overflow-y:auto;padding-block:20px 24px;scrollbar-width:thin}
   header.top{position:static;padding:0}
-  .month{width:100%;justify-content:space-between}
-  .month span{flex:1}
-  .summary{grid-template-columns:minmax(0,1fr);grid-template-areas:"main" "bar" "stats";padding:18px}
-  .sum-grid{grid-template-columns:1fr 1fr}
-  .sum-grid div:last-child{grid-column:1/-1}
-  .big{font-size:38px}
   .tabs{flex-direction:column;border:0;margin:0;gap:2px}
   .tab{border:1px solid transparent;margin:0;border-radius:10px;padding:10px 12px}
   .tab[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink)}
@@ -224,13 +258,22 @@ kbd{font-family:var(--f-mono);font-size:11.5px;background:var(--surface);border:
 @media (min-width:1100px) and (hover:hover) and (pointer:fine){.keys{display:block;line-height:1.9}}
 
 /* werkvlak: kolommen op basis van de beschikbare breedte */
+@container main (min-width:560px){.x3{display:inline}.x1{display:none}}
+@container main (min-width:640px){
+  .summary{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);grid-template-areas:"main stats" "bar bar";align-items:center;column-gap:28px;padding:20px 22px}
+  .sum-main{grid-area:main}.sum-grid{grid-area:stats}.summary .bar{grid-area:bar}
+}
 @container main (min-width:720px){
   .mcols{grid-template-columns:1fr 1fr;align-items:start}
   .groups{columns:2;column-gap:20px}
-  #v-overzicht:not([hidden]){display:block;columns:2;column-gap:16px}
+  #v-instellingen:not([hidden]){display:block;columns:2;column-gap:20px}
+  .ov{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"left next" "cost cost" "cats cats"}
+  .ov-left{display:grid;gap:12px;align-content:start;grid-area:left}
+  .ov-next{grid-area:next}.ov-cost{grid-area:cost}.ov-cats{grid-area:cats}
+  .yax,.plot{height:190px}
 }
 @container main (min-width:1150px){.groups{columns:3}}
-@container main (max-width:479px){.row{gap:10px;padding:12px}.day{width:36px;padding-right:8px}.day .num{font-size:18px}.amt{font-size:14px}.right{gap:8px}}
+@container main (max-width:479px){.tiles{grid-template-columns:1fr 1fr}.tiles div:last-child{grid-column:1/-1}.row{gap:10px;padding:12px}.day{width:36px;padding-right:8px}.day .num{font-size:18px}.amt{font-size:14px}.right{gap:8px}}
 details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0}
 .log{display:grid;gap:14px;margin-top:10px}
 .log-h{display:flex;gap:10px;align-items:baseline}
@@ -248,32 +291,14 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 <div class="wrap" lang="nl">
  <div class="side">
   <header class="top">
-    <div class="brand"><i aria-hidden="true">€</i>Vaste Lasten<button class="ver" id="verBtn">v2.3.0</button></div>
+    <div class="brand"><i aria-hidden="true">€</i>Vaste Lasten<button class="ver" id="verBtn">v2.4.0</button></div>
     <button class="sync-pill" id="syncPill" hidden data-s="ok">Gesynchroniseerd</button>
-    <div class="month" role="group" aria-label="Maand kiezen">
-      <button id="prev" aria-label="Vorige maand">‹</button>
-      <span id="monthLabel">oktober 2026</span>
-      <button id="next" aria-label="Volgende maand">›</button>
-    </div>
   </header>
-
-  <section class="summary" aria-live="polite">
-    <div class="sum-main">
-      <div><div class="lbl" id="dueLbl">Af te schrijven deze maand</div><div class="big" id="dueTotal">€ 0,00</div><div class="note num" id="myNote"></div></div>
-      <div class="note" id="countNote"></div>
-    </div>
-    <div class="bar" aria-hidden="true"><b id="paidBar" style="width:0%"></b></div>
-    <div class="sum-grid">
-      <div><span class="lbl">Betaald</span><span class="num" id="paidAmt">€ 0,00</span></div>
-      <div><span class="lbl">Nog open</span><span class="num" id="openAmt">€ 0,00</span></div>
-      <div><span class="lbl">Jouw deel p/m</span><span class="num" id="avgAmt">€ 0,00</span></div>
-    </div>
-  </section>
-
-  <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="t-maand" aria-selected="true" data-tab="maand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Deze maand</span></button>
-    <button class="tab" role="tab" id="t-alle" aria-selected="false" data-tab="alle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg><span>Alle lasten</span></button>
-    <button class="tab" role="tab" id="t-overzicht" aria-selected="false" data-tab="overzicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Overzicht</span></button>
+  <nav class="tabs" role="tablist" aria-label="Onderdelen">
+    <button class="tab" role="tab" id="t-overzicht" aria-controls="v-overzicht" aria-selected="true" data-tab="overzicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Overzicht</span></button>
+    <button class="tab" role="tab" id="t-maand" aria-controls="v-maand" aria-selected="false" data-tab="maand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8.5 15l2 2 4-4"/></svg><span>Maand</span></button>
+    <button class="tab" role="tab" id="t-lasten" aria-controls="v-lasten" aria-selected="false" data-tab="lasten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg><span>Lasten</span></button>
+    <button class="tab" role="tab" id="t-instellingen" aria-controls="v-instellingen" aria-selected="false" data-tab="instellingen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Instellingen</span></button>
   </nav>
   <div class="filters" id="filters" role="group" aria-label="Toon lasten">
     <button data-filter="alle" aria-pressed="true">Alles</button>
@@ -281,26 +306,50 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <button data-filter="eigen" aria-pressed="false">Eigen</button>
   </div>
   <button class="fab" id="addBtn"><span aria-hidden="true" style="font-size:20px;line-height:1">+</span>Nieuwe last</button>
-  <div class="keys note">Sneltoetsen: <kbd>N</kbd> nieuwe last, <kbd>←</kbd> <kbd>→</kbd> vorige of volgende maand, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> tabbladen</div>
+  <div class="keys note">Sneltoetsen: <kbd>N</kbd> nieuwe last, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> onderdelen, <kbd>←</kbd> <kbd>→</kbd> vorige of volgende maand</div>
  </div>
  <main class="main">
 
-  <section id="v-maand"></section>
-  <section id="v-alle" hidden></section>
-  <section id="v-overzicht" hidden>
-    <div id="ov-dyn"></div>
-    <div class="panel" id="inlegPanel" hidden></div>
-    <div class="panel" id="splitPanel"></div>
-    <div class="panel" id="syncPanel"></div>
-    <div class="panel">
-      <h4>Back-up</h4>
-      <div class="note">Een back-up bevat al je gegevens, onversleuteld. Bewaar hem op een veilige plek en nooit in een openbare repository.</div>
-      <div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button><button class="btn" id="dlBk" hidden>Download als bestand</button><label class="btn" for="fileBk" style="display:inline-block">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>
-      <textarea id="bkText" placeholder="Of plak hier een back-up en kies Terugzetten" aria-label="Back-up tekst"></textarea>
-      <div class="btns"><button class="btn" id="restoreBk">Terugzetten</button></div>
+  <section id="v-overzicht" role="tabpanel" aria-labelledby="t-overzicht"><div id="ov-dyn"></div></section>
+
+  <section id="v-maand" role="tabpanel" aria-labelledby="t-maand" hidden>
+    <div class="mhead">
+      <div class="month" role="group" aria-label="Maand kiezen">
+        <button id="prev" aria-label="Vorige maand">‹</button>
+        <span id="monthLabel" aria-live="polite">oktober 2026</span>
+        <button id="next" aria-label="Volgende maand">›</button>
+      </div>
+      <button class="link" id="thisMonth" hidden>Naar deze maand</button>
     </div>
-    <div class="panel" id="aboutPanel"></div>
-    <div id="ov-install"></div>
+    <section class="summary" aria-live="polite">
+      <div class="sum-main">
+        <div><div class="lbl" id="dueLbl">Af te schrijven</div><div class="big" id="dueTotal">€ 0,00</div></div>
+        <div class="note" id="countNote"></div>
+      </div>
+      <div class="bar" aria-hidden="true"><b id="paidBar" style="width:0%"></b></div>
+      <div class="sum-grid">
+        <div><span class="lbl">Betaald</span><span class="num" id="paidAmt">€ 0,00</span></div>
+        <div><span class="lbl">Nog open</span><span class="num" id="openAmt">€ 0,00</span></div>
+        <div><span class="lbl">Jouw deel</span><span class="num" id="avgAmt">€ 0,00</span></div>
+      </div>
+    </section>
+    <div id="maandList"></div>
+  </section>
+
+  <section id="v-lasten" role="tabpanel" aria-labelledby="t-lasten" hidden></section>
+
+  <section id="v-instellingen" role="tabpanel" aria-labelledby="t-instellingen" hidden>
+    <div class="set-group"><h2 class="set-h">Huishouden</h2><div class="panel" id="splitPanel"></div></div>
+    <div class="set-group"><h2 class="set-h">Dit apparaat en synchronisatie</h2><div class="panel" id="devicePanel"></div><div class="panel" id="syncPanel"></div></div>
+    <div class="set-group"><h2 class="set-h">Back-up</h2>
+      <div class="panel">
+        <div class="note">Een back-up bevat al je gegevens, onversleuteld. Bewaar hem op een veilige plek en nooit in een openbare repository.</div>
+        <div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button><button class="btn" id="dlBk" hidden>Download als bestand</button><label class="btn" for="fileBk" style="display:inline-block">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>
+        <textarea id="bkText" placeholder="Of plak hier een back-up en kies Terugzetten" aria-label="Back-up tekst"></textarea>
+        <div class="btns"><button class="btn" id="restoreBk">Terugzetten</button></div>
+      </div>
+    </div>
+    <div class="set-group"><h2 class="set-h">Over de app</h2><div class="panel" id="aboutPanel"></div><div id="ov-install"></div></div>
   </section>
  </main>
 </div>
@@ -357,8 +406,8 @@ const CATS=[
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks'};
 const PERIOD={m:1,q:3,h:6,y:12};   // aantal maanden tussen twee afschrijvingen
-const APP_VERSION='2.3.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
-const CHANGELOG=/*CHANGELOG*/[{"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
+const APP_VERSION='2.4.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
+const CHANGELOG=/*CHANGELOG*/[{"version": "2.4.0", "date": "26 oktober 2026", "items": ["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.", "Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.", "Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.", "Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.", "Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.", "Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]}, {"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
 const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
@@ -471,26 +520,35 @@ function findItem(id){for(const st of STORES){const item=state[st].items.find(i=
 function isPaid(i,k){const p=state[stOf(i)].paid[k]; return !!(p&&p[i.id]&&p[i.id].p);}
 
 /* ---------- weergave ---------- */
-function render(){
-  $('monthLabel').textContent=MONTHS[view.m]+' '+view.y;
-  document.querySelectorAll('#filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===ui.filter)));
-  const items=shown(), k=mkey(view.y,view.m), dim=daysIn(view.y,view.m);
-  const list=items.filter(i=>occurs(i,view.m)).map(i=>({...i,d:Math.min(i.day,dim),paid:isPaid(i,k)}))
+const eur0=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+function today(){const t=new Date(); return {y:t.getFullYear(),m:t.getMonth(),d:t.getDate()};}
+function monthList(items,y,m){
+  const k=mkey(y,m), dim=daysIn(y,m);
+  return items.filter(i=>occurs(i,m)).map(i=>({...i,d:Math.min(i.day,dim),paid:isPaid(i,k)}))
     .sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name));
-  const total=list.reduce((s,i)=>s+i.amount,0);
-  const paid=list.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0);
+}
+const sumAmt=a=>a.reduce((s,i)=>s+i.amount,0);
+
+function render(){
+  document.querySelectorAll('#filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===ui.filter)));
+  const items=shown();
+  /* maand */
+  const T=today();
+  $('monthLabel').textContent=MONTHS[view.m]+' '+view.y;
+  $('thisMonth').hidden=view.y===T.y&&view.m===T.m;
+  const list=monthList(items,view.y,view.m);
+  const total=sumAmt(list), paid=sumAmt(list.filter(i=>i.paid));
   const mine=list.reduce((s,i)=>s+myAmt(i,i.amount),0);
-  const avgMine=items.reduce((s,i)=>s+myAmt(i,monthly(i)),0);
-  $('dueLbl').textContent={alle:'Af te schrijven deze maand',samen:'Gezamenlijk deze maand',eigen:'Eigen lasten deze maand'}[ui.filter];
+  $('dueLbl').textContent={alle:'Af te schrijven',samen:'Gezamenlijk af te schrijven',eigen:'Eigen lasten af te schrijven'}[ui.filter];
   $('dueTotal').textContent=fmt(total);
-  $('myNote').textContent=list.some(i=>i.joint)?'Jouw deel: '+fmt(mine):'';
   $('paidAmt').textContent=fmt(paid);
   $('openAmt').textContent=fmt(total-paid);
-  $('avgAmt').textContent=fmt(avgMine);
+  $('avgAmt').textContent=fmt(mine);
   $('paidBar').style.width=(total?paid/total*100:0)+'%';
   const nPaid=list.filter(i=>i.paid).length;
   $('countNote').textContent=list.length?nPaid+' van '+list.length+' afgevinkt':'';
-  renderMonth(list); renderAll(items); renderOverview(items,avgMine); renderInleg();
+  renderMonth(list); renderLasten(items); renderOverview(items);
+  renderDevicePanel(); renderInstall();
   if(!$('splitPanel').contains(document.activeElement)) renderSplitPanel();
 }
 
@@ -500,11 +558,11 @@ const exChip=i=>i.example?'<span class="chip ex">Voorbeeld</span>':'';
 const jointChip=i=>i.joint?'<span class="chip samen">Samen · jij '+myPct(i)+'%</span>':'';
 const catTag=i=>{const c=cat(i.cat); return '<span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span>';};
 
-function statusChip(i){
+function statusChip(i,y,m){
   if(i.paid) return '<span class="chip ok">Betaald</span>';
-  const t=new Date();
-  if(view.y===t.getFullYear()&&view.m===t.getMonth()){
-    const diff=i.d-t.getDate();
+  const T=today();
+  if(y===T.y&&m===T.m){
+    const diff=i.d-T.d;
     if(diff<0) return '<span class="chip warn">Nog afvinken</span>';
     if(diff===0) return '<span class="chip warn">Vandaag</span>';
     if(diff<=3) return '<span class="chip warn">Over '+diff+(diff===1?' dag':' dagen')+'</span>';
@@ -515,29 +573,29 @@ const emptyMsg=()=>({alle:'Nog geen vaste lasten. Tik op <b>Nieuwe last</b> om j
   samen:'Nog geen gezamenlijke lasten. Voeg er een toe en kies <b>Gezamenlijk</b>.',
   eigen:'Nog geen eigen lasten. Voeg er een toe en kies <b>Eigen</b>.'}[ui.filter]);
 
-function rowHtml(i){
+/* één regel in een maandlijst; tik op de naam om te bewerken, op het vakje om af te vinken */
+function rowHtml(i,y,m){
   return '<div class="row'+(i.paid?' paid':'')+'">'+
-    '<div class="day"><span class="num">'+i.d+'</span><small>'+MONTHS[view.m].slice(0,3)+'</small></div>'+
-    '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta">'+catTag(i)+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+jointChip(i)+statusChip(i)+exChip(i)+'</div></div>'+
+    '<div class="day"><span class="num">'+i.d+'</span><small>'+MONTHS[m].slice(0,3)+'</small></div>'+
+    '<button class="info" data-edit="'+esc(i.id)+'" title="Bewerken"><span class="name">'+esc(i.name)+'</span><span class="meta">'+catTag(i)+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+jointChip(i)+statusChip(i,y,m)+exChip(i)+'</span></button>'+
     '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+'</div>'+
-    '<button class="check" data-toggle="'+esc(i.id)+'" aria-pressed="'+i.paid+'" aria-label="'+esc(i.name)+(i.paid?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
+    '<button class="check" data-toggle="'+esc(i.id)+'" data-key="'+mkey(y,m)+'" aria-pressed="'+i.paid+'" aria-label="'+esc(i.name)+(i.paid?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
 }
 function renderMonth(list){
-  const el=$('v-maand');
+  const el=$('maandList');
   if(!shown().length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
   if(!list.length){el.innerHTML='<div class="empty">Geen afschrijvingen in '+MONTHS[view.m]+'.</div>';return;}
   const open=list.filter(i=>!i.paid), done=list.filter(i=>i.paid);
-  const tot=a=>fmt(a.reduce((s,i)=>s+i.amount,0));
-  const col=(title,arr,empty)=>'<div class="mcol"><h3 class="colh"><span>'+title+'</span><span class="num">'+arr.length+' · '+tot(arr)+'</span></h3>'+
-    (arr.length?'<div class="list">'+arr.map(rowHtml).join('')+'</div>':'<div class="empty small">'+empty+'</div>')+'</div>';
+  const col=(title,arr,empty)=>'<div class="mcol"><h3 class="colh"><span>'+title+'</span><span class="num">'+arr.length+' · '+fmt(sumAmt(arr))+'</span></h3>'+
+    (arr.length?'<div class="list">'+arr.map(i=>rowHtml(i,view.y,view.m)).join('')+'</div>':'<div class="empty small">'+empty+'</div>')+'</div>';
   el.innerHTML='<div class="mcols">'+col('Nog te betalen',open,'Alles is betaald.')+col('Betaald',done,'Nog niets afgevinkt.')+'</div>';
 }
 
-function renderAll(items){
-  const el=$('v-alle');
+function renderLasten(items){
+  const el=$('v-lasten');
   if(!items.length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
   let html='';
-  if(all().some(i=>i.example)) html+='<div class="panel" style="margin-top:0"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
+  if(all().some(i=>i.example)) html+='<div class="panel"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
   html+='<div class="groups">';
   CATS.forEach(c=>{
     const g=items.filter(i=>cat(i.cat).id===c.id).sort((a,b)=>monthly(b)-monthly(a));
@@ -545,7 +603,7 @@ function renderAll(items){
     const sum=g.reduce((s,i)=>s+monthly(i),0);
     html+='<div class="group"><h3><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span><span class="num">'+fmt(sum)+' p/m</span></h3><div class="list">'+
       g.map(i=>'<div class="row" style="grid-template-columns:1fr auto">'+
-        '<div class="info"><div class="name">'+esc(i.name)+'</div><div class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+jointChip(i)+exChip(i)+'</div></div>'+
+        '<button class="info" data-edit="'+esc(i.id)+'" title="Bewerken"><span class="name">'+esc(i.name)+'</span><span class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+jointChip(i)+exChip(i)+'</span></button>'+
         '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+
           (i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+
           (i.freq!=='m'?'<div class="sub num">≈ '+fmt(monthly(i))+' p/m</div>':'')+
@@ -555,19 +613,89 @@ function renderAll(items){
   el.innerHTML=html+'</div>';
 }
 
-let installEvt=null;
-function renderOverview(items,avgMine){
+/* ---------- overzicht (startscherm) ---------- */
+function niceStep(v){
+  if(!(v>0)) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e;
+  return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e;
+}
+function chartHtml(vals,avg,T){
+  const max=Math.max(...vals); if(!(max>0)) return '';
+  const step=niceStep(max/3), top=step*Math.ceil(max/step-1e-9);
+  const ticks=[]; for(let v=0;v<=top+1e-6;v+=step) ticks.push(v);
+  const pc=v=>(v/top*100).toFixed(2)+'%';
+  return '<div class="chart">'+
+    '<div class="yax" aria-hidden="true">'+ticks.map(v=>'<span style="bottom:'+pc(v)+'">'+eur0.format(v)+'</span>').join('')+'</div>'+
+    '<div class="plot">'+ticks.slice(1).map(v=>'<i class="gl" style="bottom:'+pc(v)+'"></i>').join('')+
+      '<i class="avg" style="bottom:'+pc(avg)+'"></i>'+
+      '<div class="bars" role="group" aria-label="Jouw kosten per maand in '+T.y+'">'+vals.map((v,m)=>
+        '<button data-month="'+m+'" style="--h:'+pc(v)+'"'+(m===T.m?' aria-current="date"':'')+(m<2?' class="tl"':m>9?' class="tr"':'')+
+        ' aria-label="'+MONTHS[m]+': '+fmt(v)+'. Open deze maand."><b></b><span class="tip" aria-hidden="true">'+MONTHS[m].slice(0,3)+' · '+fmt(v)+'</span></button>').join('')+
+      '</div></div>'+
+    '<div class="xax" aria-hidden="true">'+MONTHS.map((n,m)=>'<span'+(m===T.m?' class="cur"':'')+'><span class="x3">'+n.slice(0,3)+'</span><span class="x1">'+n[0]+'</span></span>').join('')+'</div>'+
+  '</div>';
+}
+function renderOverview(items){
+  const el=$('ov-dyn');
+  if(!items.length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
+  const T=today(), mName=MONTHS[T.m];
+  const list=monthList(items,T.y,T.m), open=list.filter(i=>!i.paid);
+  const total=sumAmt(list), paid=total-sumAmt(open);
+  let h='';
+  /* deze maand */
+  const hMonth='<div class="card ov-month"><h3>Deze maand <span class="note" style="text-transform:capitalize">'+mName+' '+T.y+'</span></h3>'+
+    (list.length
+      ?'<div><div class="big">'+fmt(total-paid)+'</div><div class="note">'+(open.length?'nog af te schrijven, '+open.length+' van '+list.length+' lasten':'alles is betaald')+'</div></div>'+
+       '<div class="bar" aria-hidden="true"><b style="width:'+(total?paid/total*100:0)+'%"></b></div>'+
+       '<div class="note num">'+fmt(paid)+' van '+fmt(total)+' betaald</div>'
+      :'<div class="note">Geen afschrijvingen in '+mName+'.</div>')+
+    '<button class="link" data-goto="maand">Naar '+mName+' →</button></div>';
+  /* eerstvolgende afschrijvingen */
+  const nxt=open.slice(0,5);
+  h+='<div class="card ov-next"><h3>Eerstvolgende afschrijvingen</h3>'+
+    (nxt.length?'<div class="list">'+nxt.map(i=>rowHtml(i,T.y,T.m)).join('')+'</div>'+
+       (open.length>nxt.length?'<button class="link" data-goto="maand">Nog '+(open.length-nxt.length)+' meer in '+mName+' →</button>':'')
+      :'<div class="empty small">Alles voor '+mName+' is betaald.</div>')+'</div>';
+  /* jouw kosten + jaargrafiek */
+  const vals=MONTHS.map((_,m)=>items.filter(i=>occurs(i,m)).reduce((s,i)=>s+myAmt(i,i.amount),0));
+  const year=vals.reduce((a,b)=>a+b,0), avg=year/12;
+  let pk=0; vals.forEach((v,m)=>{if(v>vals[pk]) pk=m;});
+  h+='<div class="card ov-cost"><h3>Jouw kosten <span class="note">'+T.y+'</span></h3>'+
+    '<div class="tiles"><div><span class="lbl">Gemiddeld per maand</span><span class="num">'+fmt(avg)+'</span></div>'+
+    '<div><span class="lbl">Per jaar</span><span class="num">'+fmt(year)+'</span></div>'+
+    '<div><span class="lbl">Duurste maand</span><span class="val">'+(vals[pk]>0?MONTHS[pk]+' <span class="num" style="display:inline;font-weight:500;color:var(--muted)">'+eur0.format(vals[pk])+'</span>':'–')+'</span></div></div>'+
+    chartHtml(vals,avg,T)+
+    '<div class="note">Jouw deel per maand. De stippellijn is het gemiddelde. Tik op een maand om hem te openen.</div></div>';
+  /* gezamenlijke rekening */
+  let hInleg='';
+  const js=state.samen.items.map(i=>({...i,joint:true}));
+  if(js.length&&ui.filter!=='eigen'){
+    const tot=js.reduce((s,i)=>s+monthly(i),0), a=js.reduce((s,i)=>s+monthly(i)*p1pct(i)/100,0);
+    const tag=p=>esc(nameOf(p))+(p===me()?' (jij)':'');
+    hInleg='<div class="card ov-inleg"><h3>Gezamenlijke rekening</h3>'+
+      '<div class="note">Gezamenlijke lasten gemiddeld <b class="num">'+fmt(tot)+'</b> per maand. Dit maakt ieder maandelijks over:</div>'+
+      '<div class="inleg"><div><span class="lbl">'+tag('p1')+'</span><span class="num">'+fmt(a)+'</span></div><div><span class="lbl">'+tag('p2')+'</span><span class="num">'+fmt(tot-a)+'</span></div></div>'+
+      '<div class="note">Kwartaal-, halfjaar- en jaarbedragen zijn gespreid, zodat er genoeg op de rekening staat als ze worden afgeschreven.</div></div>';
+  }
+  /* per categorie */
   const rows=CATS.map(c=>({c,sum:items.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+myAmt(i,monthly(i)),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
   const max=rows.length?rows[0].sum:1;
-  let peak={m:0,v:0};
-  for(let m=0;m<12;m++){const v=items.filter(i=>occurs(i,m)).reduce((s,i)=>s+myAmt(i,i.amount),0); if(v>peak.v) peak={m,v};}
-  let html='<div class="stats"><div><span class="lbl">Jouw kosten per jaar</span><span class="num">'+fmt(avgMine*12)+'</span></div><div><span class="lbl">Duurste maand</span><span style="display:block;font-size:18px;margin-top:2px;font-weight:600">'+(peak.v?MONTHS[peak.m]+'</span><span class="note num">'+fmt(peak.v):'–')+'</span></div></div>';
-  html+=rows.length?'<div class="cats">'+rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avgMine*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+
-    '<div class="note">Bedragen zijn jouw deel per maand. Kwartaal- en jaarbedragen zijn omgerekend naar een maandbedrag.</div></div>'
-    :'<div class="empty">'+emptyMsg()+'</div>';
-  $('ov-dyn').innerHTML=html;
-  renderAbout();
-  $('ov-install').innerHTML=installEvt?'<div class="panel"><h4>Op je startscherm</h4><div class="note">Installeer Vaste Lasten als app, dan werkt hij ook offline.</div><div class="btns"><button class="btn primary" id="installBtn">Installeren</button></div></div>':'';
+  h+='<div class="card ov-cats"><h3>Per categorie <span class="note">jouw deel per maand</span></h3>'+
+    rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/avg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'</div>';
+  el.innerHTML='<div class="ov"><div class="ov-left">'+hMonth+hInleg+'</div>'+h+'</div>';
+}
+
+let installEvt=null;
+function renderInstall(){
+  $('ov-install').innerHTML=installEvt?'<div class="panel" style="margin-top:10px"><h4>Op je startscherm</h4><div class="note">Installeer Vaste Lasten als app, dan werkt hij ook offline.</div><div class="btns"><button class="btn primary" id="installBtn">Installeren</button></div></div>':'';
+}
+function renderDevicePanel(){
+  const el=$('devicePanel'); if(el.contains(document.activeElement)) return;
+  const m=meta();
+  el.innerHTML='<h4>Dit apparaat</h4>'+(cfg
+    ?'<div class="ok-line">Dit apparaat hoort bij <b>'+esc(nameOf(cfg.me))+'</b>.</div><div class="note">Dat ligt vast sinds het koppelen. Wil je het wijzigen, ontkoppel dan hieronder en koppel opnieuw.</div>'
+    :'<div class="field"><label for="d-me">Van wie is dit apparaat?</label><select id="d-me"><option value="p1"'+(me()==='p1'?' selected':'')+'>'+esc(m.p1)+'</option><option value="p2"'+(me()==='p2'?' selected':'')+'>'+esc(m.p2)+'</option></select></div>'+
+     '<div class="note">Bepaalt wat de app als jouw deel toont.</div>');
 }
 
 function renderAbout(){
@@ -627,32 +755,18 @@ async function applyUpdate(){
   location.reload();
 }
 function showVersionInfo(){
-  showTab('overzicht');
+  showTab('instellingen');
   const d=$('aboutPanel').querySelector('details'); if(d) d.open=true;
   $('aboutPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function renderInleg(){
-  const el=$('inlegPanel');
-  const js=state.samen.items.map(i=>({...i,joint:true}));
-  if(!js.length||ui.filter==='eigen'){el.hidden=true;return;}
-  const tot=js.reduce((s,i)=>s+monthly(i),0);
-  const a=js.reduce((s,i)=>s+monthly(i)*p1pct(i)/100,0), b=tot-a;
-  const tag=p=>esc(nameOf(p))+(p===me()?' (jij)':'');
-  el.hidden=false;
-  el.innerHTML='<h4>Gezamenlijke rekening</h4>'+
-    '<div class="note">Gezamenlijke lasten gemiddeld <b class="num">'+fmt(tot)+'</b> per maand. Dit maakt ieder maandelijks over:</div>'+
-    '<div class="inleg"><div><span class="lbl">'+tag('p1')+'</span><span class="num">'+fmt(a)+'</span></div><div><span class="lbl">'+tag('p2')+'</span><span class="num">'+fmt(b)+'</span></div></div>'+
-    '<div class="note">Kwartaal- en jaarbedragen zijn over het jaar gespreid, zodat er genoeg op de rekening staat als ze worden afgeschreven.</div>';
-}
 
 function renderSplitPanel(){
-  const m=meta(), linked=!!cfg;
+  const m=meta();
   $('splitPanel').innerHTML='<h4>Verdeling gezamenlijke lasten</h4>'+
     '<div class="two"><div class="field"><label for="m-p1">Naam persoon 1</label><input id="m-p1" value="'+esc(m.p1)+'" autocomplete="off"></div>'+
     '<div class="field"><label for="m-p2">Naam persoon 2</label><input id="m-p2" value="'+esc(m.p2)+'" autocomplete="off"></div></div>'+
-    '<div class="two"><div class="field"><label for="m-split">Standaard deel persoon 1 (%)</label><input id="m-split" type="number" min="0" max="100" inputmode="numeric" value="'+m.split+'"></div>'+
-    '<div class="field"><label for="m-me">Dit apparaat is van</label><select id="m-me"'+(linked?' disabled':'')+'><option value="p1"'+(me()==='p1'?' selected':'')+'>'+esc(m.p1)+'</option><option value="p2"'+(me()==='p2'?' selected':'')+'>'+esc(m.p2)+'</option></select></div></div>'+
-    '<div class="note">Persoon 2 betaalt de rest. Bij een last kun je van de standaard afwijken.'+(linked?' Van wie dit apparaat is, ligt vast sinds het koppelen.':'')+' Namen en verdeling worden gedeeld met je partner.</div>'+
+    '<div class="two"><div class="field"><label for="m-split">Standaard deel persoon 1 (%)</label><input id="m-split" type="number" min="0" max="100" inputmode="numeric" value="'+m.split+'"></div><div></div></div>'+
+    '<div class="note">Persoon 2 betaalt de rest. Bij een last kun je van de standaard afwijken. Namen en verdeling worden gedeeld met je partner.</div>'+
     '<div class="err" id="m-err"></div><div class="btns"><button class="btn" id="m-save">Verdeling opslaan</button></div>';
 }
 function saveSplit(){
@@ -660,10 +774,9 @@ function saveSplit(){
   if(!p1||!p2){$('m-err').textContent='Vul voor beide personen een naam in.';return;}
   if(sp===''||!(+sp>=0&&+sp<=100)){$('m-err').textContent='Kies een percentage tussen 0 en 100.';return;}
   state.samen.meta={p1,p2,split:clampPct(sp),u:Date.now()};
-  if(!cfg){ui.me=$('m-me').value; saveUi();}
   $('m-err').textContent='';
   document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
-  save(); render(); toast('Verdeling opgeslagen');
+  save(); render(); renderSplitPanel(); toast('Verdeling opgeslagen');
 }
 
 /* ================= SYNC ================= */
@@ -941,11 +1054,15 @@ async function unlink(){
 }
 
 /* ================= events ================= */
+const TABS=['overzicht','maand','lasten','instellingen'];
 function showTab(name){
-  ui.tab=name; saveUi();
+  if(!TABS.includes(name)) name='overzicht';
+  ui.tab=name;
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.tab===name)));
-  ['maand','alle','overzicht'].forEach(t=>$('v-'+t).hidden=t!==name);
+  TABS.forEach(t=>$('v-'+t).hidden=t!==name);
+  $('filters').hidden=name==='instellingen';   // het filter doet niets bij de instellingen
 }
+function toTop(){ if(window.scrollY>0) window.scrollTo({top:0}); }
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(!b) return;
   const same=b.dataset.tab===ui.tab; showTab(b.dataset.tab);
   if(window.matchMedia('(max-width:719.98px)').matches&&(!same||window.scrollY>0)) window.scrollTo({top:0,behavior:same?'smooth':'auto'});});
@@ -955,23 +1072,26 @@ document.addEventListener('keydown',e=>{
   const t=e.target; if(t&&(t.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))) return;
   const k=e.key;
   if(k==='n'||k==='N'){e.preventDefault(); openForm(null);}
-  else if(k==='ArrowLeft'){e.preventDefault(); $('prev').click();}
-  else if(k==='ArrowRight'){e.preventDefault(); $('next').click();}
-  else if(k==='1'||k==='2'||k==='3'){showTab(['maand','alle','overzicht'][+k-1]);}
+  else if(k==='ArrowLeft'&&ui.tab==='maand'){e.preventDefault(); $('prev').click();}
+  else if(k==='ArrowRight'&&ui.tab==='maand'){e.preventDefault(); $('next').click();}
+  else if(/^[1-4]$/.test(k)){showTab(TABS[+k-1]); toTop();}
 });
 $('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]'); if(!b) return; ui.filter=b.dataset.filter; saveUi(); render();});
 $('prev').onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--;} render();};
 $('next').onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++;} render();};
+$('thisMonth').onclick=()=>{const T=today(); view={y:T.y,m:T.m}; render();};
 $('verBtn').onclick=()=>{newVersion?applyUpdate():showVersionInfo();};
-$('syncPill').onclick=()=>{showTab('overzicht'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
+$('syncPill').onclick=()=>{showTab('instellingen'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
 
 let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-toggle]');
   if(t){const f=findItem(t.dataset.toggle); if(!f) return;
-    const k=mkey(view.y,view.m), P=state[f.st].paid; P[k]=P[k]||{};
+    const k=t.dataset.key||mkey(view.y,view.m), P=state[f.st].paid; P[k]=P[k]||{};
     const cur=!!(P[k][f.item.id]&&P[k][f.item.id].p); P[k][f.item.id]={p:!cur,u:Date.now()}; save(); render(); return;}
   const ed=e.target.closest('[data-edit]'); if(ed){const f=findItem(ed.dataset.edit); if(f) openForm(f); return;}
+  const go=e.target.closest('[data-goto]'); if(go){const T=today(); view={y:T.y,m:T.m}; showTab(go.dataset.goto); render(); toTop(); return;}
+  const bar=e.target.closest('[data-month]'); if(bar){view={y:today().y,m:+bar.dataset.month}; showTab('maand'); render(); toTop(); return;}
   const id=e.target.id;
   if(id==='clearEx'){STORES.forEach(st=>state[st].items=state[st].items.filter(i=>!i.example)); save(); render(); toast('Voorbeelden gewist');}
   if(id==='copyBk'){const txt=JSON.stringify({v:2,samen:state.samen,eigen:state.eigen});
@@ -996,6 +1116,7 @@ document.addEventListener('click',e=>{
   }
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='d-me'&&!cfg){ui.me=e.target.value==='p2'?'p2':'p1'; saveUi(); e.target.blur(); render(); toast('Opgeslagen');}
   if(e.target.id==='fileBk'&&e.target.files[0]){const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(e.target.files[0]);}
 });
 function restore(txt){
@@ -1093,7 +1214,7 @@ if(IS_PWA){
   window.addEventListener('offline',pillIdle);
 }
 
-if(['maand','alle','overzicht'].includes(ui.tab)) showTab(ui.tab);
+showTab('overzicht');   // de app opent altijd op het overzicht
 if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
 saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
 if(IS_PWA&&cfg){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(([s,e])=>{keys={samen:s||null,eigen:e||null}; renderSyncPanel(); sync();});}
