@@ -16,10 +16,19 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 
 ## Onderdelen
 
-- **Overzicht** (startscherm): de stand van deze maand, de eerstvolgende afschrijvingen om af te vinken, jouw kosten met een jaargrafiek, de gezamenlijke rekening en de verdeling per categorie.
-- **Maand**: de afvinklijst per maand, met *Nog te betalen* en *Betaald*.
-- **Lasten**: al je vaste lasten per categorie, om toe te voegen en te bewerken.
-- **Instellingen**: huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up, en informatie over de app.
+- **Overzicht** (startscherm): contracten die aandacht vragen, de stand van deze maand, de eerstvolgende afschrijvingen om af te vinken, inkomen en wat overblijft, de gezamenlijke rekening, verrekenen tussen jullie, de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie en Wat als-scenario's.
+- **Maand**: de afvinklijst per maand, met *Nog te betalen* en *Betaald*. Tik op een bedrag om het werkelijk afgeschreven bedrag in te vullen.
+- **Lasten**: al je vaste lasten, per categorie of gesorteerd, met zoeken. Eenmalige posten en beëindigde lasten staan apart.
+- **Instellingen**: huishouden (inkomen, verdeling en categorieën), dit apparaat en synchronisatie, exporteren naar Excel of CSV, back-up, en informatie over de app.
+
+## Wat is privé en wat gedeeld
+
+| Gedeeld met je partner (`samen.json`) | Alleen voor jou (`eigen-p1.json` / `eigen-p2.json`) |
+|---|---|
+| Gezamenlijke lasten en het afvinken ervan | Je eigen lasten en het afvinken ervan |
+| Namen, verdeling en categorieën | Je inkomen |
+| Wie een gezamenlijke last betaalt en de verrekeningen | Je Wat als-scenario's |
+| Je inkomen, alleen als je kiest voor delen | |
 
 ## Indeling per apparaat
 

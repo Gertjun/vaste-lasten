@@ -24,7 +24,7 @@
   --bg:#eaeff2; --surface:#ffffff; --sunken:#f3f6f8; --ink:#15212a; --muted:#5a6a76; --line:#d3dce2;
   --accent:#0d6570; --accent-ink:#ffffff; --accent-soft:#d9ecee; --bar-open:#3d8fd1; --bar-paid:#2c7a4b;
   --ok:#2c7a4b; --ok-soft:#dcefe3; --warn:#a25f00; --warn-soft:#f7e8d0; --bad:#b0322a;
-  --c1:#0d6570; --c2:#7a4fc4; --c3:#c27a12; --c4:#2f7fc1; --c5:#b0432f; --c6:#6b7d3a; --c7:#7d8a94;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#008300; --c7:#6250d6; --c8:#e34948; --c9:#7d8a94;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -34,13 +34,13 @@
   --bg:#0e1418; --surface:#162027; --sunken:#121a20; --ink:#e4ebef; --muted:#94a3ad; --line:#26333c;
   --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f; --bar-open:#3f7fc4; --bar-paid:#3fa66c;
   --ok:#5cc58a; --ok-soft:#173527; --warn:#e7a54a; --warn-soft:#3a2b14; --bad:#ef7a70;
-  --c1:#4cb0bb; --c2:#a888e6; --c3:#e0a243; --c4:#6eaee6; --c5:#e47f6a; --c6:#a3b86a; --c7:#9aa7b0;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#2f9a2f; --c7:#9085e9; --c8:#e66767; --c9:#9aa7b0;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1418; --surface:#162027; --sunken:#121a20; --ink:#e4ebef; --muted:#94a3ad; --line:#26333c;
   --accent:#4cb0bb; --accent-ink:#06262a; --accent-soft:#163a3f; --bar-open:#3f7fc4; --bar-paid:#3fa66c;
   --ok:#5cc58a; --ok-soft:#173527; --warn:#e7a54a; --warn-soft:#3a2b14; --bad:#ef7a70;
-  --c1:#4cb0bb; --c2:#a888e6; --c3:#e0a243; --c4:#6eaee6; --c5:#e47f6a; --c6:#a3b86a; --c7:#9aa7b0;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#2f9a2f; --c7:#9085e9; --c8:#e66767; --c9:#9aa7b0;
   color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
@@ -103,6 +103,74 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .price-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;font-size:14px}
 .price-row .num{text-align:right}
 .btn.small{padding:5px 10px;font-size:13px}
+.ltools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:14px}
+.ltools input,.ltools select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.ltools input{padding-left:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23889' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center}
+.lsum{display:flex;justify-content:space-between;gap:8px;margin:0 0 8px;font-family:var(--f-display);font-size:15px;font-weight:600}
+.lsum .num{font-size:14px;color:var(--muted)}
+mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px}
+@media (max-width:440px){.ltools{grid-template-columns:1fr}}
+.catlist{display:grid;gap:6px}
+.catrow{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.catrow summary{color:var(--ink);display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;list-style:none}
+.catrow summary::-webkit-details-marker{display:none}
+.catrow summary .dot{width:12px;height:12px;margin:0}
+.catrow summary .cn{font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+.catrow[open] summary{border-bottom:1px solid var(--line)}
+.catedit{display:grid;gap:10px;padding:12px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{position:relative;cursor:pointer}
+.swatch input{position:absolute;opacity:0;pointer-events:none}
+.swatch span:first-of-type{display:block;width:30px;height:30px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.swatch input:checked+span{box-shadow:0 0 0 2px var(--ink)}
+.swatch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.catnew{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.catnew input{font:inherit;font-size:16px;color:var(--ink);background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.check-line{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.check-line input,.field .check-line input{width:20px;min-width:20px;height:20px;padding:0;margin:1px 0 0;flex:none;accent-color:var(--accent)}
+.split-choice{display:grid;gap:8px}
+.income-bar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--sunken);gap:2px}
+.income-bar i{display:block;height:100%}
+.income-bar .lasten{background:var(--bar-open)}
+.income-bar .vrij{background:var(--bar-paid)}
+.settle-big{font-family:var(--f-display);font-size:22px;font-weight:700;line-height:1.2}
+.evlist{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13.5px}
+.evlist li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:6px}
+.evlist .num{white-space:nowrap}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;padding:0;font-size:13px;cursor:pointer}
+.amt-btn{border:0;background:none;padding:2px 4px;margin:-2px -4px;border-radius:6px;color:inherit;cursor:pointer;font:inherit}
+.amt-btn .amt{border-bottom:1px dashed var(--line)}
+@media (hover:hover){.amt-btn:hover .amt{border-bottom-color:var(--accent)}}
+.planned{text-decoration:line-through}
+.sheet-sm{max-width:440px}
+.bars button{isolation:isolate}
+.ghost{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:72%;max-width:30px;height:var(--g);border:1.5px dashed var(--muted);border-bottom:0;border-radius:4px 4px 0 0;z-index:0;pointer-events:none}
+.stack{position:relative;z-index:1}
+.sw.prev{background:none;border:1.5px dashed var(--muted)}
+.yoy-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.yoy-big .big{font-size:clamp(28px,7vw,34px)}
+.up{color:var(--bad)}.down{color:var(--ok)}
+.movers{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}
+.movers li{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:6px}
+.movers .num{white-space:nowrap}
+.sheet-lg{max-width:680px}
+.sc-list{display:grid;gap:8px}
+.sc-row{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:10px;align-items:center;font-size:14px}
+.sc-row .note{display:block}
+.sc-row input[type=text],.sc-row input:not([type]),.sc-addrow input,.sc-addrow select{font:inherit;font-size:16px;color:var(--ink);background:var(--sunken);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0;width:100%}
+.sc-row.off .sc-n{text-decoration:line-through;color:var(--muted)}
+.sc-addrow{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.scen-res{overflow-x:auto}
+.sc-t{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.sc-t th,.sc-t td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.sc-t th:first-child{text-align:left;font-weight:500;color:var(--muted)}
+.sc-t thead th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sc-t td{font-family:var(--f-mono)}
+.scen-list{display:grid;gap:8px}
+.scen-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);text-align:left;cursor:pointer;font:inherit;color:inherit}
+.scen-item b{font-weight:600}
+@media (max-width:560px){.sc-row{grid-template-columns:minmax(0,1fr) 100px}.sc-row .check-line{grid-column:1/-1}.sc-addrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}.sc-addrow .sa-n{grid-column:1/-1}}
 .url-open{font-size:13px;font-weight:600;color:var(--accent)}
 .right{display:flex;align-items:center;gap:10px}
 .amt{font-size:15px;text-align:right;white-space:nowrap}
@@ -202,7 +270,7 @@ button.info .name{display:block}
 /* overzicht */
 .ov{display:grid;gap:12px;align-items:start}
 .ov-left{display:contents}
-.ov-alert{order:0}.ov-month{order:1}.ov-next{order:2}.ov-cost{order:3}.ov-inleg{order:4}.ov-cats{order:5}
+.ov-alert{order:0}.ov-month{order:1}.ov-next{order:2}.ov-income{order:3}.ov-cost{order:4}.ov-inleg{order:5}.ov-settle{order:5}.ov-yoy{order:4}.ov-scen{order:7}.ov-cats{order:6}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:12px;min-width:0;align-content:start}
 .card h3{margin:0;font-family:var(--f-display);font-size:16px;font-weight:600;display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
 .card h3 .note{font-family:var(--f-body);font-weight:400}
@@ -233,10 +301,10 @@ button.info .name{display:block}
 .sw.p{background:var(--bar-paid)}.sw.o{background:var(--bar-open)}
 .sw.avg{width:14px;height:0;border-top:2px dashed var(--muted);border-radius:0}
 .bars button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:4px}
-.tip{position:absolute;bottom:calc(var(--h) + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;z-index:3;font-variant-numeric:tabular-nums}
+.tip{position:absolute;bottom:calc(var(--h) + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;display:none;z-index:3;font-variant-numeric:tabular-nums}
 .bars button.tl .tip{left:0;transform:none}.bars button.tr .tip{left:auto;right:0;transform:none}
-@media (hover:hover){.bars button:hover .tip{opacity:1}}
-.bars button:focus-visible .tip{opacity:1}
+@media (hover:hover){.bars button:hover .tip{display:block}}
+.bars button:focus-visible .tip{display:block}
 .xax{grid-column:2;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;text-align:center;font-size:11px;color:var(--muted)}
 .xax .cur{color:var(--ink);font-weight:600}
 .x3{display:none}
@@ -291,9 +359,9 @@ button.info .name{display:block}
   .mcols{grid-template-columns:1fr 1fr;align-items:start}
   .groups{columns:2;column-gap:20px}
   #v-instellingen:not([hidden]){display:block;columns:2;column-gap:20px}
-  .ov{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"left next" "cost cost" "cats cats"}
+  .ov{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"left next" "cost cost" "yoy cats" "scen scen"}
   .ov-left{display:grid;gap:12px;align-content:start;grid-area:left}
-  .ov-next{grid-area:next}.ov-cost{grid-area:cost}.ov-cats{grid-area:cats}
+  .ov-next{grid-area:next}.ov-cost{grid-area:cost}.ov-cats{grid-area:cats}.ov-yoy{grid-area:yoy}.ov-scen{grid-area:scen}
   .yax,.plot{height:190px}
 }
 @container main (min-width:1150px){.groups{columns:3}}
@@ -301,7 +369,7 @@ button.info .name{display:block}
 details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0}
 .log{display:grid;gap:14px;margin-top:10px}
 .log-h{display:flex;gap:10px;align-items:baseline}
-.wl{padding-left:20px;font-size:14px;gap:10px}
+.wl{padding-left:0;list-style:none;font-size:14px;gap:10px}
 .wl .note{margin-top:2px}
 .log ul{margin:4px 0 0;padding-left:18px;display:grid;gap:3px;font-size:14px}
 .ver{border:1px solid transparent;background:transparent;color:var(--muted);font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:0;padding:3px 7px;border-radius:999px;align-self:center;white-space:nowrap}
@@ -332,7 +400,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <button data-filter="eigen" aria-pressed="false">Eigen</button>
   </div>
   <button class="fab" id="addBtn"><span aria-hidden="true" style="font-size:20px;line-height:1">+</span>Nieuwe last</button>
-  <div class="keys note">Sneltoetsen: <kbd>N</kbd> nieuwe last, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> onderdelen, <kbd>←</kbd> <kbd>→</kbd> vorige of volgende maand</div>
+  <div class="keys note">Sneltoetsen: <kbd>N</kbd> nieuwe last, <kbd>/</kbd> zoeken, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> onderdelen, <kbd>←</kbd> <kbd>→</kbd> vorige of volgende maand</div>
  </div>
  <main class="main">
 
@@ -349,7 +417,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     </div>
     <section class="summary" aria-live="polite">
       <div class="sum-main">
-        <div><div class="lbl" id="dueLbl">Af te schrijven</div><div class="big" id="dueTotal">€ 0,00</div></div>
+        <div><div class="lbl" id="dueLbl">Af te schrijven</div><div class="big" id="dueTotal">€ 0,00</div><div class="note num" id="planNote"></div></div>
         <div class="note" id="countNote"></div>
       </div>
       <div class="bar" aria-hidden="true"><b id="paidBar" style="width:0%"></b></div>
@@ -362,11 +430,31 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <div id="maandList"></div>
   </section>
 
-  <section id="v-lasten" role="tabpanel" aria-labelledby="t-lasten" hidden></section>
+  <section id="v-lasten" role="tabpanel" aria-labelledby="t-lasten" hidden>
+    <div class="ltools">
+      <input id="l-q" type="search" placeholder="Zoek op naam, notitie of polisnummer" aria-label="Zoek in lasten" autocomplete="off" spellcheck="false">
+      <select id="l-sort" aria-label="Sorteren">
+        <option value="cat">Per categorie</option>
+        <option value="amount">Bedrag, hoogste eerst</option>
+        <option value="name">Naam, A tot Z</option>
+        <option value="day">Dag van afschrijving</option>
+        <option value="end">Einddatum contract</option>
+      </select>
+    </div>
+    <div id="lastenList"></div>
+  </section>
 
   <section id="v-instellingen" role="tabpanel" aria-labelledby="t-instellingen" hidden>
-    <div class="set-group"><h2 class="set-h">Huishouden</h2><div class="panel" id="splitPanel"></div></div>
+    <div class="set-group"><h2 class="set-h">Huishouden</h2><div class="panel" id="incomePanel"></div><div class="panel" id="splitPanel"></div><div class="panel" id="catPanel"></div></div>
     <div class="set-group"><h2 class="set-h">Dit apparaat en synchronisatie</h2><div class="panel" id="devicePanel"></div><div class="panel" id="syncPanel"></div></div>
+    <div class="set-group"><h2 class="set-h">Exporteren</h2>
+      <div class="panel" id="exportPanel">
+        <div class="note">Een Excel-bestand met al je lasten, alle afschrijvingen van het gekozen jaar, een overzicht per maand en per categorie. Handig voor de belastingaangifte of een gesprek met een adviseur.</div>
+        <div class="two"><div class="field"><label for="x-year">Jaar</label><select id="x-year"></select></div><div></div></div>
+        <div class="btns"><button class="btn primary" id="x-xlsx">Excel-bestand</button><button class="btn" id="x-csv">CSV met afschrijvingen</button></div>
+        <div class="note" id="x-note">Het bestand is niet versleuteld. Bewaar het op een veilige plek.</div>
+      </div>
+    </div>
     <div class="set-group"><h2 class="set-h">Back-up</h2>
       <div class="panel">
         <div class="note">Een back-up bevat al je gegevens, onversleuteld. Bewaar hem op een veilige plek en nooit in een openbare repository.</div>
@@ -398,10 +486,12 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <details class="fdetails" id="priceBox" hidden><summary>Prijsgeschiedenis</summary><div class="fbody" id="priceList"></div></details>
     <div class="two">
       <div class="field"><label for="f-freq">Hoe vaak</label>
-        <select id="f-freq"><option value="m">Elke maand</option><option value="q">Per kwartaal</option><option value="h">Per half jaar</option><option value="y">Per jaar</option></select></div>
+        <select id="f-freq"><option value="m">Elke maand</option><option value="q">Per kwartaal</option><option value="h">Per half jaar</option><option value="y">Per jaar</option><option value="o">Eenmalig</option></select></div>
       <div class="field"><label for="f-day">Dag van afschrijving</label><input id="f-day" type="number" min="1" max="31" inputmode="numeric" value="1"></div>
     </div>
     <div class="field" id="splitField" hidden><label for="f-split">Jouw deel (%)</label><input id="f-split" type="number" min="0" max="100" inputmode="numeric"><span class="hint" id="splitHint"></span></div>
+    <div class="field" id="payerField" hidden><label for="f-payer">Wie betaalt deze last?</label><select id="f-payer"></select><span class="hint">Betaalt één van jullie hem van een eigen rekening, dan houdt de app bij wat de ander moet bijdragen.</span></div>
+    <div class="field" id="ymField" hidden><label for="f-ym">In welke maand?</label><select id="f-ym"></select><span class="hint">Voor een afrekening, naheffing of andere afschrijving die één keer voorkomt.</span></div>
     <div class="field" id="monthField" hidden><label for="f-month">Eerste maand van afschrijving</label><select id="f-month"></select></div>
     <div class="field"><label for="f-note">Notitie (optioneel)</label><input id="f-note" placeholder="Bijv. wat erin zit of waarom" autocomplete="off"></div>
     <details class="fdetails" id="contractBox"><summary>Contract en looptijd</summary>
@@ -428,6 +518,33 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     </div>
   </form>
 </div>
+<div class="scrim" id="scenScrim" hidden>
+  <form class="sheet sheet-lg" id="scenForm" novalidate>
+    <h2>Wat als</h2>
+    <div class="note">Reken een verandering door zonder je lasten aan te passen. Scenario's zijn alleen voor jou zichtbaar.</div>
+    <div class="field"><label for="sc-name">Naam van het scenario</label><input id="sc-name" placeholder="Bijv. Hogere hypotheekrente" autocomplete="off" maxlength="60"></div>
+    <div class="scen-res" id="sc-res" aria-live="polite"></div>
+    <details class="fdetails" open><summary>Bestaande lasten aanpassen</summary><div class="fbody"><div class="hint">Vul een nieuw bedrag in, of vink Vervalt aan.</div><div id="sc-items" class="sc-list"></div></div></details>
+    <details class="fdetails" open><summary>Nieuwe lasten</summary><div class="fbody"><div id="sc-adds" class="sc-list"></div><div><button type="button" class="btn" id="sc-add">+ Last toevoegen</button></div></div></details>
+    <div class="err" id="sc-err"></div>
+    <div class="btns" style="justify-content:space-between">
+      <button type="button" class="btn danger" id="sc-del" hidden>Verwijderen</button>
+      <div class="btns" style="margin-left:auto"><button type="button" class="btn" id="sc-cancel">Sluiten</button><button type="submit" class="btn primary">Opslaan</button></div>
+    </div>
+  </form>
+</div>
+<div class="scrim" id="amtScrim" hidden>
+  <form class="sheet sheet-sm" id="amtForm" novalidate>
+    <h2 id="amtTitle">Werkelijk bedrag</h2>
+    <div class="note" id="amtInfo"></div>
+    <div class="field"><label for="amt-v">Afgeschreven bedrag (€)</label><input id="amt-v" inputmode="decimal" autocomplete="off"></div>
+    <div class="err" id="amtErr"></div>
+    <div class="btns" style="justify-content:space-between">
+      <button type="button" class="btn" id="amtReset">Gepland bedrag gebruiken</button>
+      <div class="btns" style="margin-left:auto"><button type="button" class="btn" id="amtCancel">Annuleren</button><button type="submit" class="btn primary">Opslaan als betaald</button></div>
+    </div>
+  </form>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -437,20 +554,23 @@ const DKEY=BASE+'.v2', OLDKEY=BASE+'.v1';
 const CFGKEY=BASE+'.v2.sync', OLDCFG=BASE+'.v1.sync';
 const UIKEY=BASE+'.ui';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
-const CATS=[
-  {id:'wonen',name:'Wonen',c:'--c1'},
-  {id:'verzekering',name:'Verzekeringen',c:'--c2'},
-  {id:'energie',name:'Energie & water',c:'--c3'},
-  {id:'abonnement',name:'Abonnementen',c:'--c4'},
-  {id:'belasting',name:'Belastingen',c:'--c5'},
-  {id:'vervoer',name:'Vervoer',c:'--c6'},
-  {id:'overig',name:'Overig',c:'--c7'}];
+/* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
+const BASE_CATS=[
+  {id:'wonen',name:'Wonen',c:'c1'},
+  {id:'verzekering',name:'Verzekeringen',c:'c7'},
+  {id:'energie',name:'Energie & water',c:'c4'},
+  {id:'abonnement',name:'Abonnementen',c:'c3'},
+  {id:'belasting',name:'Belastingen',c:'c8'},
+  {id:'vervoer',name:'Vervoer',c:'c6'},
+  {id:'overig',name:'Overig',c:'c9'}];
+/* acht gecontroleerde kleuren (ook voor kleurenblinden te onderscheiden) plus grijs */
+const PALETTE=[['c1','blauw'],['c2','oranje'],['c3','zeegroen'],['c4','geel'],['c5','roze'],['c6','groen'],['c7','paars'],['c8','rood'],['c9','grijs']];
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks'};
+const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks',o:'eenmalig'};
 const PERIOD={m:1,q:3,h:6,y:12};   // aantal maanden tussen twee afschrijvingen
-const APP_VERSION='2.6.1';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
-const WISHLIST=/*WISHLIST*/[{"title": "Bankafschrift importeren", "size": "groot", "text": "Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt."}, {"title": "Inkomen en wat er overblijft", "size": "klein", "text": "Netto inkomen per persoon, vaste lasten als percentage van het inkomen en wat er vrij te besteden is. Optioneel de verdeling van gezamenlijke lasten automatisch naar inkomen."}, {"title": "Buffer voor de gezamenlijke rekening", "size": "middel", "text": "Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden."}, {"title": "Verrekenen tussen partners", "size": "middel", "text": "Per last kiezen wie hem betaalt, met een saldo zoals \"Anne krijgt nog € 42,50 van Geert\" en een knop om te verrekenen."}, {"title": "Herinneringen via je agenda", "size": "klein", "text": "Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt."}, {"title": "Vergrendelen met Face ID", "size": "middel", "text": "Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf."}, {"title": "Exporteren naar Excel en jaaroverzicht", "size": "klein", "text": "Export van alle lasten en een jaaroverzicht, bijvoorbeeld voor de belastingaangifte."}, {"title": "Zoeken en sorteren in Lasten", "size": "klein", "text": "Zoeken op naam en sorteren op bedrag, datum of einddatum."}, {"title": "Per categorie volgt het filter", "size": "klein", "text": "Het blok Per categorie in het Overzicht toont dezelfde bedragen als het kostenblok: totaal, gezamenlijk of eigen."}, {"title": "Werkelijk betaald bedrag en eenmalige afrekeningen", "size": "middel", "text": "Bij het afvinken het echte bedrag invullen als het afwijkt, zoals een energieafrekening, en eenmalige extra afschrijvingen aan een maand toevoegen. Het Overzicht toont gepland tegenover werkelijk."}, {"title": "Zien wat je partner heeft gewijzigd", "size": "klein", "text": "Bij het openen een melding zoals \"Anne heeft Energie aangepast en Hypotheek afgevinkt\", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé."}, {"title": "Eigen categorieën", "size": "klein", "text": "Categorieën toevoegen, hernoemen en een kleur geven, zoals Kinderopvang of Huisdieren, gedeeld met je partner."}, {"title": "Scenario's: wat als", "size": "middel", "text": "Een verandering doorrekenen zonder je gegevens aan te passen, zoals een hogere hypotheekrente na de rentevaste periode of kinderopvang erbij, met het effect op maandlasten, jouw deel en de inleg."}, {"title": "Jaarvergelijking", "size": "klein", "text": "Ontwikkeling van je vaste lasten ten opzichte van vorig jaar, met de grootste stijgers per last en per categorie, en vorig jaar als schaduw in de jaargrafiek."}]/*END*/;      // wordt bij het bouwen ingevuld uit WISHLIST.md
-const CHANGELOG=/*CHANGELOG*/[{"version": "2.6.1", "date": "27 oktober 2026", "items": ["Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.", "Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14)."]}, {"version": "2.6.0", "date": "26 oktober 2026", "items": ["Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.", "Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.", "Nieuw: bij Lasten zie je een komende prijswijziging en hoeveel een last ten opzichte van vorig jaar is gestegen of gedaald. De jaargrafiek en de maandlijsten rekenen per maand met het juiste bedrag.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont alleen het huidige bedrag en kan de prijsgeschiedenis wissen als je daar een last bewerkt."]}, {"version": "2.5.0", "date": "26 oktober 2026", "items": ["Nieuw: per last een einddatum, opzegtermijn, contract- of polisnummer en de website van de aanbieder, onder Contract en looptijd in het formulier.", "Nieuw: het Overzicht waarschuwt bij contracten die binnen twee maanden opgezegd moeten worden of aflopen, en bij een contract dat net is verlopen.", "Nieuw: kies Stopt na de einddatum voor een last die daarna vervalt, zoals een afgeloste lening. Na die maand telt hij niet meer mee en staat hij bij Lasten onder Beëindigd.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie kan de contractgegevens wissen als je daar een last bewerkt."]}, {"version": "2.4.1", "date": "26 oktober 2026", "items": ["Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is."]}, {"version": "2.4.0", "date": "26 oktober 2026", "items": ["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.", "Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.", "Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.", "Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.", "Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.", "Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]}, {"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
+const APP_VERSION='2.14.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
+const WISHLIST=/*WISHLIST*/[{"nr": "1", "title": "Bankafschrift importeren", "size": "groot", "text": "Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt."}, {"nr": "3", "title": "Buffer voor de gezamenlijke rekening", "size": "middel", "text": "Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden."}, {"nr": "5", "title": "Herinneringen via je agenda", "size": "klein", "text": "Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt."}, {"nr": "6", "title": "Vergrendelen met Face ID", "size": "middel", "text": "Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf."}, {"nr": "11", "title": "Zien wat je partner heeft gewijzigd", "size": "klein", "text": "Bij het openen een melding zoals \"Anne heeft Energie aangepast en Hypotheek afgevinkt\", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé."}]/*END*/;      // wordt bij het bouwen ingevuld uit WISHLIST.md
+const CHANGELOG=/*CHANGELOG*/[{"version": "2.14.0", "date": "27 oktober 2026", "items": ["Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.", "Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.", "Verbeterd: bij Wat als staat de knop Weg op de telefoon naast het bedrag."]}, {"version": "2.13.0", "date": "27 oktober 2026", "items": ["Nieuw: Wat als in het Overzicht. Reken een verandering door zonder je lasten aan te passen: een ander bedrag voor bestaande lasten, lasten die vervallen of nieuwe lasten erbij.", "Nieuw: je ziet direct het verschil in totale vaste lasten, jouw deel, de inleg per persoon en, als je je inkomen hebt ingevuld, wat je vrij te besteden hebt. Scenario's bewaar je met een naam; ze staan in je eigen bestand en zijn alleen voor jou zichtbaar.", "Opgelost: op de iPhone was de pagina bij Overzicht en Instellingen iets breder dan het scherm, waardoor Safari een beetje uitzoomde. Dat kwam door verborgen tooltips in de grafiek en de keuzerondjes bij de standaardverdeling."]}, {"version": "2.12.0", "date": "27 oktober 2026", "items": ["Nieuw: het Overzicht vergelijkt je kosten met vorig jaar: hoeveel procent duurder of goedkoper, de grootste stijgers en dalers per last en de verschillen per categorie.", "Nieuw: de jaargrafiek toont vorig jaar als gestippelde omtrek achter elke balk, zodra er verschil is."]}, {"version": "2.11.0", "date": "27 oktober 2026", "items": ["Nieuw: tik in Maand of Overzicht op het bedrag van een afschrijving om het werkelijk afgeschreven bedrag in te vullen, bijvoorbeeld bij een variabele rekening. De last wordt dan meteen afgevinkt en het geplande bedrag staat doorgestreept ernaast.", "Nieuw: Eenmalig bij Hoe vaak, voor een afrekening, naheffing of andere afschrijving die één keer voorkomt. Die telt mee in de maand zelf en in het jaar, maar niet als vaste last per maand. Bij Lasten staan ze onder Eenmalig.", "Nieuw: Maand en het Overzicht tonen gepland tegenover werkelijk als die verschillen. De jaargrafiek en het verrekenen rekenen met het werkelijke bedrag.", "Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.11.0 toont een eenmalige post als maandelijkse last."]}, {"version": "2.10.0", "date": "27 oktober 2026", "items": ["Nieuw: kies bij een gezamenlijke last wie hem betaalt: de gezamenlijke rekening, of één van jullie van een eigen rekening.", "Nieuw: het Overzicht houdt bij wat de ander moet bijdragen, bijvoorbeeld Anne betaalt jou € 572,50, met de laatste betalingen. Met Markeer als verrekend zet je het saldo op nul; dat kun je ongedaan maken.", "Nieuw: bij het afvinken legt de app vast wie betaalde, het bedrag en de verdeling op dat moment. Latere wijzigingen aan de last veranderen het saldo dus niet.", "Verbeterd: de inleg op de gezamenlijke rekening telt alleen lasten die van die rekening gaan."]}, {"version": "2.9.0", "date": "27 oktober 2026", "items": ["Nieuw: vul onder Instellingen → Huishouden je netto inkomen in. Het staat versleuteld in je eigen bestand en is alleen voor jou zichtbaar.", "Nieuw: het Overzicht toont welk deel van je inkomen naar vaste lasten gaat en wat er per maand vrij te besteden is.", "Nieuw: gezamenlijke lasten naar inkomen verdelen. Delen jullie allebei je inkomen, dan berekent de app de standaardverdeling automatisch. Tot die tijd geldt het vaste percentage.", "Verbeterd: de namen van categorieën in Instellingen staan in gewone tekstkleur."]}, {"version": "2.8.0", "date": "27 oktober 2026", "items": ["Nieuw: eigen categorieën. Onder Instellingen → Huishouden voeg je categorieën toe, zoals Kinderopvang of Huisdieren, en wijzig je de naam en kleur van elke categorie. Ze worden gedeeld met je partner.", "Nieuw: een categorie verwijderen kan ook; de lasten erin gaan dan naar Overig.", "Verbeterd: nieuwe kleuren voor de categorieën, die ook voor kleurenblinden goed van elkaar te onderscheiden zijn.", "Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.6.2 toont de eigen categorieën als Overig."]}, {"version": "2.7.0", "date": "27 oktober 2026", "items": ["Nieuw: zoeken in Lasten op naam, notitie of contract- en polisnummer. Hoofdletters en accenten maken niet uit, en de zoekterm wordt gemarkeerd.", "Nieuw: sorteren in Lasten per categorie, op bedrag, naam, dag van afschrijving of einddatum van het contract. Je keuze wordt onthouden.", "Nieuw: sneltoets / om op de laptop direct te zoeken; Esc maakt het zoekveld leeg."]}, {"version": "2.6.2", "date": "27 oktober 2026", "items": ["Verbeterd: het blok Per categorie in het Overzicht volgt het filter, net als het kostenblok. Bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee, bij Eigen zie je je eigen kosten. De percentages tellen op tot 100%.", "Verbeterd: de app bewaart voortaan gegevens die een nieuwere versie toevoegt, ook op een apparaat dat nog niet is bijgewerkt. Zo raak je bij volgende uitbreidingen niets kwijt.", "Verbeterd: wishlistpunten houden een vast nummer, ook in de app."]}, {"version": "2.6.1", "date": "27 oktober 2026", "items": ["Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.", "Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14)."]}, {"version": "2.6.0", "date": "26 oktober 2026", "items": ["Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.", "Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.", "Nieuw: bij Lasten zie je een komende prijswijziging en hoeveel een last ten opzichte van vorig jaar is gestegen of gedaald. De jaargrafiek en de maandlijsten rekenen per maand met het juiste bedrag.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont alleen het huidige bedrag en kan de prijsgeschiedenis wissen als je daar een last bewerkt."]}, {"version": "2.5.0", "date": "26 oktober 2026", "items": ["Nieuw: per last een einddatum, opzegtermijn, contract- of polisnummer en de website van de aanbieder, onder Contract en looptijd in het formulier.", "Nieuw: het Overzicht waarschuwt bij contracten die binnen twee maanden opgezegd moeten worden of aflopen, en bij een contract dat net is verlopen.", "Nieuw: kies Stopt na de einddatum voor een last die daarna vervalt, zoals een afgeloste lening. Na die maand telt hij niet meer mee en staat hij bij Lasten onder Beëindigd.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie kan de contractgegevens wissen als je daar een last bewerkt."]}, {"version": "2.4.1", "date": "26 oktober 2026", "items": ["Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is."]}, {"version": "2.4.0", "date": "26 oktober 2026", "items": ["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.", "Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.", "Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.", "Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.", "Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.", "Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]}, {"version": "2.3.0", "date": "26 oktober 2026", "items": ["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.", "Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.", "Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]}, {"version": "2.2.0", "date": "26 oktober 2026", "items": ["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.", "Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.", "Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]}, {"version": "2.1.0", "date": "26 oktober 2026", "items": ["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.", "Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.", "Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.", "Verbeterd: invoervelden zoomen op de iPhone niet meer in."]}, {"version": "2.0.0", "date": "21 oktober 2026", "items": ["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.", "Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.", "Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.", "Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.", "Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]}, {"version": "1.1.0", "date": "15 oktober 2026", "items": ["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]}, {"version": "1.0.0", "date": "15 oktober 2026", "items": ["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
 const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
@@ -484,21 +604,23 @@ function normPrices(p){
   out[0].from='';
   return out.length>1?out:null;
 }
+const KNOWN_KEYS=['items','del','paid','meta'];
 function migStore(d){
   if(!d||!Array.isArray(d.items)) return null;
   const s=EMPTY();
+  for(const k in d) if(!KNOWN_KEYS.includes(k)) s[k]=d[k];   // onderdelen van een nieuwere versie blijven bewaard
   s.items=d.items.map(i=>({...i,id:String(i.id),name:String(i.name||''),amount:+i.amount||0,
     end:/^\d{4}-\d{2}-\d{2}$/.test(i.end||'')?i.end:'',after:i.after==='stop'?'stop':'door',
-    notice:Math.max(0,Math.min(999,parseInt(i.notice,10)||0)),noticeU:i.noticeU==='d'?'d':'m',ref:String(i.ref||''),url:String(i.url||''),prices:normPrices(i.prices),cat:i.cat||'overig',freq:PERIOD[i.freq]?i.freq:'m',day:+i.day||1,month:+i.month||1,note:i.note||'',example:!!i.example,u:+i.u||0,
+    notice:Math.max(0,Math.min(999,parseInt(i.notice,10)||0)),noticeU:i.noticeU==='d'?'d':'m',ref:String(i.ref||''),url:String(i.url||''),prices:normPrices(i.prices),cat:i.cat||'overig',freq:PERIOD[i.freq]||i.freq==='o'?i.freq:'m',ym:/^\d{4}-\d{2}$/.test(i.ym||'')?i.ym:'',day:+i.day||1,month:+i.month||1,note:i.note||'',example:!!i.example,u:+i.u||0,
     split:(i.split==null||i.split==='')?null:clampPct(i.split)}));
   if(d.del&&typeof d.del==='object') for(const id in d.del) s.del[id]=+d.del[id]||0;
   const p=d.paid||{};
   for(const k in p){
     s.paid[k]={};
     if(Array.isArray(p[k])) p[k].forEach(id=>s.paid[k][id]={p:true,u:0});
-    else for(const id in p[k]) s.paid[k][id]={p:!!p[k][id].p,u:+p[k][id].u||0};
+    else for(const id in p[k]) s.paid[k][id]={...p[k][id],p:!!p[k][id].p,u:+p[k][id].u||0};
   }
-  if(d.meta&&typeof d.meta==='object') s.meta={p1:String(d.meta.p1||'Ik'),p2:String(d.meta.p2||'Partner'),split:clampPct(d.meta.split),u:+d.meta.u||0};
+  if(d.meta&&typeof d.meta==='object') s.meta={...d.meta,p1:String(d.meta.p1||'Ik'),p2:String(d.meta.p2||'Partner'),split:clampPct(d.meta.split),u:+d.meta.u||0};
   return s;
 }
 function migrateAll(d){
@@ -540,19 +662,38 @@ function merge(a,b){
   for(const i of map.values()) if(!(out.del[i.id]>=i.u)) out.items.push({...i});
   for(const s of [a,b]) for(const k in s.paid){
     out.paid[k]=out.paid[k]||{};
-    for(const id in s.paid[k]){const v=s.paid[k][id], cur=out.paid[k][id]; if(!cur||v.u>cur.u) out.paid[k][id]={p:v.p,u:v.u};}
+    for(const id in s.paid[k]){const v=s.paid[k][id], cur=out.paid[k][id]; if(!cur||v.u>cur.u) out.paid[k][id]={...v};}
   }
   const ma=a.meta, mb=b.meta;
   out.meta=!ma?(mb?{...mb}:null):!mb?{...ma}:(mb.u>ma.u?{...mb}:{...ma});
+  /* overige onderdelen: met een eigen samenvoegregel, anders de versie van GitHub */
+  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){
+    if(k in out) continue;
+    out[k]=MERGE[k]?MERGE[k](a[k],b[k]):(b[k]!==undefined?b[k]:a[k]);
+  }
   return out;
 }
+/* samenvoegregels voor onderdelen die later zijn toegevoegd */
+function mergeById(x,y){            // {id:{...,u}}: per id wint de nieuwste wijziging
+  const out={};
+  for(const src of [x||{},y||{}]) for(const id in src){const v=src[id]; if(v&&(!out[id]||(+v.u||0)>(+out[id].u||0))) out[id]={...v};}
+  return out;
+}
+const newest=(x,y)=>!x?(y?{...y}:undefined):!y?{...x}:((+y.u||0)>(+x.u||0)?{...y}:{...x});
+const MERGE={
+  cats:mergeById,                                                     // samen: categorieën
+  inc:(x,y)=>({p1:newest(x&&x.p1,y&&y.p1),p2:newest(x&&x.p2,y&&y.p2)}),  // samen: gedeeld inkomen per persoon
+  prof:newest,                                                        // eigen: jouw inkomen (privé)
+  settle:mergeById,                                                   // samen: verrekeningen tussen jullie
+  scen:mergeById                                                      // eigen: scenario's (privé)
+};
 const withoutExamples=s=>({...s,items:s.items.filter(i=>!i.example)});
 function canon(v){
   if(Array.isArray(v)) return '['+v.map(canon).join(',')+']';
   if(v&&typeof v==='object') return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
   return JSON.stringify(v===undefined?null:v);
 }
-const canonStore=s=>canon({items:[...s.items].sort((x,y)=>x.id<y.id?-1:1),del:s.del,paid:s.paid,meta:s.meta||null});
+const canonStore=s=>canon({...s,items:[...s.items].sort((x,y)=>x.id<y.id?-1:1),meta:s.meta||null});
 
 /* ---------- afgeleide waarden ---------- */
 const now=new Date();
@@ -563,7 +704,7 @@ try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}
 
 const mkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
 const daysIn=(y,m)=>new Date(y,m+1,0).getDate();
-const monthly=i=>i.amount/(PERIOD[i.freq]||1);
+const monthly=i=>i.freq==='o'?0:i.amount/(PERIOD[i.freq]||1);   // eenmalige posten tellen niet mee als vaste last per maand
 const occurs=(i,m)=>{const p=PERIOD[i.freq]||1; return p===1||(((m-(i.month-1))%p)+p)%p===0;};
 /* looptijd: een last met "stopt" na de einddatum heeft na de maand van de einddatum geen afschrijvingen meer */
 const parseDate=s=>{const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d);};
@@ -576,7 +717,10 @@ const priceList=i=>Array.isArray(i.prices)&&i.prices.length?i.prices:[{from:'',a
 function amountAt(i,y,m){const k=mkey(y,m); let a=priceList(i)[0].a; for(const p of priceList(i)) if(p.from===''||p.from<=k) a=p.a; return a;}
 function curAmount(i){const t=new Date(); return amountAt(i,t.getFullYear(),t.getMonth());}
 const ymLabel=k=>MONTHS[+k.slice(5)-1]+' '+k.slice(0,4);
-const occursYM=(i,y,m)=>occurs(i,m)&&!endedBy(i,y,m);
+const occursYM=(i,y,m)=>i.freq==='o'?i.ym===mkey(y,m):occurs(i,m)&&!endedBy(i,y,m);
+/* werkelijk afgeschreven bedrag: staat bij het vinkje van die maand; anders geldt het geplande bedrag */
+function paidEntry(i,k){const p=state[i.joint?'samen':'eigen'].paid[k]; return p&&p[i.id];}
+function amountFor(i,y,m){const e=paidEntry(i,mkey(y,m)); return e&&e.p&&e.a!=null?+e.a:amountAt(i,y,m);}
 function isEnded(i){const t=new Date(); return endedBy(i,t.getFullYear(),t.getMonth());}
 function noticeDate(i){
   if(!i.end||!i.notice) return null;
@@ -596,7 +740,18 @@ function contractStatus(i){
   if(days(e)<=60) return {level:'warn',short:(i.after==='stop'?'Stopt ':'Loopt af ')+fmtDate(e),text:(i.after==='stop'?'stopt op ':'loopt af op ')+fmtDate(e,true)+(n?'; de opzegtermijn is verstreken':'')};
   return {level:'none',short:'Tot '+fmtDate(e,true)};
 }
-const cat=id=>CATS.find(c=>c.id===id)||CATS[CATS.length-1];
+let _cats=null;
+function cats(){
+  if(_cats) return _cats;
+  const over=state.samen.cats||{}, out=[];
+  for(const b of BASE_CATS){const o=over[b.id]; if(o&&o.del&&b.id!=='overig') continue;
+    out.push({id:b.id,name:(o&&o.name)||b.name,c:'--'+((o&&o.c)||b.c),base:true});}
+  Object.values(over).filter(o=>o&&!o.del&&!BASE_CATS.some(b=>b.id===o.id)).sort((a,b)=>(a.ord||0)-(b.ord||0))
+    .forEach(o=>out.push({id:o.id,name:o.name,c:'--'+(o.c||'c9')}));
+  const ov=out.findIndex(c=>c.id==='overig'); out.push(out.splice(ov,1)[0]);   // Overig altijd onderaan
+  return _cats=out;
+}
+const cat=id=>cats().find(c=>c.id===id)||cats().find(c=>c.id==='overig');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>eur.format(n);
 
@@ -604,9 +759,14 @@ const meta=()=>state.samen.meta||DEFAULT_META;
 const me=()=>cfg&&cfg.me?cfg.me:(ui.me==='p2'?'p2':'p1');
 const other=()=>me()==='p1'?'p2':'p1';
 const nameOf=p=>meta()[p]||(p==='p1'?'Ik':'Partner');
-const p1pct=i=>i.split!=null?i.split:meta().split;
+/* standaardverdeling: vast percentage, of naar inkomen als jullie dat kiezen en allebei je inkomen delen */
+function sharedInc(p){const v=state.samen.inc&&state.samen.inc[p]; return v&&+v.a>0?+v.a:0;}
+const byIncomeReady=()=>!!(meta().byIncome&&sharedInc('p1')&&sharedInc('p2'));
+const effSplit=()=>byIncomeReady()?Math.round(sharedInc('p1')/(sharedInc('p1')+sharedInc('p2'))*100):meta().split;
+const myIncome=()=>{const p=state.eigen.prof; return p&&+p.income>0?+p.income:0;};
+const p1pct=i=>i.split!=null?i.split:effSplit();
 const myPct=i=>!i.joint?100:(me()==='p1'?p1pct(i):100-p1pct(i));
-const myDefault=()=>me()==='p1'?meta().split:100-meta().split;
+const myDefault=()=>me()==='p1'?effSplit():100-effSplit();
 const myAmt=(i,a)=>a*myPct(i)/100;
 const stOf=i=>i.joint?'samen':'eigen';
 function all(){return state.samen.items.map(i=>({...i,joint:true,amount:curAmount(i)})).concat(state.eigen.items.map(i=>({...i,joint:false,amount:curAmount(i)})));}
@@ -614,17 +774,45 @@ function shown(){const f=ui.filter; return all().filter(i=>f==='alle'||(f==='sam
 function findItem(id){for(const st of STORES){const item=state[st].items.find(i=>i.id===id); if(item) return {st,item};} return null;}
 function isPaid(i,k){const p=state[stOf(i)].paid[k]; return !!(p&&p[i.id]&&p[i.id].p);}
 
+/* afvinken: legt bij een gezamenlijke last die één van jullie betaalt vast wie betaalde, het bedrag en de verdeling op dat moment */
+function setPaid(f,k,on,patch){
+  const P=state[f.st].paid; P[k]=P[k]||{};
+  const e={...(P[k][f.item.id]||{}),...(patch||{}),p:on,u:Date.now()};
+  if(e.a==null) delete e.a;
+  const y=+k.slice(0,4), m=+k.slice(5)-1;
+  if(f.st==='samen'&&on&&(f.item.payer==='p1'||f.item.payer==='p2')){
+    e.by=f.item.payer; e.sh=p1pct(f.item); e.amt=e.a!=null?+e.a:amountAt(f.item,y,m);
+  }else{delete e.by; delete e.sh; delete e.amt;}
+  P[k][f.item.id]=e;
+}
+/* saldo tussen jullie: positief betekent dat persoon 2 persoon 1 nog iets moet betalen */
+function settleState(){
+  const P=state.samen.paid||{}, ev=[]; let net=0;
+  for(const k in P) for(const id in P[k]){
+    const e=P[k][id]; if(!e||!e.p||!e.by) continue;
+    const amt=+e.amt||0, sh=e.sh==null?50:+e.sh, owe=e.by==='p1'?amt*(100-sh)/100:-amt*sh/100;
+    net+=owe;
+    const it=state.samen.items.find(i=>i.id===id);
+    ev.push({t:+e.u||0,kind:'pay',k,by:e.by,name:it?it.name:'Verwijderde last',share:Math.abs(owe)});
+  }
+  const S=state.samen.settle||{};
+  for(const id in S){const s=S[id]; if(!s||s.del) continue; net+=s.from==='p2'?-s.a:s.a; ev.push({t:+s.u||0,kind:'settle',id,from:s.from,to:s.to,a:+s.a});}
+  ev.sort((a,b)=>b.t-a.t);
+  return {net:Math.round(net*100)/100,ev};
+}
+
 /* ---------- weergave ---------- */
 const eur0=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 function today(){const t=new Date(); return {y:t.getFullYear(),m:t.getMonth(),d:t.getDate()};}
 function monthList(items,y,m){
   const k=mkey(y,m), dim=daysIn(y,m);
-  return items.filter(i=>occursYM(i,y,m)).map(i=>({...i,amount:amountAt(i,y,m),d:Math.min(i.day,dim),paid:isPaid(i,k)}))
+  return items.filter(i=>occursYM(i,y,m)).map(i=>({...i,amount:amountFor(i,y,m),planned:amountAt(i,y,m),d:Math.min(i.day,dim),paid:isPaid(i,k)}))
     .sort((a,b)=>a.d-b.d||a.name.localeCompare(b.name));
 }
 const sumAmt=a=>a.reduce((s,i)=>s+i.amount,0);
 
 function render(){
+  _cats=null;
   document.querySelectorAll('#filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===ui.filter)));
   const items=shown();
   /* maand */
@@ -636,6 +824,8 @@ function render(){
   const mine=list.reduce((s,i)=>s+myAmt(i,i.amount),0);
   $('dueLbl').textContent={alle:'Af te schrijven',samen:'Gezamenlijk af te schrijven',eigen:'Eigen lasten af te schrijven'}[ui.filter];
   $('dueTotal').textContent=fmt(total);
+  const planned=list.reduce((s,i)=>s+i.planned,0), dv=total-planned;
+  $('planNote').textContent=Math.abs(dv)>=0.005?'Gepland '+fmt(planned)+', werkelijk '+fmt(Math.abs(dv))+(dv>0?' hoger':' lager'):'';
   $('paidAmt').textContent=fmt(paid);
   $('openAmt').textContent=fmt(total-paid);
   $('avgAmt').textContent=fmt(mine);
@@ -645,12 +835,13 @@ function render(){
   renderMonth(list); renderLasten(items); renderOverview(items);
   renderDevicePanel(); renderInstall();
   if(!$('splitPanel').contains(document.activeElement)) renderSplitPanel();
+  renderCatPanel(); renderIncomePanel(); fillYears();
 }
 
 const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const PEN='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
 const exChip=i=>i.example?'<span class="chip ex">Voorbeeld</span>':'';
-const jointChip=i=>i.joint?'<span class="chip samen">Samen · jij '+myPct(i)+'%</span>':'';
+const jointChip=i=>i.joint?'<span class="chip samen">Samen · jij '+myPct(i)+'%</span>'+(i.payer==='p1'||i.payer==='p2'?'<span class="chip plain">betaalt '+esc(i.payer===me()?'jij':nameOf(i.payer))+'</span>':''):'';
 function priceChip(i){
   const ps=priceList(i); if(ps.length<2) return '';
   const T=today(), k=mkey(T.y,T.m);
@@ -668,7 +859,7 @@ function contractChip(i){
   const cls={warn:'chip warn',info:'chip info',ended:'chip ex',none:'chip plain'}[s.level];
   return '<span class="'+cls+'">'+esc(s.short)+'</span>';
 }
-const catTag=i=>{const c=cat(i.cat); return '<span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span>';};
+const catTag=i=>{const c=cat(i.cat); return '<span><span class="dot" style="background:var('+c.c+')"></span>'+esc(c.name)+'</span>';};
 
 function statusChip(i,y,m){
   if(i.paid) return '<span class="chip ok">Betaald</span>';
@@ -690,7 +881,8 @@ function rowHtml(i,y,m){
   return '<div class="row'+(i.paid?' paid':'')+'">'+
     '<div class="day"><span class="num">'+i.d+'</span><small>'+MONTHS[m].slice(0,3)+'</small></div>'+
     '<button class="info" data-edit="'+esc(i.id)+'" title="Bewerken"><span class="name">'+esc(i.name)+'</span><span class="meta">'+catTag(i)+(i.freq!=='m'?'<span>'+FREQ[i.freq]+'</span>':'')+jointChip(i)+statusChip(i,y,m)+exChip(i)+'</span></button>'+
-    '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+(i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+'</div>'+
+    '<div class="right"><div class="amt-wrap"><button class="amt-btn" data-amt="'+esc(i.id)+'" data-key="'+mkey(y,m)+'" title="Werkelijk bedrag aanpassen" aria-label="'+esc(i.name)+': '+fmt(i.amount)+'. Werkelijk bedrag aanpassen"><span class="amt num">'+fmt(i.amount)+'</span></button>'+
+      (Math.abs(i.amount-i.planned)>=0.005?'<div class="sub num planned">'+fmt(i.planned)+'</div>':'')+(i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+'</div>'+
     '<button class="check" data-toggle="'+esc(i.id)+'" data-key="'+mkey(y,m)+'" aria-pressed="'+i.paid+'" aria-label="'+esc(i.name)+(i.paid?' als niet betaald markeren':' als betaald markeren')+'">'+CHECK+'</button></div></div>';
 }
 function renderMonth(list){
@@ -703,25 +895,51 @@ function renderMonth(list){
   el.innerHTML='<div class="mcols">'+col('Nog te betalen',open,'Alles is betaald.')+col('Betaald',done,'Nog niets afgevinkt.')+'</div>';
 }
 
+/* zoeken: hoofdletters en accenten tellen niet mee */
+const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function hl(text,q){      // zoekterm markeren in de naam
+  if(!q) return esc(text);
+  const f=fold(text), i=f.indexOf(fold(q));
+  return i<0?esc(text):esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length));
+}
+let lq='';
+const SORTS={
+  amount:(a,b)=>monthly(b)-monthly(a)||a.name.localeCompare(b.name,'nl'),
+  name:(a,b)=>a.name.localeCompare(b.name,'nl'),
+  day:(a,b)=>a.day-b.day||a.name.localeCompare(b.name,'nl'),
+  end:(a,b)=>(a.end?0:1)-(b.end?0:1)||(a.end<b.end?-1:a.end>b.end?1:0)||a.name.localeCompare(b.name,'nl')
+};
 function renderLasten(items){
-  const el=$('v-lasten');
+  const el=$('lastenList');
+  $('l-sort').value=SORTS[ui.sort]?ui.sort:'cat';
   if(!items.length){el.innerHTML='<div class="empty">'+emptyMsg()+'</div>';return;}
+  const q=lq.trim();
+  if(q){const fq=fold(q); items=items.filter(i=>fold(i.name+' '+(i.note||'')+' '+(i.ref||'')).includes(fq));}
   let html='';
   if(all().some(i=>i.example)) html+='<div class="panel"><div class="note">De lijst is gevuld met voorbeeldbedragen zodat je ziet hoe het werkt. Voorbeelden worden niet gesynchroniseerd. Pas ze aan of wis ze en begin met je eigen lasten.</div><div class="btns"><button class="btn" id="clearEx">Voorbeelden wissen</button></div></div>';
   html+='<div class="groups">';
   const lastRow=i=>'<div class="row'+(isEnded(i)?' ended':'')+'" style="grid-template-columns:1fr auto">'+
-        '<button class="info" data-edit="'+esc(i.id)+'" title="Bewerken"><span class="name">'+esc(i.name)+'</span><span class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+jointChip(i)+priceChip(i)+contractChip(i)+exChip(i)+'</span></button>'+
+        '<button class="info" data-edit="'+esc(i.id)+'" title="Bewerken"><span class="name">'+hl(i.name,q)+'</span><span class="meta"><span>'+FREQ[i.freq]+(i.freq==='m'?' op de '+i.day+'e':i.freq==='o'?' · '+(i.ym?ymLabel(i.ym):'')+', dag '+i.day:' · vanaf '+MONTHS[i.month-1]+', dag '+i.day)+'</span>'+(i.note?'<span>'+esc(i.note)+'</span>':'')+jointChip(i)+priceChip(i)+contractChip(i)+exChip(i)+'</span></button>'+
         '<div class="right"><div class="amt-wrap"><div class="amt num">'+fmt(i.amount)+'</div>'+
           (i.joint?'<div class="sub num">jij '+fmt(myAmt(i,i.amount))+'</div>':'')+
-          (i.freq!=='m'?'<div class="sub num">≈ '+fmt(monthly(i))+' p/m</div>':'')+
+          (i.freq!=='m'&&i.freq!=='o'?'<div class="sub num">≈ '+fmt(monthly(i))+' p/m</div>':'')+
         '</div><button class="edit" data-edit="'+esc(i.id)+'" aria-label="'+esc(i.name)+' bewerken">'+PEN+'</button></div></div>';
-  const active=items.filter(i=>!isEnded(i)), ended=items.filter(isEnded);
-  CATS.forEach(c=>{
+  const once=items.filter(i=>i.freq==='o').sort((a,b)=>a.ym<b.ym?-1:a.ym>b.ym?1:a.day-b.day);
+  const active=items.filter(i=>!isEnded(i)&&i.freq!=='o'), ended=items.filter(i=>isEnded(i)&&i.freq!=='o');
+  if(q&&!items.length){el.innerHTML=html+'<div class="empty">Geen lasten gevonden voor <b>'+esc(q)+'</b>.</div>';return;}
+  if(q||SORTS[ui.sort]){   // platte lijst bij zoeken of een andere sortering
+    const list=[...items].sort(SORTS[ui.sort]||SORTS.amount);
+    const sum=active.filter(i=>items.includes(i)).reduce((s,i)=>s+monthly(i),0);
+    el.innerHTML=html.replace('<div class="groups">','')+'<div class="lsum"><span>'+list.length+(list.length===1?' last':' lasten')+'</span><span class="num">'+fmt(sum)+' p/m</span></div><div class="list">'+list.map(lastRow).join('')+'</div>';
+    return;
+  }
+  cats().forEach(c=>{
     const g=active.filter(i=>cat(i.cat).id===c.id).sort((a,b)=>monthly(b)-monthly(a));
     if(!g.length) return;
     const sum=g.reduce((s,i)=>s+monthly(i),0);
-    html+='<div class="group"><h3><span><span class="dot" style="background:var('+c.c+')"></span>'+c.name+'</span><span class="num">'+fmt(sum)+' p/m</span></h3><div class="list">'+g.map(lastRow).join('')+'</div></div>';
+    html+='<div class="group"><h3><span><span class="dot" style="background:var('+c.c+')"></span>'+esc(c.name)+'</span><span class="num">'+fmt(sum)+' p/m</span></h3><div class="list">'+g.map(lastRow).join('')+'</div></div>';
   });
+  if(once.length) html+='<div class="group"><h3><span>Eenmalig</span><span class="note">telt mee in de maand zelf</span></h3><div class="list">'+once.map(lastRow).join('')+'</div></div>';
   if(ended.length) html+='<div class="group"><h3><span>Beëindigd</span><span class="note">telt niet meer mee</span></h3><div class="list">'+ended.map(lastRow).join('')+'</div></div>';
   el.innerHTML=html+'</div>';
 }
@@ -732,22 +950,23 @@ function niceStep(v){
   const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e;
   return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e;
 }
-function chartHtml(vals,avg,T,title,paid){
-  const max=Math.max(...vals); if(!(max>0)) return '';
+function chartHtml(vals,avg,T,title,paid,prev){
+  const ghost=prev&&prev.some((v,m)=>Math.abs(v-vals[m])>=0.005);
+  const max=Math.max(...vals,...(ghost?prev:[])); if(!(max>0)) return '';
   const step=niceStep(max/3), top=step*Math.ceil(max/step-1e-9);
   const ticks=[]; for(let v=0;v<=top+1e-6;v+=step) ticks.push(v);
   const pc=v=>(v/top*100).toFixed(2)+'%';
-  return '<div class="legend" aria-hidden="true"><span><i class="sw p"></i>Betaald</span><span><i class="sw o"></i>Nog open</span><span><i class="sw avg"></i>Gemiddelde</span></div>'+
+  return '<div class="legend" aria-hidden="true"><span><i class="sw p"></i>Betaald</span><span><i class="sw o"></i>Nog open</span><span><i class="sw avg"></i>Gemiddelde</span>'+(ghost?'<span><i class="sw prev"></i>'+(T.y-1)+'</span>':'')+'</div>'+
     '<div class="chart">'+
     '<div class="yax" aria-hidden="true">'+ticks.map(v=>'<span style="bottom:'+pc(v)+'">'+eur0.format(v)+'</span>').join('')+'</div>'+
     '<div class="plot">'+ticks.slice(1).map(v=>'<i class="gl" style="bottom:'+pc(v)+'"></i>').join('')+
       '<i class="avg" style="bottom:'+pc(avg)+'"></i>'+
       '<div class="bars" role="group" aria-label="'+title+' per maand in '+T.y+'">'+vals.map((v,m)=>
-        '<button data-month="'+m+'" style="--h:'+pc(v)+'"'+(m===T.m?' aria-current="date"':'')+(m<2?' class="tl"':m>9?' class="tr"':'')+
-        ' aria-label="'+MONTHS[m]+': '+fmt(v)+(paid[m]>0?', waarvan '+fmt(paid[m])+' betaald':'')+'. Open deze maand.">'+
+        '<button data-month="'+m+'" style="--h:'+pc(v)+(ghost?';--g:'+pc(prev[m]):'')+'"'+(m===T.m?' aria-current="date"':'')+(m<3?' class="tl"':m>8?' class="tr"':'')+
+        ' aria-label="'+MONTHS[m]+': '+fmt(v)+(paid[m]>0?', waarvan '+fmt(paid[m])+' betaald':'')+(ghost?', '+(T.y-1)+': '+fmt(prev[m]):'')+'. Open deze maand.">'+(ghost?'<span class="ghost"></span>':'')+
         /* gestapelde balk: onderaan groen voor wat betaald is, daarboven blauw voor wat nog open staat */
         '<span class="stack">'+(v-paid[m]>0.005?'<i class="o" style="flex-grow:'+(v-paid[m]).toFixed(2)+'"></i>':'')+(paid[m]>0.005?'<i class="p" style="flex-grow:'+paid[m].toFixed(2)+'"></i>':'')+'</span>'+
-        '<span class="tip" aria-hidden="true">'+MONTHS[m].slice(0,3)+' · '+fmt(v)+(paid[m]>0?' · betaald '+fmt(paid[m]):'')+'</span></button>').join('')+
+        '<span class="tip" aria-hidden="true">'+MONTHS[m].slice(0,3)+' · '+fmt(v)+(paid[m]>0?' · betaald '+fmt(paid[m]):'')+(ghost?' · '+(T.y-1)+' '+fmt(prev[m]):'')+'</span></button>').join('')+
       '</div></div>'+
     '<div class="xax" aria-hidden="true">'+MONTHS.map((n,m)=>'<span'+(m===T.m?' class="cur"':'')+'><span class="x3">'+n.slice(0,3)+'</span><span class="x1">'+n[0]+'</span></span>').join('')+'</div>'+
   '</div>';
@@ -764,7 +983,7 @@ function renderOverview(items){
     (list.length
       ?'<div><div class="big">'+fmt(total-paid)+'</div><div class="note">'+(open.length?'nog af te schrijven, '+open.length+' van '+list.length+' lasten':'alles is betaald')+'</div></div>'+
        '<div class="bar" aria-hidden="true"><b style="width:'+(total?paid/total*100:0)+'%"></b></div>'+
-       '<div class="note num">'+fmt(paid)+' van '+fmt(total)+' betaald</div>'
+       '<div class="note num">'+fmt(paid)+' van '+fmt(total)+' betaald'+(Math.abs(total-list.reduce((s,i)=>s+i.planned,0))>=0.005?' (gepland '+fmt(list.reduce((s,i)=>s+i.planned,0))+')':'')+'</div>'
       :'<div class="note">Geen afschrijvingen in '+mName+'.</div>')+
     '<button class="link" data-goto="maand">Naar '+mName+' →</button></div>';
   /* eerstvolgende afschrijvingen */
@@ -775,13 +994,16 @@ function renderOverview(items){
       :'<div class="empty small">Alles voor '+mName+' is betaald.</div>')+'</div>';
   /* kosten + jaargrafiek: titel en bedragen volgen het filter */
   const full=ui.filter!=='eigen';                       // bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee
-  const perMonth=f=>MONTHS.map((_,m)=>items.filter(i=>occursYM(i,T.y,m)).reduce((s,i)=>s+f({...i,amount:amountAt(i,T.y,m)}),0));
+  const perMonthY=(y,f)=>MONTHS.map((_,m)=>items.filter(i=>occursYM(i,y,m)).reduce((s,i)=>s+f({...i,amount:amountFor(i,y,m)}),0));
+  const perMonth=f=>perMonthY(T.y,f);
   const vals=perMonth(i=>full?i.amount:myAmt(i,i.amount));
   const paidVals=MONTHS.map((_,m)=>items.filter(i=>occursYM(i,T.y,m)&&isPaid(i,mkey(T.y,m)))
-    .reduce((s,i)=>{const a=amountAt(i,T.y,m); return s+(full?a:myAmt(i,a));},0));
+    .reduce((s,i)=>{const a=amountFor(i,T.y,m); return s+(full?a:myAmt(i,a));},0));
   const year=vals.reduce((a,b)=>a+b,0), avg=year/12;
+  const basis=i=>full?i.amount:myAmt(i,i.amount);
+  const prevVals=perMonthY(T.y-1,basis), prevYear=prevVals.reduce((a,b)=>a+b,0);
   const active=items.filter(i=>!isEnded(i));
-  const myAvg=active.reduce((s,i)=>s+myAmt(i,monthly(i)),0);
+  const myAvg=perMonth(i=>myAmt(i,i.amount)).reduce((a,b)=>a+b,0)/12;
   let pk=0; vals.forEach((v,m)=>{if(v>vals[pk]) pk=m;});
   const costTitle={alle:'Totale kosten',samen:'Gezamenlijke kosten',eigen:'Jouw kosten'}[ui.filter];
   const costNote={alle:'Gezamenlijke lasten tellen volledig mee, plus je eigen lasten.',
@@ -792,29 +1014,84 @@ function renderOverview(items){
     '<div><span class="lbl">Per jaar</span><span class="num">'+fmt(year)+'</span></div>'+
     '<div><span class="lbl">Duurste maand</span><span class="val">'+(vals[pk]>0?MONTHS[pk]+' <span class="num" style="display:inline;font-weight:500;color:var(--muted)">'+eur0.format(vals[pk])+'</span>':'–')+'</span></div></div>'+
     (full&&Math.abs(myAvg-avg)>0.005?'<div class="note">Jouw deel hiervan: <b class="num">'+fmt(myAvg)+'</b> per maand, <span class="num">'+fmt(myAvg*12)+'</span> per jaar.</div>':'')+
-    chartHtml(vals,avg,T,costTitle,paidVals)+
+    chartHtml(vals,avg,T,costTitle,paidVals,prevVals)+
     '<div class="note">'+costNote+' Tik op een maand om hem te openen.</div></div>';
+  /* wat als: opgeslagen scenario's */
+  const base=scenCalc(null), scs=scenAll();
+  const dtxt=d=>Math.abs(d)<0.005?'geen verschil':(d>0?'+':'−')+fmt(Math.abs(d));
+  h+='<div class="card ov-scen"><h3>Wat als <span class="note">alleen voor jou</span></h3>'+
+    (scs.length?'<div class="scen-list">'+scs.map(sc=>{const r=scenCalc(sc); return '<button class="scen-item" data-scen="'+esc(sc.id)+'"><b>'+esc(sc.name)+'</b><span class="num '+(r.total-base.total>0.005?'up':r.total-base.total<-0.005?'down':'')+'">'+dtxt(r.total-base.total)+' p/m</span>'+
+      '<span class="note">Jouw deel '+dtxt(r.mine-base.mine)+(r.free!=null?', vrij te besteden '+fmt(r.free):'')+'</span></button>';}).join('')+'</div>'
+      :'<div class="note">Reken een verandering door zonder je lasten aan te passen, zoals een hogere hypotheekrente na de rentevaste periode of kinderopvang erbij.</div>')+
+    '<div class="btns"><button class="btn" data-scen="">Scenario doorrekenen</button></div></div>';
+  /* jaarvergelijking: dit jaar tegenover vorig jaar, per last en per categorie */
+  const yearOf=(i,y)=>MONTHS.reduce((s,_,m)=>s+(occursYM(i,y,m)?basis({...i,amount:amountFor(i,y,m)}):0),0);
+  const diffs=items.map(i=>{const a=yearOf(i,T.y), b=yearOf(i,T.y-1); return {i,a,b,d:a-b};}).filter(x=>Math.abs(x.d)>=0.005);
+  const dy=year-prevYear, dpct=prevYear>0?dy/prevYear*100:0;
+  const pctTxt=p=>(p>0?'+':'−')+Math.abs(p).toFixed(Math.abs(p)<10?1:0).replace('.',',')+'%';
+  const eurTxt=v=>(v>0?'+':'−')+fmt(Math.abs(v));
+  const catD={}; diffs.forEach(x=>{const c=cat(x.i.cat); catD[c.id]=catD[c.id]||{c,d:0}; catD[c.id].d+=x.d;});
+  const catList=Object.values(catD).filter(x=>Math.abs(x.d)>=0.005).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,4);
+  const up=diffs.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,3), down=diffs.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,2);
+  const mover=x=>'<li><button class="info" data-edit="'+esc(x.i.id)+'"><span>'+esc(x.i.name)+'</span></button><span class="num '+(x.d>0?'up':'down')+'">'+eurTxt(x.d)+(x.b>0?' ('+pctTxt(x.d/x.b*100)+')':'')+'</span></li>';
+  h+='<div class="card ov-yoy"><h3>Vergelijking met '+(T.y-1)+'</h3>'+
+    (Math.abs(dy)<0.005?'<div class="note">Je kosten voor '+T.y+' zijn gelijk aan die van '+(T.y-1)+'.</div>':
+      '<div class="yoy-big"><span class="big '+(dy>0?'up':'down')+'">'+(prevYear>0?pctTxt(dpct):eurTxt(dy))+'</span><span class="note num">'+fmt(year)+' in '+T.y+', '+fmt(prevYear)+' in '+(T.y-1)+'</span></div>'+
+      (up.length?'<div><div class="lbl">Grootste stijgers</div><ul class="movers">'+up.map(mover).join('')+'</ul></div>':'')+
+      (down.length?'<div><div class="lbl">Gedaald</div><ul class="movers">'+down.map(mover).join('')+'</ul></div>':'')+
+      (catList.length>1?'<div><div class="lbl">Per categorie</div><ul class="movers">'+catList.map(x=>'<li><span><span class="dot" style="background:var('+x.c.c+')"></span>'+esc(x.c.name)+'</span><span class="num '+(x.d>0?'up':'down')+'">'+eurTxt(x.d)+'</span></li>').join('')+'</ul></div>':''))+
+    '<div class="note">Op basis van je prijsgeschiedenis, eenmalige posten en ingevulde werkelijke bedragen. Lasten tellen voor '+(T.y-1)+' mee alsof ze toen ook liepen.</div></div>';
+  /* inkomen en wat er overblijft: altijd jouw deel van al je lopende lasten, los van het filter */
+  let hIncome='';
+  const inc=myIncome();
+  if(inc>0){
+    const mine=all().filter(i=>!isEnded(i)).reduce((s,i)=>s+myAmt(i,monthly(i)),0), free=inc-mine, pct=mine/inc*100;
+    hIncome='<div class="card ov-income"><h3>Inkomen en wat overblijft <span class="note">per maand</span></h3>'+
+      '<div class="tiles"><div><span class="lbl">Netto inkomen</span><span class="num">'+fmt(inc)+'</span></div>'+
+      '<div><span class="lbl">Jouw vaste lasten</span><span class="num">'+fmt(mine)+'</span></div>'+
+      '<div><span class="lbl">Vrij te besteden</span><span class="num"'+(free<0?' style="color:var(--bad)"':'')+'>'+fmt(free)+'</span></div></div>'+
+      '<div class="income-bar" role="img" aria-label="'+Math.round(pct)+'% van je inkomen gaat naar vaste lasten"><i class="lasten" style="width:'+Math.min(100,pct).toFixed(1)+'%"></i>'+(free>0?'<i class="vrij" style="flex:1"></i>':'')+'</div>'+
+      '<div class="note">'+Math.round(pct)+'% van je inkomen gaat naar vaste lasten'+(free<0?'; dat is meer dan je inkomen.':'.')+' Gezamenlijke lasten tellen voor jouw deel mee.</div></div>';
+  }
   /* gezamenlijke rekening */
   let hInleg='';
-  const js=state.samen.items.filter(i=>!isEnded(i)).map(i=>({...i,joint:true,amount:curAmount(i)}));
+  const js=state.samen.items.filter(i=>!isEnded(i)&&i.payer!=='p1'&&i.payer!=='p2').map(i=>({...i,joint:true,amount:curAmount(i)}));
+  const viaPerson=state.samen.items.filter(i=>!isEnded(i)&&(i.payer==='p1'||i.payer==='p2')).length;
   if(js.length&&ui.filter!=='eigen'){
     const tot=js.reduce((s,i)=>s+monthly(i),0), a=js.reduce((s,i)=>s+monthly(i)*p1pct(i)/100,0);
     const tag=p=>esc(nameOf(p))+(p===me()?' (jij)':'');
     hInleg='<div class="card ov-inleg"><h3>Gezamenlijke rekening</h3>'+
       '<div class="note">Gezamenlijke lasten gemiddeld <b class="num">'+fmt(tot)+'</b> per maand. Dit maakt ieder maandelijks over:</div>'+
       '<div class="inleg"><div><span class="lbl">'+tag('p1')+'</span><span class="num">'+fmt(a)+'</span></div><div><span class="lbl">'+tag('p2')+'</span><span class="num">'+fmt(tot-a)+'</span></div></div>'+
-      '<div class="note">Kwartaal-, halfjaar- en jaarbedragen zijn gespreid, zodat er genoeg op de rekening staat als ze worden afgeschreven.</div></div>';
+      '<div class="note">Kwartaal-, halfjaar- en jaarbedragen zijn gespreid, zodat er genoeg op de rekening staat als ze worden afgeschreven.'+
+      (viaPerson?' '+viaPerson+(viaPerson===1?' last betaalt':' lasten betaalt')+' één van jullie zelf; die lopen via Verrekenen.':'')+'</div></div>';
+  }
+  /* verrekenen tussen jullie */
+  let hSettle='';
+  const ss=settleState();
+  if(ui.filter!=='eigen'&&(viaPerson||ss.ev.length)){
+    const debtor=ss.net>0?'p2':'p1', cred=debtor==='p1'?'p2':'p1', amt=Math.abs(ss.net);
+    const who=p=>p===me()?'jij':esc(nameOf(p)), Who=p=>p===me()?'Jij':esc(nameOf(p));
+    const line=amt<0.005?'Jullie staan quitte.':(debtor===me()?'Jij betaalt '+esc(nameOf(cred)):Who(debtor)+' betaalt '+(cred===me()?'jou':esc(nameOf(cred))))+' <span class="num">'+fmt(amt)+'</span>';
+    hSettle='<div class="card ov-settle"><h3>Verrekenen</h3><div class="settle-big">'+line+'</div>'+
+      (amt>=0.005?'<div class="btns"><button class="btn" id="settleBtn" data-a="'+amt+'" data-from="'+debtor+'" data-to="'+cred+'">Markeer als verrekend</button></div>':'')+
+      (ss.ev.length?'<ul class="evlist">'+ss.ev.slice(0,6).map(x=>x.kind==='pay'
+        ?'<li><span>'+esc(x.name)+' · '+MONTHS[+x.k.slice(5)-1]+', betaald door '+(x.by===me()?'jou':esc(nameOf(x.by)))+'</span><span class="num">'+fmt(x.share)+'</span></li>'
+        :'<li><span>Verrekend: '+who(x.from)+' → '+who(x.to)+' <button class="linkbtn" data-unsettle="'+esc(x.id)+'">Ongedaan maken</button></span><span class="num">'+fmt(x.a)+'</span></li>').join('')+'</ul>':'')+
+      '<div class="note">Bedragen naast een betaling zijn het deel van de ander. Kies bij een gezamenlijke last wie hem betaalt.</div></div>';
   }
   /* per categorie */
-  const rows=CATS.map(c=>({c,sum:active.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+myAmt(i,monthly(i)),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
-  const max=rows.length?rows[0].sum:1;
-  h+='<div class="card ov-cats"><h3>Per categorie <span class="note">jouw deel per maand</span></h3>'+
-    rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+r.c.name+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/myAvg*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'</div>';
+  /* per categorie: rekent zoals het kostenblok (volledig bij Alles en Gezamenlijk, jouw deel bij Eigen) */
+  const catAmt=i=>full?monthly(i):myAmt(i,monthly(i));
+  const rows=cats().map(c=>({c,sum:active.filter(i=>cat(i.cat).id===c.id).reduce((s,i)=>s+catAmt(i),0)})).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
+  const catTotal=rows.reduce((s,r)=>s+r.sum,0)||1, max=rows.length?rows[0].sum:1;
+  h+='<div class="card ov-cats"><h3>Per categorie <span class="note">'+{alle:'totaal per maand',samen:'gezamenlijk per maand',eigen:'jouw kosten per maand'}[ui.filter]+'</span></h3>'+
+    rows.map(r=>'<div class="cat-row"><span><span class="dot" style="background:var('+r.c.c+')"></span>'+esc(r.c.name)+'</span><span class="num">'+fmt(r.sum)+' <span class="note">('+Math.round(r.sum/catTotal*100)+'%)</span></span><div class="bar"><b style="width:'+(r.sum/max*100)+'%;background:var('+r.c.c+')"></b></div></div>').join('')+'</div>';
   /* contracten die aandacht vragen */
   const alerts=items.map(i=>({i,s:contractStatus(i)})).filter(x=>x.s&&(x.s.level==='warn'||x.s.level==='info'));
   const hAlert=alerts.length?'<div class="card ov-alert"><h3>Contracten <span class="note">'+alerts.length+(alerts.length===1?' vraagt':' vragen')+' aandacht</span></h3><ul class="alerts">'+
     alerts.map(x=>'<li class="'+x.s.level+'"><button class="info" data-edit="'+esc(x.i.id)+'"><span class="name">'+esc(x.i.name)+'</span><span class="note">'+esc(x.s.text)+'</span></button></li>').join('')+'</ul></div>':'';
-  el.innerHTML='<div class="ov"><div class="ov-left">'+hAlert+hMonth+hInleg+'</div>'+h+'</div>';
+  el.innerHTML='<div class="ov"><div class="ov-left">'+hAlert+hMonth+hIncome+hInleg+hSettle+'</div>'+h+'</div>';
 }
 
 let installEvt=null;
@@ -841,8 +1118,8 @@ function renderAbout(){
     '<details><summary>Wat is er veranderd</summary><div class="log">'+
     CHANGELOG.map(r=>'<div><div class="log-h"><b class="num">'+esc(r.version)+'</b><span class="note">'+esc(r.date)+'</span></div><ul>'+r.items.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>').join('')+
     '</div></details>'+
-    (WISHLIST.length?'<details class="wish"><summary>Op de wishlist ('+WISHLIST.length+')</summary><ol class="log wl">'+
-      WISHLIST.map(w=>'<li><b>'+esc(w.title)+'</b> <span class="note">'+esc(w.size)+'</span><div class="note">'+esc(w.text)+'</div></li>').join('')+'</ol></details>':'');
+    (WISHLIST.length?'<details class="wish"><summary>Op de wishlist ('+WISHLIST.length+')</summary><ul class="log wl">'+
+      WISHLIST.map(w=>'<li><b>#'+esc(w.nr)+' '+esc(w.title)+'</b> <span class="note">'+esc(w.size)+'</span><div class="note">'+esc(w.text)+'</div></li>').join('')+'</ul></details>':'');
   if(wasOpen) el.querySelector('details').open=true;
 }
 
@@ -899,15 +1176,84 @@ function renderSplitPanel(){
   $('splitPanel').innerHTML='<h4>Verdeling gezamenlijke lasten</h4>'+
     '<div class="two"><div class="field"><label for="m-p1">Naam persoon 1</label><input id="m-p1" value="'+esc(m.p1)+'" autocomplete="off"></div>'+
     '<div class="field"><label for="m-p2">Naam persoon 2</label><input id="m-p2" value="'+esc(m.p2)+'" autocomplete="off"></div></div>'+
-    '<div class="two"><div class="field"><label for="m-split">Standaard deel persoon 1 (%)</label><input id="m-split" type="number" min="0" max="100" inputmode="numeric" value="'+m.split+'"></div><div></div></div>'+
+    '<div class="field split-choice"><span class="flabel">Standaardverdeling</span>'+
+      '<label class="check-line"><input type="radio" name="m-mode" value="vast"'+(m.byIncome?'':' checked')+'> <span>Vast percentage</span></label>'+
+      '<label class="check-line"><input type="radio" name="m-mode" value="inkomen"'+(m.byIncome?' checked':'')+'> <span>Naar inkomen'+
+        (byIncomeReady()?': '+esc(m.p1)+' '+effSplit()+'%, '+esc(m.p2)+' '+(100-effSplit())+'%':'')+'</span></label></div>'+
+    '<div class="two"><div class="field"><label for="m-split">Deel persoon 1 bij een vast percentage (%)</label><input id="m-split" type="number" min="0" max="100" inputmode="numeric" value="'+m.split+'"></div><div></div></div>'+
+    (m.byIncome&&!byIncomeReady()?'<div class="note"><b>Nog niet actief.</b> Verdelen naar inkomen werkt zodra '+[['p1',m.p1],['p2',m.p2]].filter(x=>!sharedInc(x[0])).map(x=>esc(x[1])).join(' en ')+' het inkomen deelt onder Inkomen. Tot die tijd geldt het vaste percentage.</div>':'')+
     '<div class="note">Persoon 2 betaalt de rest. Bij een last kun je van de standaard afwijken. Namen en verdeling worden gedeeld met je partner.</div>'+
     '<div class="err" id="m-err"></div><div class="btns"><button class="btn" id="m-save">Verdeling opslaan</button></div>';
+}
+/* ---------- inkomen (privé, met optie om te delen voor de verdeling) ---------- */
+function renderIncomePanel(){
+  const el=$('incomePanel'); if(el.contains(document.activeElement)) return;
+  const inc=myIncome(), shared=sharedInc(me())>0, partner=esc(nameOf(other()));
+  el.innerHTML='<h4>Inkomen</h4>'+
+    '<div class="two"><div class="field"><label for="i-inc">Jouw netto inkomen per maand (€)</label><input id="i-inc" inputmode="decimal" placeholder="0,00" autocomplete="off" value="'+(inc?inc.toFixed(2).replace('.',','):'')+'"></div><div></div></div>'+
+    '<div class="note">Alleen voor jou zichtbaar: het staat versleuteld in je eigen bestand. Het Overzicht laat zien welk deel naar vaste lasten gaat en wat er overblijft.</div>'+
+    '<label class="check-line"><input type="checkbox" id="i-share"'+(shared?' checked':'')+'> <span>Deel mijn inkomen met '+partner+' zodat we gezamenlijke lasten naar inkomen kunnen verdelen</span></label>'+
+    '<div class="err" id="i-err"></div><div class="btns"><button class="btn" id="i-save">Inkomen opslaan</button></div>';
+}
+function saveIncome(){
+  const v=$('i-inc').value.trim(), a=v===''?0:parseAmount(v), share=$('i-share').checked;
+  if(v!==''&&!(a>=0)){$('i-err').textContent='Vul een bedrag in, bijvoorbeeld 3.250,00.';return;}
+  if(share&&!(a>0)){$('i-err').textContent='Vul eerst je inkomen in om het te kunnen delen.';return;}
+  const t=Date.now();
+  state.eigen.prof={...(state.eigen.prof||{}),income:a||null,u:t};
+  state.samen.inc=state.samen.inc||{};
+  if(share||sharedInc(me())) state.samen.inc[me()]={a:share?a:null,u:t};
+  $('i-err').textContent=''; document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  save(); render(); renderIncomePanel(); renderSplitPanel(); toast('Inkomen opgeslagen');
+}
+
+/* ---------- categorieën beheren ---------- */
+let catOpen=null, catDelArmed=null;
+function renderCatPanel(){
+  const el=$('catPanel'); if(el.contains(document.activeElement)&&/^(INPUT)$/.test(document.activeElement.tagName)&&document.activeElement.type!=='radio') return;
+  const use={}; all().forEach(i=>{const id=cat(i.cat).id; use[id]=(use[id]||0)+1;});
+  el.innerHTML='<h4>Categorieën</h4><div class="note">Gedeeld met je partner. Tik op een categorie om de naam of kleur te wijzigen.</div><div class="catlist">'+
+    cats().map(c=>'<details class="catrow" data-cat="'+esc(c.id)+'"'+(catOpen===c.id?' open':'')+'><summary><span class="dot" style="background:var('+c.c+')"></span><span class="cn">'+esc(c.name)+'</span><span class="note">'+(use[c.id]||0)+(use[c.id]===1?' last':' lasten')+'</span></summary>'+
+      '<div class="catedit"><div class="field"><label for="cn-'+esc(c.id)+'">Naam</label><input id="cn-'+esc(c.id)+'" value="'+esc(c.name)+'" maxlength="30" autocomplete="off"></div>'+
+      '<div class="field"><span class="flabel">Kleur</span><div class="swatches" role="radiogroup" aria-label="Kleur">'+
+        PALETTE.map(([p,n])=>'<label class="swatch" title="'+n+'"><input type="radio" name="cc-'+esc(c.id)+'" value="'+p+'"'+(c.c==='--'+p?' checked':'')+'><span style="background:var(--'+p+')"></span><span class="sr">'+n+'</span></label>').join('')+'</div></div>'+
+      '<div class="btns"><button class="btn primary small" data-catsave="'+esc(c.id)+'">Opslaan</button>'+(c.id!=='overig'?'<button class="btn danger small" data-catdel="'+esc(c.id)+'">Verwijderen</button>':'')+'</div>'+
+      '<div class="err" id="ce-'+esc(c.id)+'"></div></div></details>').join('')+'</div>'+
+    '<div class="catnew"><input id="cat-new" placeholder="Nieuwe categorie, bijv. Kinderopvang" maxlength="30" aria-label="Naam nieuwe categorie" autocomplete="off"><button class="btn" id="cat-add">Toevoegen</button></div><div class="err" id="cat-err"></div>';
+}
+function setCat(id,patch){
+  const over=state.samen.cats=state.samen.cats||{};
+  over[id]={...(over[id]||{id}),...patch,id,u:Date.now()};
+  _cats=null; save(); render(); renderCatPanel();
+}
+function catAction(e){
+  const sv=e.target.closest('[data-catsave]'), dl=e.target.closest('[data-catdel]');
+  if(sv){
+    const id=sv.dataset.catsave, name=$('cn-'+id).value.trim(), col=(document.querySelector('input[name="cc-'+id+'"]:checked')||{}).value;
+    if(!name){$('ce-'+id).textContent='Vul een naam in.';return true;}
+    if(cats().some(c=>c.id!==id&&fold(c.name)===fold(name))){$('ce-'+id).textContent='Er is al een categorie met deze naam.';return true;}
+    catOpen=null; setCat(id,{name,c:col||'c9',del:false}); toast('Categorie opgeslagen'); return true;
+  }
+  if(dl){
+    const id=dl.dataset.catdel, n=all().filter(i=>cat(i.cat).id===id).length;
+    if(catDelArmed!==id){catDelArmed=id; dl.classList.add('armed'); dl.textContent=n?'Zeker weten? '+n+(n===1?' last gaat':' lasten gaan')+' naar Overig':'Zeker weten? Tik nogmaals'; return true;}
+    catDelArmed=null; catOpen=null; setCat(id,{del:true}); toast('Categorie verwijderd'); return true;
+  }
+  if(e.target.id==='cat-add'){
+    const name=$('cat-new').value.trim();
+    if(!name){$('cat-err').textContent='Vul een naam in voor de nieuwe categorie.';return true;}
+    if(cats().some(c=>fold(c.name)===fold(name))){$('cat-err').textContent='Er is al een categorie met deze naam.';return true;}
+    const used=new Set(cats().map(c=>c.c.slice(2))), free=PALETTE.map(p=>p[0]).find(p=>p!=='c9'&&!used.has(p))||'c9';
+    setCat('k'+uid(),{name,c:free,ord:Date.now()}); toast(name+' toegevoegd'); return true;
+  }
+  return false;
 }
 function saveSplit(){
   const p1=$('m-p1').value.trim(), p2=$('m-p2').value.trim(), sp=$('m-split').value.trim();
   if(!p1||!p2){$('m-err').textContent='Vul voor beide personen een naam in.';return;}
   if(sp===''||!(+sp>=0&&+sp<=100)){$('m-err').textContent='Kies een percentage tussen 0 en 100.';return;}
-  state.samen.meta={p1,p2,split:clampPct(sp),u:Date.now()};
+  const mode=(document.querySelector('input[name="m-mode"]:checked')||{}).value;
+  state.samen.meta={...meta(),p1,p2,split:clampPct(sp),byIncome:mode==='inkomen',u:Date.now()};
   $('m-err').textContent='';
   document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
   save(); render(); renderSplitPanel(); toast('Verdeling opgeslagen');
@@ -1203,13 +1549,18 @@ document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.cl
 /* sneltoetsen voor laptop */
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey||!$('scrim').hidden) return;
-  const t=e.target; if(t&&(t.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))) return;
+  const t=e.target;
+  if(t&&t.id==='l-q'&&e.key==='Escape'){t.value=''; lq=''; renderLasten(shown()); t.blur(); return;}
+  if(t&&(t.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))) return;
   const k=e.key;
   if(k==='n'||k==='N'){e.preventDefault(); openForm(null);}
+  else if(k==='/'){e.preventDefault(); showTab('lasten'); $('l-q').focus();}
   else if(k==='ArrowLeft'&&ui.tab==='maand'){e.preventDefault(); $('prev').click();}
   else if(k==='ArrowRight'&&ui.tab==='maand'){e.preventDefault(); $('next').click();}
   else if(/^[1-4]$/.test(k)){showTab(TABS[+k-1]); toTop();}
 });
+$('l-q').addEventListener('input',e=>{lq=e.target.value; renderLasten(shown());});
+$('l-sort').addEventListener('change',e=>{ui.sort=e.target.value; saveUi(); renderLasten(shown());});
 $('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]'); if(!b) return; ui.filter=b.dataset.filter; saveUi(); render();});
 $('prev').onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--;} render();};
 $('next').onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++;} render();};
@@ -1221,8 +1572,10 @@ let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-toggle]');
   if(t){const f=findItem(t.dataset.toggle); if(!f) return;
-    const k=t.dataset.key||mkey(view.y,view.m), P=state[f.st].paid; P[k]=P[k]||{};
-    const cur=!!(P[k][f.item.id]&&P[k][f.item.id].p); P[k][f.item.id]={p:!cur,u:Date.now()}; save(); render(); return;}
+    const k=t.dataset.key||mkey(view.y,view.m), P=state[f.st].paid;
+    setPaid(f,k,!(P[k]&&P[k][f.item.id]&&P[k][f.item.id].p)); save(); render(); return;}
+  const scb=e.target.closest('[data-scen]'); if(scb){openScen(scb.dataset.scen||null); return;}
+  const am=e.target.closest('[data-amt]'); if(am){openAmt(am.dataset.amt,am.dataset.key); return;}
   const ed=e.target.closest('[data-edit]'); if(ed){const f=findItem(ed.dataset.edit); if(f) openForm(f); return;}
   const go=e.target.closest('[data-goto]'); if(go){const T=today(); view={y:T.y,m:T.m}; showTab(go.dataset.goto); render(); toTop(); return;}
   const bar=e.target.closest('[data-month]'); if(bar){view={y:today().y,m:+bar.dataset.month}; showTab('maand'); render(); toTop(); return;}
@@ -1236,6 +1589,19 @@ document.addEventListener('click',e=>{
   if(id==='restoreBk') restore($('bkText').value);
   if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
   if(id==='m-save') saveSplit();
+  if(id==='i-save') saveIncome();
+  if(id==='x-xlsx') exportXlsx();
+  if(id==='x-csv') exportCsv();
+  if(id==='settleBtn'){
+    const b=e.target;
+    if(!b.classList.contains('armed')){b.classList.add('armed','danger'); b.textContent='Zeker weten? Tik nogmaals'; return;}
+    const sid=uid(); state.samen.settle=state.samen.settle||{};
+    state.samen.settle[sid]={id:sid,from:b.dataset.from,to:b.dataset.to,a:Math.round(+b.dataset.a*100)/100,u:Date.now()};
+    save(); render(); toast('Verrekend'); return;
+  }
+  const us=e.target.closest('[data-unsettle]');
+  if(us){const s=state.samen.settle[us.dataset.unsettle]; if(s){state.samen.settle[us.dataset.unsettle]={...s,del:true,u:Date.now()}; save(); render(); toast('Verrekening ongedaan gemaakt');} return;}
+  if(catAction(e)) return;
   if(e.target.closest('[data-update]')) applyUpdate();
   if(id==='s-next1') busy(id,'Controleren…',next1);
   if(id==='s-next2') busy(id,'Controleren…',next2);
@@ -1249,6 +1615,8 @@ document.addEventListener('click',e=>{
     else{unlinkArmed=false;unlink();}
   }
 });
+document.addEventListener('toggle',e=>{const d=e.target; if(d.classList&&d.classList.contains('catrow')){ if(d.open) catOpen=d.dataset.cat; else if(catOpen===d.dataset.cat) catOpen=null; }},true);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='cat-new'){e.preventDefault(); catAction({target:$('cat-add')});}});
 document.addEventListener('change',e=>{
   if(e.target.id==='d-me'&&!cfg){ui.me=e.target.value==='p2'?'p2':'p1'; saveUi(); e.target.blur(); render(); toast('Opgeslagen');}
   if(e.target.id==='fileBk'&&e.target.files[0]){const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(e.target.files[0]);}
@@ -1267,15 +1635,29 @@ function restore(txt){
 }
 
 /* ---------- formulier ---------- */
-$('f-cat').innerHTML=CATS.map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
+const fillCats=sel=>{$('f-cat').innerHTML=cats().map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join(''); $('f-cat').value=sel;};
+fillCats('wonen');
 $('f-month').innerHTML=MONTHS.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
-$('f-freq').onchange=()=>{$('monthField').hidden=$('f-freq').value==='m';};
+function ymOptions(sel){
+  const T=today(); let o='', has=false;
+  for(let d=-12;d<=24;d++){const dt=new Date(T.y,T.m+d,1), k=mkey(dt.getFullYear(),dt.getMonth()); if(k===sel) has=true;
+    o+='<option value="'+k+'">'+ymLabel(k)+(d===0?' (deze maand)':'')+'</option>';}
+  if(sel&&!has) o='<option value="'+sel+'">'+ymLabel(sel)+'</option>'+o;
+  $('f-ym').innerHTML=o; $('f-ym').value=sel||mkey(T.y,T.m);
+}
+function syncFreqUi(){const f=$('f-freq').value; $('monthField').hidden=f==='m'||f==='o'; $('ymField').hidden=f!=='o'; syncPriceUi();}
+$('f-freq').onchange=syncFreqUi;
 const typeVal=()=>$('f-type-s').checked?'samen':'eigen';
 function syncTypeUi(){
   const j=typeVal()==='samen';
   $('splitField').hidden=!j;
   $('f-split').placeholder=String(myDefault());
   $('splitHint').textContent='Leeg laten voor de standaard ('+myDefault()+'%). '+nameOf(other())+' betaalt de rest.';
+  $('payerField').hidden=!j;
+}
+function fillPayer(v){
+  $('f-payer').innerHTML='<option value="rek">Gezamenlijke rekening</option><option value="p1">'+esc(nameOf('p1'))+'</option><option value="p2">'+esc(nameOf('p2'))+'</option>';
+  $('f-payer').value=v==='p1'||v==='p2'?v:'rek';
 }
 $('f-type-e').onchange=syncTypeUi; $('f-type-s').onchange=syncTypeUi;
 
@@ -1288,7 +1670,7 @@ function openForm(f){
   $('f-amount').value=item?curAmount(item).toFixed(2).replace('.',','):'';
   formPrices=item?priceList(item).map(p=>({...p})):null;
   $('f-from').innerHTML=fromOptions();
-  $('f-cat').value=item?cat(item.cat).id:'wonen';
+  fillCats(item?cat(item.cat).id:cats()[0].id);
   $('f-freq').value=item?item.freq:'m';
   $('f-day').value=item?item.day:1;
   $('f-month').value=item?item.month:(view.m+1);
@@ -1298,8 +1680,8 @@ function openForm(f){
   $('f-notice').value=item&&item.notice?item.notice:''; $('f-noticeU').value=item&&item.noticeU==='d'?'d':'m';
   $('f-ref').value=item&&item.ref||''; $('f-url').value=item&&item.url||'';
   $('contractBox').open=!!(item&&(item.end||item.notice||item.ref||item.url));
-  syncUrlUi(); syncPriceUi();
-  $('monthField').hidden=$('f-freq').value==='m';
+  fillPayer(item&&item.payer); syncUrlUi(); syncFreqUi();
+  ymOptions(item&&item.ym||mkey(view.y,view.m));
   syncTypeUi();
   $('delBtn').hidden=!item; $('delBtn').classList.remove('armed'); $('delBtn').textContent='Verwijderen';
   $('formErr').textContent='';
@@ -1314,7 +1696,7 @@ function fromOptions(){
 }
 const priceEditable=()=>!!(editing&&!editing.item.example);
 function syncPriceUi(){
-  if(!priceEditable()){$('fromField').hidden=true; $('priceBox').hidden=true; return;}
+  if(!priceEditable()||$('f-freq').value==='o'){$('fromField').hidden=true; $('priceBox').hidden=true; return;}
   const cur=curAmount({prices:formPrices}), v=parseAmount($('f-amount').value);
   $('fromField').hidden=!(v>0&&Math.abs(v-cur)>=0.005);
   $('priceBox').hidden=formPrices.length<2;
@@ -1341,7 +1723,7 @@ function parseAmount(v){v=String(v).trim().replace(/[€\s]/g,''); if(v.includes
 $('addBtn').onclick=()=>openForm(null);
 $('cancelBtn').onclick=closeForm;
 $('scrim').addEventListener('click',e=>{if(e.target===$('scrim')) closeForm();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('scrim').hidden) closeForm();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('scrim').hidden) closeForm(); if(e.key==='Escape'&&!$('amtScrim').hidden) closeAmt(); if(e.key==='Escape'&&!$('scenScrim').hidden) closeScen();});
 $('delBtn').onclick=()=>{
   const b=$('delBtn');
   if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Zeker weten? Tik nogmaals';return;}
@@ -1367,7 +1749,7 @@ $('form').addEventListener('submit',e=>{
   const t=Date.now();
   /* prijsgeschiedenis bijwerken: een gewijzigd bedrag krijgt een ingangsmaand, of corrigeert het huidige bedrag */
   let prices=[{from:'',a:amount}];
-  if(priceEditable()){
+  if(priceEditable()&&$('f-freq').value!=='o'){
     const T=today(), k=mkey(T.y,T.m);
     prices=formPrices.map(p=>({...p}));
     if(Math.abs(amount-curAmount({prices}))>=0.005){
@@ -1377,7 +1759,8 @@ $('form').addEventListener('submit',e=>{
     }
     prices=prices.filter((p,x,arr)=>x===0||Math.abs(p.a-arr[x-1].a)>=0.005);
   }
-  const data={name,amount:curAmount({prices}),prices:prices.length>1?prices:null,cat:$('f-cat').value,freq:$('f-freq').value,day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false,u:t,split,
+  const data={name,amount:curAmount({prices}),prices:prices.length>1?prices:null,cat:$('f-cat').value,freq:$('f-freq').value,ym:$('f-freq').value==='o'?$('f-ym').value:'',day,month:parseInt($('f-month').value,10)||1,note:$('f-note').value.trim(),example:false,u:t,split,
+    payer:target==='samen'&&$('f-payer').value!=='rek'?$('f-payer').value:null,
     end,after:$('f-after').value==='stop'?'stop':'door',notice:nv===''?0:+nv,noticeU:$('f-noticeU').value==='d'?'d':'m',ref:$('f-ref').value.trim(),url};
   const wasEdit=!!editing;
   if(editing){
@@ -1393,9 +1776,185 @@ $('form').addEventListener('submit',e=>{
   save(); closeForm(); render(); toast(wasEdit?'Opgeslagen':name+' toegevoegd');
 });
 
+/* ---------- werkelijk afgeschreven bedrag ---------- */
+let amtCtx=null;
+function openAmt(id,k){
+  const f=findItem(id); if(!f) return;
+  const y=+k.slice(0,4), m=+k.slice(5)-1, it={...f.item,joint:f.st==='samen'}, e=paidEntry(it,k)||{};
+  amtCtx={f,k,planned:amountAt(f.item,y,m)};
+  $('amtTitle').textContent=f.item.name;
+  $('amtInfo').textContent='Gepland voor '+MONTHS[m]+' '+y+': '+fmt(amtCtx.planned)+'. Vul in wat er werkelijk is afgeschreven, bijvoorbeeld na een afrekening.';
+  $('amt-v').value=(e.p&&e.a!=null?+e.a:amtCtx.planned).toFixed(2).replace('.',',');
+  $('amtErr').textContent=''; $('amtReset').hidden=!(e.a!=null);
+  $('amtScrim').hidden=false; setTimeout(()=>{$('amt-v').focus(); $('amt-v').select();},50);
+}
+const closeAmt=()=>{$('amtScrim').hidden=true; amtCtx=null;};
+$('amtCancel').onclick=closeAmt;
+$('amtScrim').addEventListener('click',e=>{if(e.target===$('amtScrim')) closeAmt();});
+$('amtReset').onclick=()=>{const {f,k}=amtCtx, P=state[f.st].paid; setPaid(f,k,!!(P[k]&&P[k][f.item.id]&&P[k][f.item.id].p),{a:null}); closeAmt(); save(); render(); toast('Gepland bedrag hersteld');};
+$('amtForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const v=parseAmount($('amt-v').value);
+  if(!(v>=0)){$('amtErr').textContent='Vul een bedrag in, bijvoorbeeld 312,40.';return;}
+  const {f,k,planned}=amtCtx;
+  setPaid(f,k,true,{a:Math.abs(v-planned)<0.005?null:v}); closeAmt(); save(); render(); toast('Opgeslagen als betaald');
+});
+
+/* ---------- scenario's: wat als ---------- */
+/* sc = {id,name,mods:{id:{a,off}},add:[{name,a,joint}],u}; bedragen in mods in de frequentie van de last, add per maand */
+function scenCalc(sc){
+  const mods=(sc&&sc.mods)||{}, r={total:0,mine:0,inl:{p1:0,p2:0},joint:0};
+  const addOne=(i,mon)=>{
+    r.total+=mon; r.mine+=i.joint?mon*myPct(i)/100:mon;
+    if(i.joint&&i.payer!=='p1'&&i.payer!=='p2'){const a=mon*p1pct(i)/100; r.inl.p1+=a; r.inl.p2+=mon-a; r.joint+=mon;}
+  };
+  all().filter(i=>i.freq!=='o'&&!isEnded(i)).forEach(i=>{
+    const m=mods[i.id]; if(m&&m.off) return;
+    const a=m&&m.a!=null?+m.a:i.amount; addOne(i,a/(PERIOD[i.freq]||1));
+  });
+  ((sc&&sc.add)||[]).forEach(x=>{if(+x.a>0) addOne({joint:!!x.joint,split:null},+x.a);});
+  r.free=myIncome()?myIncome()-r.mine:null;
+  return r;
+}
+let scenCtx=null;
+const scenAll=()=>Object.values(state.eigen.scen||{}).filter(s=>s&&!s.del).sort((a,b)=>(a.ord||0)-(b.ord||0));
+function openScen(id){
+  const sc=id?(state.eigen.scen||{})[id]:{mods:{},add:[]};
+  scenCtx={id:id||null};
+  $('sc-name').value=sc.name||''; $('sc-err').textContent=''; $('sc-del').hidden=!id; $('sc-del').classList.remove('armed'); $('sc-del').textContent='Verwijderen';
+  const items=all().filter(i=>i.freq!=='o'&&!isEnded(i)).sort((a,b)=>monthly(b)-monthly(a));
+  $('sc-items').innerHTML=items.map(i=>{const m=(sc.mods||{})[i.id]||{};
+    return '<div class="sc-row'+(m.off?' off':'')+'" data-id="'+esc(i.id)+'"><div class="sc-n"><b>'+esc(i.name)+'</b><span class="note">'+fmt(i.amount)+' '+FREQ[i.freq]+(i.joint?' · samen':'')+'</span></div>'+
+      '<input class="sc-a" inputmode="decimal" aria-label="Nieuw bedrag voor '+esc(i.name)+'" placeholder="'+i.amount.toFixed(2).replace('.',',')+'" value="'+(m.a!=null?(+m.a).toFixed(2).replace('.',','):'')+'">'+
+      '<label class="check-line"><input type="checkbox" class="sc-x"'+(m.off?' checked':'')+'> <span>Vervalt</span></label></div>';}).join('');
+  $('sc-adds').innerHTML=''; (sc.add||[]).forEach(addScenRow);
+  scenRes(); $('scenScrim').hidden=false; setTimeout(()=>$('sc-name').focus(),50);
+}
+function addScenRow(x){
+  const d=document.createElement('div'); d.className='sc-addrow';
+  d.innerHTML='<input class="sa-n" placeholder="Naam, bijv. Kinderopvang" aria-label="Naam nieuwe last" value="'+esc(x&&x.name||'')+'">'+
+    '<input class="sa-a" inputmode="decimal" placeholder="€ per maand" aria-label="Bedrag per maand" value="'+(x&&+x.a>0?(+x.a).toFixed(2).replace('.',','):'')+'">'+
+    '<select class="sa-j" aria-label="Soort"><option value="eigen">Eigen</option><option value="samen"'+(x&&x.joint?' selected':'')+'>Gezamenlijk</option></select>'+
+    '<button type="button" class="linkbtn sa-x">Weg</button>';
+  $('sc-adds').appendChild(d);
+}
+function readScen(){
+  const mods={}, add=[];
+  document.querySelectorAll('#sc-items .sc-row').forEach(r=>{
+    const v=r.querySelector('.sc-a').value.trim(), off=r.querySelector('.sc-x').checked, a=v===''?null:parseAmount(v);
+    r.classList.toggle('off',off);
+    if(off||(a!=null&&a>=0)) mods[r.dataset.id]={a:off?null:a,off};
+  });
+  document.querySelectorAll('#sc-adds .sc-addrow').forEach(r=>{
+    const a=parseAmount(r.querySelector('.sa-a').value), n=r.querySelector('.sa-n').value.trim();
+    if(n||a>0) add.push({name:n,a:a>0?a:0,joint:r.querySelector('.sa-j').value==='samen'});
+  });
+  return {mods,add};
+}
+function scenTable(base,sc){
+  const row=(lbl,a,b,goodDown)=>{const d=b-a, cls=Math.abs(d)<0.005?'':((d>0)===goodDown?'up':'down');
+    return '<tr><th>'+lbl+'</th><td>'+fmt(a)+'</td><td>'+fmt(b)+'</td><td class="'+cls+'">'+(Math.abs(d)<0.005?'–':(d>0?'+':'−')+fmt(Math.abs(d)))+'</td></tr>';};
+  return '<table class="sc-t"><thead><tr><th>Per maand</th><th>Nu</th><th>Scenario</th><th>Verschil</th></tr></thead><tbody>'+
+    row('Totale vaste lasten',base.total,sc.total,true)+row('Jouw deel',base.mine,sc.mine,true)+
+    (base.joint||sc.joint?row('Inleg '+esc(nameOf('p1')),base.inl.p1,sc.inl.p1,true)+row('Inleg '+esc(nameOf('p2')),base.inl.p2,sc.inl.p2,true):'')+
+    (base.free!=null?row('Vrij te besteden',base.free,sc.free,false):'')+'</tbody></table>';
+}
+function scenRes(){$('sc-res').innerHTML=scenTable(scenCalc(null),scenCalc(readScen()));}
+$('scenForm').addEventListener('input',e=>{if(e.target.id!=='sc-name') scenRes();});
+$('scenForm').addEventListener('change',e=>{if(e.target.classList.contains('sc-x')||e.target.classList.contains('sa-j')) scenRes();});
+$('sc-add').onclick=()=>{addScenRow(null); const r=$('sc-adds').lastElementChild; r.querySelector('.sa-n').focus();};
+$('sc-adds').addEventListener('click',e=>{if(e.target.classList.contains('sa-x')){e.target.closest('.sc-addrow').remove(); scenRes();}});
+const closeScen=()=>{$('scenScrim').hidden=true; scenCtx=null;};
+$('sc-cancel').onclick=closeScen;
+$('scenScrim').addEventListener('click',e=>{if(e.target===$('scenScrim')) closeScen();});
+$('sc-del').onclick=()=>{
+  const b=$('sc-del'); if(!b.classList.contains('armed')){b.classList.add('armed'); b.textContent='Zeker weten? Tik nogmaals'; return;}
+  const s=state.eigen.scen[scenCtx.id]; state.eigen.scen[scenCtx.id]={...s,del:true,u:Date.now()}; closeScen(); save(); render(); toast('Scenario verwijderd');
+};
+$('scenForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=$('sc-name').value.trim(), sc=readScen();
+  if(!name){$('sc-err').textContent='Geef het scenario een naam, bijvoorbeeld Hogere hypotheekrente.'; $('sc-name').focus(); return;}
+  if(!Object.keys(sc.mods).length&&!sc.add.length){$('sc-err').textContent='Pas minstens één last aan of voeg een nieuwe last toe.'; return;}
+  if(sc.add.some(x=>!x.name||!(x.a>0))){$('sc-err').textContent='Geef elke nieuwe last een naam en een bedrag per maand.'; return;}
+  const id=scenCtx.id||uid(), prev=(state.eigen.scen||{})[id]||{};
+  state.eigen.scen=state.eigen.scen||{};
+  state.eigen.scen[id]={id,name,...sc,ord:prev.ord||Date.now(),u:Date.now()};
+  closeScen(); save(); render(); toast('Scenario opgeslagen');
+});
+
+/* ---------- exporteren naar Excel en CSV ---------- */
+const XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((res,rej)=>{const s=document.createElement('script'); s.src=XLSX_URL; s.onload=()=>window.XLSX?res(window.XLSX):rej(); s.onerror=()=>rej(); document.head.appendChild(s);});
+}
+function fillYears(){const y=today().y, sel=$('x-year'); if(sel.options.length) return; sel.innerHTML=[y-1,y,y+1].map(v=>'<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>').join('');}
+const soort=i=>i.joint?'Gezamenlijk':'Eigen';
+const payerName=i=>i.joint?(i.payer==='p1'||i.payer==='p2'?nameOf(i.payer):'Gezamenlijke rekening'):'';
+/* alle afschrijvingen van een jaar, met gepland en werkelijk bedrag */
+function bookings(y){
+  const out=[];
+  for(let m=0;m<12;m++){const dim=daysIn(y,m), k=mkey(y,m);
+    all().filter(i=>occursYM(i,y,m)).forEach(i=>{const e=paidEntry(i,k)||{}, planned=amountAt(i,y,m), act=amountFor(i,y,m);
+      out.push({date:new Date(y,m,Math.min(i.day,dim)),i,planned,act,paid:!!e.p,mine:myAmt(i,act)});});}
+  return out.sort((a,b)=>a.date-b.date||a.i.name.localeCompare(b.i.name,'nl'));
+}
+function exportRows(y){
+  const items=all().sort((a,b)=>a.name.localeCompare(b.name,'nl'));
+  const lasten=[['Naam','Soort','Categorie','Hoe vaak','Bedrag','Per maand','Jouw deel (%)','Jouw deel per maand','Dag','Maand','Wie betaalt','Status','Einddatum contract','Na einddatum','Opzegtermijn','Contract- of polisnummer','Website','Notitie']];
+  items.forEach(i=>lasten.push([i.name,soort(i),cat(i.cat).name,FREQ[i.freq],i.amount,monthly(i),myPct(i),myAmt(i,monthly(i)),i.day,
+    i.freq==='o'?(i.ym?ymLabel(i.ym):''):i.freq==='m'?'':MONTHS[i.month-1],payerName(i),i.freq==='o'?'Eenmalig':isEnded(i)?'Beëindigd':'Lopend',
+    i.end?parseDate(i.end):'',i.end?(i.after==='stop'?'Stopt':'Loopt door'):'',i.notice?i.notice+(i.noticeU==='d'?' dagen':(i.notice===1?' maand':' maanden')):'',i.ref||'',i.url||'',i.note||'']));
+  const bk=bookings(y);
+  const afs=[['Datum','Naam','Soort','Categorie','Gepland','Werkelijk','Betaald','Jouw deel']];
+  bk.forEach(b=>afs.push([b.date,b.i.name,soort(b.i),cat(b.i.cat).name,b.planned,b.act,b.paid?'ja':'nee',b.mine]));
+  const pm=[['Maand','Totaal','Jouw deel','Betaald','Nog open','Gepland']];
+  for(let m=0;m<12;m++){const r=bk.filter(b=>b.date.getMonth()===m), sum=f=>r.reduce((s,b)=>s+f(b),0);
+    pm.push([MONTHS[m]+' '+y,sum(b=>b.act),sum(b=>b.mine),sum(b=>b.paid?b.act:0),sum(b=>b.paid?0:b.act),sum(b=>b.planned)]);}
+  pm.push(['Totaal '+y,...[1,2,3,4,5].map(c=>pm.slice(1).reduce((s,r)=>s+r[c],0))]);
+  const pc=[['Categorie','Totaal per jaar','Jouw deel per jaar','Vaste lasten per maand']];
+  cats().forEach(c=>{const r=bk.filter(b=>cat(b.i.cat).id===c.id); if(!r.length) return;
+    pc.push([c.name,r.reduce((s,b)=>s+b.act,0),r.reduce((s,b)=>s+b.mine,0),items.filter(i=>cat(i.cat).id===c.id&&!isEnded(i)).reduce((s,i)=>s+monthly(i),0)]);});
+  return {lasten,afs,pm,pc,bk};
+}
+function download(name,blob){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+async function exportXlsx(){
+  const y=+$('x-year').value, b=$('x-xlsx'); b.disabled=true; b.textContent='Bezig…';
+  try{
+    const X=await loadXLSX(), R=exportRows(y), wb=X.utils.book_new();
+    const sheet=(rows,name,money,dates,widths)=>{
+      const ws=X.utils.aoa_to_sheet(rows,{cellDates:true});
+      for(let r=1;r<rows.length;r++){money.forEach(c=>{const a=X.utils.encode_cell({r,c}); if(ws[a]&&ws[a].t==='n') ws[a].z='"€" #,##0.00';});
+        dates.forEach(c=>{const a=X.utils.encode_cell({r,c}); if(ws[a]&&ws[a].t==='d') ws[a].z='dd-mm-yyyy';});}
+      ws['!cols']=widths.map(w=>({wch:w})); ws['!autofilter']={ref:X.utils.encode_range({s:{r:0,c:0},e:{r:rows.length-1,c:rows[0].length-1}})};
+      X.utils.book_append_sheet(wb,ws,name);
+    };
+    sheet(R.lasten,'Lasten',[4,5,7],[12],[30,12,18,14,12,12,12,16,6,14,20,11,14,12,13,22,28,30]);
+    sheet(R.afs,'Afschrijvingen '+y,[4,5,7],[0],[12,30,12,18,12,12,9,12]);
+    sheet(R.pm,'Per maand '+y,[1,2,3,4,5],[],[18,12,12,12,12,12]);
+    sheet(R.pc,'Per categorie '+y,[1,2,3],[],[22,16,18,20]);
+    X.writeFile(wb,'vaste-lasten-'+y+'.xlsx',{compression:true});
+    toast('Excel-bestand gemaakt');
+  }catch(e){toast(navigator.onLine?'Het Excel-bestand kon niet worden gemaakt. Probeer het opnieuw.':'Voor de eerste export is internet nodig.');}
+  b.disabled=false; b.textContent='Excel-bestand';
+}
+function exportCsv(){
+  const y=+$('x-year').value, R=exportRows(y);
+  const cell=v=>{if(v instanceof Date) return String(v.getDate()).padStart(2,'0')+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+v.getFullYear();
+    if(typeof v==='number') return v.toFixed(2).replace('.',','); const s=String(v); return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const csv='\ufeff'+R.afs.map(r=>r.map(cell).join(';')).join('\r\n');
+  download('vaste-lasten-afschrijvingen-'+y+'.csv',new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  toast('CSV gemaakt');
+}
+
 let tt; function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800);}
 
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;render();});
+if(!IS_PWA){$('x-xlsx').disabled=true; $('x-csv').disabled=true; $('x-note').textContent='Exporteren werkt in de geïnstalleerde app, niet in deze voorbeeldweergave.';}
 if(IS_PWA){
   $('dlBk').hidden=false;
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}}

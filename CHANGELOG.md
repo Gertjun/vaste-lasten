@@ -7,6 +7,54 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.14.0 — 27 oktober 2026
+- Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.
+- Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.
+- Verbeterd: bij Wat als staat de knop Weg op de telefoon naast het bedrag.
+
+## 2.13.0 — 27 oktober 2026
+- Nieuw: Wat als in het Overzicht. Reken een verandering door zonder je lasten aan te passen: een ander bedrag voor bestaande lasten, lasten die vervallen of nieuwe lasten erbij.
+- Nieuw: je ziet direct het verschil in totale vaste lasten, jouw deel, de inleg per persoon en, als je je inkomen hebt ingevuld, wat je vrij te besteden hebt. Scenario's bewaar je met een naam; ze staan in je eigen bestand en zijn alleen voor jou zichtbaar.
+- Opgelost: op de iPhone was de pagina bij Overzicht en Instellingen iets breder dan het scherm, waardoor Safari een beetje uitzoomde. Dat kwam door verborgen tooltips in de grafiek en de keuzerondjes bij de standaardverdeling.
+
+## 2.12.0 — 27 oktober 2026
+- Nieuw: het Overzicht vergelijkt je kosten met vorig jaar: hoeveel procent duurder of goedkoper, de grootste stijgers en dalers per last en de verschillen per categorie.
+- Nieuw: de jaargrafiek toont vorig jaar als gestippelde omtrek achter elke balk, zodra er verschil is.
+
+## 2.11.0 — 27 oktober 2026
+- Nieuw: tik in Maand of Overzicht op het bedrag van een afschrijving om het werkelijk afgeschreven bedrag in te vullen, bijvoorbeeld bij een variabele rekening. De last wordt dan meteen afgevinkt en het geplande bedrag staat doorgestreept ernaast.
+- Nieuw: Eenmalig bij Hoe vaak, voor een afrekening, naheffing of andere afschrijving die één keer voorkomt. Die telt mee in de maand zelf en in het jaar, maar niet als vaste last per maand. Bij Lasten staan ze onder Eenmalig.
+- Nieuw: Maand en het Overzicht tonen gepland tegenover werkelijk als die verschillen. De jaargrafiek en het verrekenen rekenen met het werkelijke bedrag.
+- Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.11.0 toont een eenmalige post als maandelijkse last.
+
+## 2.10.0 — 27 oktober 2026
+- Nieuw: kies bij een gezamenlijke last wie hem betaalt: de gezamenlijke rekening, of één van jullie van een eigen rekening.
+- Nieuw: het Overzicht houdt bij wat de ander moet bijdragen, bijvoorbeeld Anne betaalt jou € 572,50, met de laatste betalingen. Met Markeer als verrekend zet je het saldo op nul; dat kun je ongedaan maken.
+- Nieuw: bij het afvinken legt de app vast wie betaalde, het bedrag en de verdeling op dat moment. Latere wijzigingen aan de last veranderen het saldo dus niet.
+- Verbeterd: de inleg op de gezamenlijke rekening telt alleen lasten die van die rekening gaan.
+
+## 2.9.0 — 27 oktober 2026
+- Nieuw: vul onder Instellingen → Huishouden je netto inkomen in. Het staat versleuteld in je eigen bestand en is alleen voor jou zichtbaar.
+- Nieuw: het Overzicht toont welk deel van je inkomen naar vaste lasten gaat en wat er per maand vrij te besteden is.
+- Nieuw: gezamenlijke lasten naar inkomen verdelen. Delen jullie allebei je inkomen, dan berekent de app de standaardverdeling automatisch. Tot die tijd geldt het vaste percentage.
+- Verbeterd: de namen van categorieën in Instellingen staan in gewone tekstkleur.
+
+## 2.8.0 — 27 oktober 2026
+- Nieuw: eigen categorieën. Onder Instellingen → Huishouden voeg je categorieën toe, zoals Kinderopvang of Huisdieren, en wijzig je de naam en kleur van elke categorie. Ze worden gedeeld met je partner.
+- Nieuw: een categorie verwijderen kan ook; de lasten erin gaan dan naar Overig.
+- Verbeterd: nieuwe kleuren voor de categorieën, die ook voor kleurenblinden goed van elkaar te onderscheiden zijn.
+- Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.6.2 toont de eigen categorieën als Overig.
+
+## 2.7.0 — 27 oktober 2026
+- Nieuw: zoeken in Lasten op naam, notitie of contract- en polisnummer. Hoofdletters en accenten maken niet uit, en de zoekterm wordt gemarkeerd.
+- Nieuw: sorteren in Lasten per categorie, op bedrag, naam, dag van afschrijving of einddatum van het contract. Je keuze wordt onthouden.
+- Nieuw: sneltoets / om op de laptop direct te zoeken; Esc maakt het zoekveld leeg.
+
+## 2.6.2 — 27 oktober 2026
+- Verbeterd: het blok Per categorie in het Overzicht volgt het filter, net als het kostenblok. Bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee, bij Eigen zie je je eigen kosten. De percentages tellen op tot 100%.
+- Verbeterd: de app bewaart voortaan gegevens die een nieuwere versie toevoegt, ook op een apparaat dat nog niet is bijgewerkt. Zo raak je bij volgende uitbreidingen niets kwijt.
+- Verbeterd: wishlistpunten houden een vast nummer, ook in de app.
+
 ## 2.6.1 — 27 oktober 2026
 - Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.
 - Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14).
