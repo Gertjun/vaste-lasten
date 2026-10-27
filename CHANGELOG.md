@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.6.1 — 27 oktober 2026
+- Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.
+- Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14).
+
 ## 2.6.0 — 26 oktober 2026
 - Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.
 - Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.
