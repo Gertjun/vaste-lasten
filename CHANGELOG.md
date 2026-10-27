@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.14.1 — 27 oktober 2026
+- Verbeterd: de handleiding in de download heet nu README.md in plaats van LEESMIJ.md, zodat GitHub hem op de pagina van je repository toont. Het oude bestand LEESMIJ.md kun je uit de repository verwijderen.
+
 ## 2.14.0 — 27 oktober 2026
 - Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.
 - Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.
