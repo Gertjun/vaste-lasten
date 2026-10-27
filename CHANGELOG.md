@@ -7,6 +7,18 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.6.0 — 26 oktober 2026
+- Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.
+- Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.
+- Nieuw: bij Lasten zie je een komende prijswijziging en hoeveel een last ten opzichte van vorig jaar is gestegen of gedaald. De jaargrafiek en de maandlijsten rekenen per maand met het juiste bedrag.
+- Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont alleen het huidige bedrag en kan de prijsgeschiedenis wissen als je daar een last bewerkt.
+
+## 2.5.0 — 26 oktober 2026
+- Nieuw: per last een einddatum, opzegtermijn, contract- of polisnummer en de website van de aanbieder, onder Contract en looptijd in het formulier.
+- Nieuw: het Overzicht waarschuwt bij contracten die binnen twee maanden opgezegd moeten worden of aflopen, en bij een contract dat net is verlopen.
+- Nieuw: kies Stopt na de einddatum voor een last die daarna vervalt, zoals een afgeloste lening. Na die maand telt hij niet meer mee en staat hij bij Lasten onder Beëindigd.
+- Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie kan de contractgegevens wissen als je daar een last bewerkt.
+
 ## 2.4.1 — 26 oktober 2026
 - Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is.
 

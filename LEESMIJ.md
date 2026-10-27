@@ -11,6 +11,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `sw.js` | Service worker: laat de app offline werken |
 | `version.json` | Het actuele versienummer; hiermee ziet de app dat er een update is |
 | `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
+| `WISHLIST.md` | Ideeën voor volgende versies, bijgewerkt bij elke versie |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
 ## Onderdelen
