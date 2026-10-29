@@ -34,8 +34,8 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 
 De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of een smaller laptopvenster.
 
-- **iPhone**: één kolom, tabbladen in een balk onderin binnen bereik van je duim, grotere tikvlakken.
-- **iPad staand**: samenvatting als brede band, *Nog te betalen* en *Betaald* naast elkaar, categorieën in twee kolommen.
+- **iPhone**: één kolom, tabbladen in een balk onderin binnen bereik van je duim, grotere tikvlakken. *Nieuwe last* staat bij Lasten, naast het zoekveld.
+- **iPad staand**: *Nieuwe last* bij Lasten, samenvatting als brede band, *Nog te betalen* en *Betaald* naast elkaar, categorieën in twee kolommen.
 - **iPad liggend en laptop**: vaste zijbalk met maand, samenvatting, navigatie en *Nieuwe last*; het werkvlak gebruikt twee tot drie kolommen.
 - **Laptop-sneltoetsen**: `N` nieuwe last, `←` `→` vorige of volgende maand, `1` `2` `3` tabbladen, `Esc` sluit het formulier.
 

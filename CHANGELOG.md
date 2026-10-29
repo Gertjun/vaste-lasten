@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.14.3 — 29 oktober 2026
+- Verbeterd: op de iPhone en iPad staat de knop Nieuwe last bij Lasten, naast het zoekveld. Hij zweeft niet meer over de afschrijvingen, zodat je elk vinkje kunt raken. Op de laptop staat hij zoals altijd in de zijbalk.
+
 ## 2.14.2 — 29 oktober 2026
 - Verbeterd: de knoppen Alles, Gezamenlijk en Eigen staan nu bij de inhoud waar ze op werken: bij Maand naast de maandkiezer, bij Overzicht en Lasten bovenaan. Bij Instellingen verdwijnen ze, omdat ze daar niets doen.
 
