@@ -19,7 +19,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 - **Overzicht** (startscherm): contracten die aandacht vragen, de stand van deze maand, afschrijvingen om af te vinken (eerst wat een voorbije datum heeft, daarna wat binnenkort komt, aan het eind van de maand ook uit de volgende maand), inkomen en wat overblijft, de gezamenlijke rekening, verrekenen tussen jullie, de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie en Wat als-scenario's.
 - **Maand**: de afvinklijst per maand, met *Datum voorbij* (nog niet afgevinkt terwijl de datum geweest is), *Nog te betalen* en *Betaald*. Tik op een bedrag om het werkelijk afgeschreven bedrag in te vullen.
 - **Lasten**: al je vaste lasten, per categorie of gesorteerd, met zoeken. Eenmalige posten en beëindigde lasten staan apart.
-- **Instellingen**: huishouden (inkomen, verdeling en categorieën), dit apparaat en synchronisatie, exporteren naar Excel of CSV, back-up, en informatie over de app.
+- **Instellingen**: vier groepen die je in- en uitklapt: *Synchronisatie* (koppelen en van wie dit apparaat is, met de status in de kop), *Huishouden* (inkomen, verdeling en categorieën), *Gegevens* (exporteren naar Excel of CSV en back-up) en *Over de app*. De app onthoudt welke groepen je open hebt.
 
 ## Wat is privé en wat gedeeld
 

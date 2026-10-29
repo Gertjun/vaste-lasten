@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.15.1 — 29 oktober 2026
+- Verbeterd: Instellingen is ingedeeld in vier groepen die je in- en uitklapt: Synchronisatie, Huishouden, Gegevens en Over de app. De app onthoudt welke je open hebt.
+- Verbeterd: Synchronisatie staat bovenaan, met in de kop of je gekoppeld bent. Is er een wachtwoord nodig, dan klapt de groep vanzelf open.
+- Verbeterd: exporteren en back-up staan samen onder Gegevens.
+
 ## 2.15.0 — 29 oktober 2026
 - Nieuw: Datum voorbij. Lasten waarvan de datum geweest is en die je nog niet hebt afgevinkt, staan in Maand en het Overzicht apart bovenaan. Zo zie je meteen wat je nog moet controleren.
 - Nieuw: aan het eind van de maand toont het Overzicht bij Eerstvolgende ook de afschrijvingen van de komende twee weken in de volgende maand. Die kun je daar meteen afvinken.
