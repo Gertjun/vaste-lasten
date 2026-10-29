@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.14.4 — 29 oktober 2026
+- Verbeterd: afschrijvingen in Maand en het Overzicht nemen minder ruimte in. Naam en bedrag staan bovenaan, met jouw deel onder het bedrag, en de labels over de volle breedte eronder. Op de iPhone zie je zo veel meer lasten tegelijk.
+- Verbeterd: het label Nog afvinken is weg; het lege vinkje zegt hetzelfde.
+
 ## 2.14.3 — 29 oktober 2026
 - Verbeterd: op de iPhone en iPad staat de knop Nieuwe last bij Lasten, naast het zoekveld. Hij zweeft niet meer over de afschrijvingen, zodat je elk vinkje kunt raken. Op de laptop staat hij zoals altijd in de zijbalk.
 
