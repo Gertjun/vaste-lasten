@@ -7,6 +7,12 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.0 — 29 oktober 2026
+- Nieuw: stel onder Instellingen → Huishouden je loondag in. Valt die in het weekend of op een feestdag, dan rekent de app met de werkdag ervoor, zoals vrijdag 23 oktober in plaats van zondag 25 oktober.
+- Nieuw: Tot je loon in het Overzicht. Je ziet hoeveel er tot je volgende loon nog van je eigen rekening afgaat: je eigen lasten en gezamenlijke lasten die je zelf betaalt. Gezamenlijke lasten van de gezamenlijke rekening tellen niet mee.
+- Verbeterd: met een loondag loopt Eerstvolgende in het Overzicht door tot je volgende loon, in plaats van twee weken vooruit.
+- Verbeterd: je loondag staat net als je inkomen alleen in je eigen versleutelde bestand.
+
 ## 2.17.0 — 29 oktober 2026
 - Nieuw: thema's. Kies onder Instellingen → Weergave tussen Automatisch, Licht en Donker. Automatisch volgt je iPhone, iPad of laptop.
 - Nieuw: een accentkleur: Petrol, Blauw, Paars, Terracotta of Leisteen. Knoppen, tabbladen en het label Samen kleuren mee; de kleuren van categorieën, grafieken en meldingen blijven gelijk.
