@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.15.0 — 29 oktober 2026
+- Nieuw: Datum voorbij. Lasten waarvan de datum geweest is en die je nog niet hebt afgevinkt, staan in Maand en het Overzicht apart bovenaan. Zo zie je meteen wat je nog moet controleren.
+- Nieuw: aan het eind van de maand toont het Overzicht bij Eerstvolgende ook de afschrijvingen van de komende twee weken in de volgende maand. Die kun je daar meteen afvinken.
+- Nieuw: in de eerste twee weken van een maand zie je ook wat er van eind vorige maand nog niet is afgevinkt.
+
 ## 2.14.4 — 29 oktober 2026
 - Verbeterd: afschrijvingen in Maand en het Overzicht nemen minder ruimte in. Naam en bedrag staan bovenaan, met jouw deel onder het bedrag, en de labels over de volle breedte eronder. Op de iPhone zie je zo veel meer lasten tegelijk.
 - Verbeterd: het label Nog afvinken is weg; het lege vinkje zegt hetzelfde.
