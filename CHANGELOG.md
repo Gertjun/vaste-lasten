@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.17.0 — 29 oktober 2026
+- Nieuw: thema's. Kies onder Instellingen → Weergave tussen Automatisch, Licht en Donker. Automatisch volgt je iPhone, iPad of laptop.
+- Nieuw: een accentkleur: Petrol, Blauw, Paars, Terracotta of Leisteen. Knoppen, tabbladen en het label Samen kleuren mee; de kleuren van categorieën, grafieken en meldingen blijven gelijk.
+- Verbeterd: je thema geldt alleen voor het apparaat waarop je het kiest, zodat je partner haar eigen keuze houdt.
+
 ## 2.16.1 — 29 oktober 2026
 - Verbeterd: eigen lasten hebben nu ook een label, Eigen, net zoals gezamenlijke lasten het label Samen hebben. In Maand, het Overzicht en Lasten zie je zo meteen wat van jou alleen is.
 

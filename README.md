@@ -20,7 +20,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 - **Maand**: de afvinklijst per maand, met *Datum voorbij* (nog niet afgevinkt terwijl de datum geweest is), *Nog te betalen* en *Betaald*. Tik op een bedrag om het werkelijk afgeschreven bedrag in te vullen.
 - **Lasten**: al je vaste lasten, per categorie of gesorteerd, met zoeken. Eenmalige posten en beëindigde lasten staan apart.
 - **Inzicht**: de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie, inkomen en wat overblijft, en Wat als-scenario's.
-- **Instellingen**: vier groepen die je in- en uitklapt: *Synchronisatie* (koppelen en van wie dit apparaat is, met de status in de kop), *Huishouden* (inkomen, verdeling en categorieën), *Gegevens* (exporteren naar Excel of CSV en back-up) en *Over de app*. De app onthoudt welke groepen je open hebt.
+- **Instellingen**: vijf groepen die je in- en uitklapt: *Synchronisatie* (koppelen en van wie dit apparaat is, met de status in de kop), *Huishouden* (inkomen, verdeling en categorieën), *Weergave* (Automatisch, Licht of Donker en een accentkleur, per apparaat), *Gegevens* (exporteren naar Excel of CSV en back-up) en *Over de app*. De app onthoudt welke groepen je open hebt.
 
 ## Wat is privé en wat gedeeld
 
