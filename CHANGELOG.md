@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.16.1 — 29 oktober 2026
+- Verbeterd: eigen lasten hebben nu ook een label, Eigen, net zoals gezamenlijke lasten het label Samen hebben. In Maand, het Overzicht en Lasten zie je zo meteen wat van jou alleen is.
+
 ## 2.16.0 — 29 oktober 2026
 - Nieuw: het tabblad Inzicht, tussen Lasten en Instellingen. Daar staan de jaargrafiek, de vergelijking met vorig jaar, per categorie, inkomen en wat overblijft, en Wat als. Het filter Alles, Gezamenlijk, Eigen werkt er ook.
 - Verbeterd: het Overzicht is korter en laat zien wat er nu moet gebeuren: contracten die aandacht vragen, deze maand, de afschrijvingen om af te vinken, de gezamenlijke rekening en verrekenen.
