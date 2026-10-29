@@ -16,9 +16,10 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 
 ## Onderdelen
 
-- **Overzicht** (startscherm): contracten die aandacht vragen, de stand van deze maand, afschrijvingen om af te vinken (eerst wat een voorbije datum heeft, daarna wat binnenkort komt, aan het eind van de maand ook uit de volgende maand), inkomen en wat overblijft, de gezamenlijke rekening, verrekenen tussen jullie, de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie en Wat als-scenario's.
+- **Overzicht** (startscherm): wat er nu moet gebeuren. Contracten die aandacht vragen, de stand van deze maand, afschrijvingen om af te vinken (eerst wat een voorbije datum heeft, daarna wat binnenkort komt, aan het eind van de maand ook uit de volgende maand), de gezamenlijke rekening en verrekenen tussen jullie.
 - **Maand**: de afvinklijst per maand, met *Datum voorbij* (nog niet afgevinkt terwijl de datum geweest is), *Nog te betalen* en *Betaald*. Tik op een bedrag om het werkelijk afgeschreven bedrag in te vullen.
 - **Lasten**: al je vaste lasten, per categorie of gesorteerd, met zoeken. Eenmalige posten en beëindigde lasten staan apart.
+- **Inzicht**: de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie, inkomen en wat overblijft, en Wat als-scenario's.
 - **Instellingen**: vier groepen die je in- en uitklapt: *Synchronisatie* (koppelen en van wie dit apparaat is, met de status in de kop), *Huishouden* (inkomen, verdeling en categorieën), *Gegevens* (exporteren naar Excel of CSV en back-up) en *Over de app*. De app onthoudt welke groepen je open hebt.
 
 ## Wat is privé en wat gedeeld
@@ -37,7 +38,7 @@ De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of 
 - **iPhone**: één kolom, tabbladen in een balk onderin binnen bereik van je duim, grotere tikvlakken. *Nieuwe last* staat bij Lasten, naast het zoekveld.
 - **iPad staand**: *Nieuwe last* bij Lasten, samenvatting als brede band, *Nog te betalen* en *Betaald* naast elkaar, categorieën in twee kolommen.
 - **iPad liggend en laptop**: vaste zijbalk met maand, samenvatting, navigatie en *Nieuwe last*; het werkvlak gebruikt twee tot drie kolommen.
-- **Laptop-sneltoetsen**: `N` nieuwe last, `←` `→` vorige of volgende maand, `1` `2` `3` tabbladen, `Esc` sluit het formulier.
+- **Laptop-sneltoetsen**: `N` nieuwe last, `←` `→` vorige of volgende maand, `1` tot `5` onderdelen, `Esc` sluit het formulier.
 
 ## Hoe de gegevens zijn verdeeld
 

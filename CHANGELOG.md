@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.16.0 — 29 oktober 2026
+- Nieuw: het tabblad Inzicht, tussen Lasten en Instellingen. Daar staan de jaargrafiek, de vergelijking met vorig jaar, per categorie, inkomen en wat overblijft, en Wat als. Het filter Alles, Gezamenlijk, Eigen werkt er ook.
+- Verbeterd: het Overzicht is korter en laat zien wat er nu moet gebeuren: contracten die aandacht vragen, deze maand, de afschrijvingen om af te vinken, de gezamenlijke rekening en verrekenen.
+- Verbeterd: het Overzicht heeft een huisje als pictogram; Inzicht krijgt de grafiek. Op de laptop openen de toetsen 1 tot en met 5 de onderdelen.
+
 ## 2.15.1 — 29 oktober 2026
 - Verbeterd: Instellingen is ingedeeld in vier groepen die je in- en uitklapt: Synchronisatie, Huishouden, Gegevens en Over de app. De app onthoudt welke je open hebt.
 - Verbeterd: Synchronisatie staat bovenaan, met in de kop of je gekoppeld bent. Is er een wachtwoord nodig, dan klapt de groep vanzelf open.
