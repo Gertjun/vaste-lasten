@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.14.2 — 29 oktober 2026
+- Verbeterd: de knoppen Alles, Gezamenlijk en Eigen staan nu bij de inhoud waar ze op werken: bij Maand naast de maandkiezer, bij Overzicht en Lasten bovenaan. Bij Instellingen verdwijnen ze, omdat ze daar niets doen.
+
 ## 2.14.1 — 27 oktober 2026
 - Verbeterd: de handleiding in de download heet nu README.md in plaats van LEESMIJ.md, zodat GitHub hem op de pagina van je repository toont. Het oude bestand LEESMIJ.md kun je uit de repository verwijderen.
 
