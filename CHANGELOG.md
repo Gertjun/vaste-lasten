@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.19.0 — 30 oktober 2026
+- Nieuw: bij het koppelen kies je een wachtwoord van minstens 12 tekens dat niet makkelijk te raden is. Een meter laat zien of het Zwak, Redelijk of Sterk is. Een wachtzin van vier losse woorden, zoals fiets regen koffie lantaarn, is sterk en makkelijk te onthouden.
+- Nieuw: tik op het oogje naast een wachtwoordveld om te zien wat je typt.
+- Verbeterd: je huidige wachtwoorden blijven gewoon werken, ook op een nieuw apparaat. De strengere eis geldt alleen voor een nieuw wachtwoord.
+
 ## 2.18.5 — 30 oktober 2026
 - Verbeterd: op de iPhone en iPad opent een back-up, Excel-bestand of CSV nu het deelmenu. Kies Bewaar in Bestanden of AirDrop naar je laptop; je loopt niet meer vast in een voorbeeldscherm. Op de laptop blijft het een gewone download.
 
