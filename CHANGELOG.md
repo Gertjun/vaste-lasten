@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.20.0 — 30 oktober 2026
+- Nieuw: je gegevens onthouden welke versie van de app ze minstens nodig hebben. Heeft een ander apparaat ze opgeslagen met een nieuwere versie, dan vraagt de app eerst om bij te werken, met een knop Nu bijwerken. Tot die tijd synchroniseert hij niet en kun je niets wijzigen, zodat een oudere versie niets verkeerd kan opslaan.
+- Let op: werk alle apparaten bij, ook dat van je partner. Deze bescherming werkt pas op apparaten met versie 2.20.0 of nieuwer.
+
 ## 2.19.0 — 30 oktober 2026
 - Nieuw: bij het koppelen kies je een wachtwoord van minstens 12 tekens dat niet makkelijk te raden is. Een meter laat zien of het Zwak, Redelijk of Sterk is. Een wachtzin van vier losse woorden, zoals fiets regen koffie lantaarn, is sterk en makkelijk te onthouden.
 - Nieuw: tik op het oogje naast een wachtwoordveld om te zien wat je typt.
