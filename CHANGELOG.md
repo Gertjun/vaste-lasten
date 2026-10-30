@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.4 — 30 oktober 2026
+- Verbeterd: de app onthoudt welke lasten, categorieën, verrekeningen en scenario's je hebt verwijderd, zodat ze niet terugkomen via een ander apparaat. Die aantekeningen worden nu na 180 dagen opgeruimd, zodat je gegevens niet blijven groeien.
+- Let op: heeft een apparaat langer dan een half jaar niet gesynchroniseerd, open het dan eerst en laat het bijwerken. Anders kan een last die je in die tijd hebt verwijderd terugkomen.
+
 ## 2.18.3 — 30 oktober 2026
 - Verbeterd: de app wacht na een wijziging tien seconden voordat hij synchroniseert. Vink je vijf lasten achter elkaar af, dan gaat dat in één keer naar GitHub in plaats van in vijf aparte opslagmomenten, zodat je data-repository niet onnodig groeit.
 - Verbeterd: verlaat je de app of ga je naar een ander tabblad, dan synchroniseert hij meteen. Zolang een wijziging wacht, staat er Wacht op synchroniseren.
