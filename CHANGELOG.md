@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.5 — 30 oktober 2026
+- Verbeterd: op de iPhone en iPad opent een back-up, Excel-bestand of CSV nu het deelmenu. Kies Bewaar in Bestanden of AirDrop naar je laptop; je loopt niet meer vast in een voorbeeldscherm. Op de laptop blijft het een gewone download.
+
 ## 2.18.4 — 30 oktober 2026
 - Verbeterd: de app onthoudt welke lasten, categorieën, verrekeningen en scenario's je hebt verwijderd, zodat ze niet terugkomen via een ander apparaat. Die aantekeningen worden nu na 180 dagen opgeruimd, zodat je gegevens niet blijven groeien.
 - Let op: heeft een apparaat langer dan een half jaar niet gesynchroniseerd, open het dan eerst en laat het bijwerken. Anders kan een last die je in die tijd hebt verwijderd terugkomen.
