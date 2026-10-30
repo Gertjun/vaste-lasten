@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.2 — 30 oktober 2026
+- Opgelost: had je de app in twee tabbladen of vensters open, bijvoorbeeld op je laptop, dan kon het ene tabblad de wijzigingen van het andere overschrijven. Tabbladen nemen elkaars wijzigingen nu direct over.
+- Verbeterd: de app vraagt de browser je gegevens blijvend te bewaren, zodat iOS ze niet opruimt als er weinig ruimte is. Onder Instellingen → Gegevens zie je of dat gelukt is.
+
 ## 2.18.1 — 30 oktober 2026
 - Verbeterd: op een breed scherm, zoals een laptop of externe monitor, gebruikt de app nu de volle breedte. De zijbalk is wat smaller.
 - Verbeterd: op een heel breed scherm staat het Overzicht in drie kolommen, zodat je alles in één keer ziet.
