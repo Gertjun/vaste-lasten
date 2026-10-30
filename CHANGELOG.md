@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.22.1 — 30 oktober 2026
+- Verbeterd: in Maand en het Overzicht zijn alle afschrijvingen even hoog, ook als er geen jouw deel onder het bedrag staat. Een heel lange naam wordt na twee regels afgekort; tik erop om hem helemaal te zien.
+
 ## 2.22.0 — 30 oktober 2026
 - Nieuw: tik in Lasten op het gekleurde bolletje voor een categorie om meteen een andere kleur te kiezen. De blokken en het bolletje krijgen direct de nieuwe kleur, en je partner ziet hem ook.
 - Verbeterd: de kleurvakjes bij Instellingen → Huishouden → Categorieën zijn groter, zodat je ze op de iPhone makkelijker raakt.
