@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.3 — 30 oktober 2026
+- Verbeterd: de app wacht na een wijziging tien seconden voordat hij synchroniseert. Vink je vijf lasten achter elkaar af, dan gaat dat in één keer naar GitHub in plaats van in vijf aparte opslagmomenten, zodat je data-repository niet onnodig groeit.
+- Verbeterd: verlaat je de app of ga je naar een ander tabblad, dan synchroniseert hij meteen. Zolang een wijziging wacht, staat er Wacht op synchroniseren.
+
 ## 2.18.2 — 30 oktober 2026
 - Opgelost: had je de app in twee tabbladen of vensters open, bijvoorbeeld op je laptop, dan kon het ene tabblad de wijzigingen van het andere overschrijven. Tabbladen nemen elkaars wijzigingen nu direct over.
 - Verbeterd: de app vraagt de browser je gegevens blijvend te bewaren, zodat iOS ze niet opruimt als er weinig ruimte is. Onder Instellingen → Gegevens zie je of dat gelukt is.
