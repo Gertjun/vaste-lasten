@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.22.0 — 30 oktober 2026
+- Nieuw: tik in Lasten op het gekleurde bolletje voor een categorie om meteen een andere kleur te kiezen. De blokken en het bolletje krijgen direct de nieuwe kleur, en je partner ziet hem ook.
+- Verbeterd: de kleurvakjes bij Instellingen → Huishouden → Categorieën zijn groter, zodat je ze op de iPhone makkelijker raakt.
+
 ## 2.21.1 — 30 oktober 2026
 - Verbeterd: in Lasten krijgt elk blok een lichte tint van de kleur van zijn categorie, net als het bolletje bij de categorie. Zo zie je in één oogopslag waar een last bij hoort, ook als je op bedrag of naam sorteert.
 
