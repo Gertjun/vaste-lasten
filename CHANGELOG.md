@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.21.0 — 30 oktober 2026
+- Nieuw: Vorige versie herstellen onder Instellingen → Synchronisatie. Elke synchronisatie bewaart een versie in GitHub; kies een moment en zet je gezamenlijke of eigen lasten, afvinkjes, categorieën, verrekeningen en scenario's terug zoals ze toen waren. Ook op het apparaat van je partner.
+- Verbeterd: terugzetten is zelf ook een nieuwe versie, dus je kunt het weer ongedaan maken. Namen, verdeling, inkomen en loondag blijven zoals ze nu zijn.
+
 ## 2.20.0 — 30 oktober 2026
 - Nieuw: je gegevens onthouden welke versie van de app ze minstens nodig hebben. Heeft een ander apparaat ze opgeslagen met een nieuwere versie, dan vraagt de app eerst om bij te werken, met een knop Nu bijwerken. Tot die tijd synchroniseert hij niet en kun je niets wijzigen, zodat een oudere versie niets verkeerd kan opslaan.
 - Let op: werk alle apparaten bij, ook dat van je partner. Deze bescherming werkt pas op apparaten met versie 2.20.0 of nieuwer.
