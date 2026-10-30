@@ -2,7 +2,7 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 2.21.0, 30 oktober 2026
+Laatst bijgewerkt: versie 2.21.1, 30 oktober 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
@@ -10,6 +10,7 @@ Laatst bijgewerkt: versie 2.21.0, 30 oktober 2026
 - #5 **Herinneringen via je agenda** (klein) — Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt.
 - #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf.
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
+- #25 **Kleur kiezen vanuit Lasten** (klein) — Tik op het gekleurde bolletje bij een categorie in Lasten om direct een andere kleur te kiezen.
 
 ## Gerealiseerd
 - **Looptijd en contractgegevens** — versie 2.5.0
@@ -32,3 +33,4 @@ Laatst bijgewerkt: versie 2.21.0, 30 oktober 2026
 - #21 **Thema's** — versie 2.17.0
 - #22 **Tot je volgende loon** — versie 2.18.0
 - #23 **Volle breedte op de laptop** — versie 2.18.1
+- #24 **Lasten in de kleur van hun categorie** — versie 2.21.1

@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.21.1 — 30 oktober 2026
+- Verbeterd: in Lasten krijgt elk blok een lichte tint van de kleur van zijn categorie, net als het bolletje bij de categorie. Zo zie je in één oogopslag waar een last bij hoort, ook als je op bedrag of naam sorteert.
+
 ## 2.21.0 — 30 oktober 2026
 - Nieuw: Vorige versie herstellen onder Instellingen → Synchronisatie. Elke synchronisatie bewaart een versie in GitHub; kies een moment en zet je gezamenlijke of eigen lasten, afvinkjes, categorieën, verrekeningen en scenario's terug zoals ze toen waren. Ook op het apparaat van je partner.
 - Verbeterd: terugzetten is zelf ook een nieuwe versie, dus je kunt het weer ongedaan maken. Namen, verdeling, inkomen en loondag blijven zoals ze nu zijn.
