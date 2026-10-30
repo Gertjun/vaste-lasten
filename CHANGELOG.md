@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.18.1 — 30 oktober 2026
+- Verbeterd: op een breed scherm, zoals een laptop of externe monitor, gebruikt de app nu de volle breedte. De zijbalk is wat smaller.
+- Verbeterd: op een heel breed scherm staat het Overzicht in drie kolommen, zodat je alles in één keer ziet.
+
 ## 2.18.0 — 29 oktober 2026
 - Nieuw: stel onder Instellingen → Huishouden je loondag in. Valt die in het weekend of op een feestdag, dan rekent de app met de werkdag ervoor, zoals vrijdag 23 oktober in plaats van zondag 25 oktober.
 - Nieuw: Tot je loon in het Overzicht. Je ziet hoeveel er tot je volgende loon nog van je eigen rekening afgaat: je eigen lasten en gezamenlijke lasten die je zelf betaalt. Gezamenlijke lasten van de gezamenlijke rekening tellen niet mee.
