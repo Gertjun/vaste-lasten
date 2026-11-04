@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.22.2 — 4 november 2026
+- Opgelost: op de laptop sprongen de groepen in Instellingen naar een andere kolom als je er een in- of uitklapte. Elke groep heeft nu een vaste plek: Synchronisatie en Huishouden links, Weergave, Gegevens en Over de app rechts, en op een breed scherm Huishouden in een eigen kolom ertussen. Uitklappen maakt alleen die kolom langer.
+
 ## 2.22.1 — 30 oktober 2026
 - Verbeterd: in Maand en het Overzicht zijn alle afschrijvingen even hoog, ook als er geen jouw deel onder het bedrag staat. Een heel lange naam wordt na twee regels afgekort; tik erop om hem helemaal te zien.
 
