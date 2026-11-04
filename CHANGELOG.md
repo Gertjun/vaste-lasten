@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.23.0 — 4 november 2026
+- Verbeterd: op de laptop en de iPad liggend is de zijbalk een eigen vlak over de volle hoogte van het scherm, smaller en rustiger, met de versie onder de naam. Op de iPhone en de iPad staand blijft alles zoals het was.
+- Nieuw: boven het werkvlak staat nu de naam van het onderdeel, met rechts de synchronisatiestatus en de knop Nieuwe last.
+- Nieuw: klap de zijbalk in met het pijltje bovenin of de toets [. Je ziet dan alleen de pictogrammen en het werkvlak wordt breder; wijs een pictogram aan om de naam te zien. De app onthoudt je keuze per apparaat.
+
 ## 2.22.2 — 4 november 2026
 - Opgelost: op de laptop sprongen de groepen in Instellingen naar een andere kolom als je er een in- of uitklapte. Elke groep heeft nu een vaste plek: Synchronisatie en Huishouden links, Weergave, Gegevens en Over de app rechts, en op een breed scherm Huishouden in een eigen kolom ertussen. Uitklappen maakt alleen die kolom langer.
 

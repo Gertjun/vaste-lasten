@@ -37,8 +37,8 @@ De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of 
 
 - **iPhone**: één kolom, tabbladen in een balk onderin binnen bereik van je duim, grotere tikvlakken. *Nieuwe last* staat bij Lasten, naast het zoekveld.
 - **iPad staand**: *Nieuwe last* bij Lasten, samenvatting als brede band, *Nog te betalen* en *Betaald* naast elkaar, categorieën in twee kolommen.
-- **iPad liggend en laptop**: vaste zijbalk met maand, samenvatting, navigatie en *Nieuwe last*; het werkvlak gebruikt twee tot drie kolommen.
-- **Laptop-sneltoetsen**: `N` nieuwe last, `←` `→` vorige of volgende maand, `1` tot `5` onderdelen, `Esc` sluit het formulier.
+- **iPad liggend en laptop**: een vaste zijbalk met de onderdelen, die je met het pijltje bovenin (of de toets `[`) inklapt tot alleen pictogrammen. Boven het werkvlak staan de naam van het onderdeel, de synchronisatiestatus en *Nieuwe last*; het werkvlak gebruikt twee tot drie kolommen.
+- **Laptop-sneltoetsen**: `N` nieuwe last, `/` zoeken, `←` `→` vorige of volgende maand, `1` tot `5` onderdelen, `[` zijbalk in- of uitklappen, `Esc` sluit het formulier.
 
 ## Hoe de gegevens zijn verdeeld
 
