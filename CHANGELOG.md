@@ -7,6 +7,10 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.23.2 — 5 november 2026
+- Verbeterd: op de laptop staat Instellingen nu als een lijst. Links de koppen Synchronisatie, Huishouden, Weergave, Gegevens en Over de app, met een korte omschrijving en de status; rechts, over twee kolommen, de blokken van de kop die je kiest. Op een breed scherm staan die blokken naast elkaar. De app onthoudt je keuze per apparaat.
+- Verbeterd: op de iPhone en de iPad staand blijft Instellingen zoals het was, met groepen die je in- en uitklapt.
+
 ## 2.23.1 — 5 november 2026
 - Verbeterd: de labels Samen en Eigen zijn beter van elkaar te onderscheiden. Samen is nu gevuld in je accentkleur, Eigen blijft omlijnd. Dat werkt in elke accentkleur, ook Leisteen, en in licht en donker.
 
