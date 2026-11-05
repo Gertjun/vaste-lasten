@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.23.1 — 5 november 2026
+- Verbeterd: de labels Samen en Eigen zijn beter van elkaar te onderscheiden. Samen is nu gevuld in je accentkleur, Eigen blijft omlijnd. Dat werkt in elke accentkleur, ook Leisteen, en in licht en donker.
+
 ## 2.23.0 — 4 november 2026
 - Verbeterd: op de laptop en de iPad liggend is de zijbalk een eigen vlak over de volle hoogte van het scherm, smaller en rustiger, met de versie onder de naam. Op de iPhone en de iPad staand blijft alles zoals het was.
 - Nieuw: boven het werkvlak staat nu de naam van het onderdeel, met rechts de synchronisatiestatus en de knop Nieuwe last.
