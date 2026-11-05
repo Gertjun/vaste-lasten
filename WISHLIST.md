@@ -2,7 +2,7 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 2.23.2, 5 november 2026
+Laatst bijgewerkt: versie 2.23.3, 5 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
@@ -39,3 +39,4 @@ Laatst bijgewerkt: versie 2.23.2, 5 november 2026
 - #28 **Zijbalk als eigen vlak, in te klappen** — versie 2.23.0
 - #29 **Samen en Eigen beter te onderscheiden** — versie 2.23.1
 - #30 **Instellingen als lijst op de laptop** — versie 2.23.2
+- #31 **Blokken in Instellingen netjes uitgelijnd** — versie 2.23.3
