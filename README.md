@@ -94,6 +94,15 @@ Geef je partner de tweede token op een veilige manier, bijvoorbeeld via een gede
 
 Een tweede apparaat van dezelfde persoon koppel je op dezelfde manier: kies dezelfde naam en gebruik hetzelfde eigen wachtwoord.
 
+## Wachtwoord wijzigen
+
+1. Ga naar **Instellingen → Synchronisatie → Wachtwoord wijzigen**.
+2. Kies *Gezamenlijk* of *Jouw eigen*, vul het huidige wachtwoord in en twee keer het nieuwe (minstens 12 tekens) → **Wachtwoord wijzigen**.
+3. De app versleutelt het bestand in GitHub opnieuw met het nieuwe wachtwoord.
+4. Je andere apparaten, en bij het gezamenlijke wachtwoord ook die van je partner, tonen daarna *Wachtwoord nodig*. Vul daar één keer het nieuwe wachtwoord in; wat je op dat apparaat had gewijzigd blijft bewaard.
+
+Vorige versies van vóór de wijziging kun je nog terugzetten op apparaten die toen al gekoppeld waren.
+
 ## Verdeling en inleg
 
 - Onder **Instellingen → Huishouden** stel je de namen en de standaardverdeling in (bijvoorbeeld 60/40). Dat geldt voor jullie allebei.
@@ -119,6 +128,7 @@ Een tweede apparaat van dezelfde persoon koppel je op dezelfde manier: kies deze
 | De token mag niet schrijven | Zet *Contents* op *Read and write* bij de token. |
 | Gezamenlijk wachtwoord klopt niet | Gebruik het wachtwoord dat de eerste persoon heeft gekozen. |
 | Eigen wachtwoord klopt niet | Je hebt op een ander apparaat al een eigen wachtwoord gekozen; gebruik dat. Of je koos de verkeerde naam. |
+| Het gezamenlijke wachtwoord is gewijzigd | Het wachtwoord is op een ander apparaat veranderd. Vul het nieuwe in en tik *Ontgrendelen*. |
 | Deze repository is openbaar | Zet de data-repository op *Private* via Settings → General → Danger Zone. |
 
 ## App bijwerken

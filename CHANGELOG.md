@@ -7,6 +7,12 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.24.0 — 5 november 2026
+- Nieuw: Wachtwoord wijzigen onder Instellingen → Synchronisatie. Kies het gezamenlijke of je eigen wachtwoord, vul het huidige in en twee keer het nieuwe. De app versleutelt je gegevens in GitHub opnieuw met het nieuwe wachtwoord.
+- Nieuw: is een wachtwoord op een ander apparaat gewijzigd, dan vraagt de app één keer om het nieuwe wachtwoord, alleen dat ene. Wat je op dat apparaat had gewijzigd blijft bewaard.
+- Verbeterd: een vorige versie van vóór een wachtwoordwijziging kun je nog terugzetten op apparaten die toen al gekoppeld waren.
+- Let op: werk eerst alle apparaten bij, ook die van je partner, voordat je het gezamenlijke wachtwoord wijzigt. Een oudere versie vraagt je anders om te ontkoppelen en opnieuw te koppelen.
+
 ## 2.23.3 — 5 november 2026
 - Verbeterd: op de laptop staan de blokken in Instellingen netjes in een raster. Blokken naast elkaar zijn even hoog en hun knoppen, zoals Inkomen opslaan en Loondag opslaan, staan onderaan op één lijn.
 - Opgelost: bij Over de app stond het blok Op je startscherm iets lager dan het blok met de versie.
