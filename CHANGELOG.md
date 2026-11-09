@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.24.3 — 9 november 2026
+- Verbeterd: de code voor de overstap van versie 1 naar 2 uit oktober is opgeruimd, want alle apparaten zijn al over. Een back-up van vóór die tijd kun je nog steeds terugzetten.
+
 ## 2.24.2 — 9 november 2026
 - Verbeterd: overbodige regels uit het sjabloon waarmee de app ooit begon, zijn opgeruimd. Je ziet geen verschil.
 

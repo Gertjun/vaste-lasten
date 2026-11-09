@@ -64,7 +64,6 @@ Bijwerken van een eerdere versie: vervang `index.html` en `sw.js`.
 ## 2. Privé-repository voor de gegevens
 
 1. Maak een repository `vaste-lasten-data`, **Private**, en vink *Add a README file* aan.
-2. Had je al een oude koppeling? Dan bestaat deze repo al. Het oude bestand `vaste-lasten.json` kun je na het opnieuw koppelen verwijderen.
 
 ## 3. Tokens aanmaken (door de eigenaar van de repo)
 
