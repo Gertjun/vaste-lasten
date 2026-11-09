@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.24.1 — 9 november 2026
+- Verbeterd: opmaak die nergens meer gebruikt werd, is uit de app gehaald. Je ziet geen verschil.
+
 ## 2.24.0 — 5 november 2026
 - Nieuw: Wachtwoord wijzigen onder Instellingen → Synchronisatie. Kies het gezamenlijke of je eigen wachtwoord, vul het huidige in en twee keer het nieuwe. De app versleutelt je gegevens in GitHub opnieuw met het nieuwe wachtwoord.
 - Nieuw: is een wachtwoord op een ander apparaat gewijzigd, dan vraagt de app één keer om het nieuwe wachtwoord, alleen dat ene. Wat je op dat apparaat had gewijzigd blijft bewaard.
