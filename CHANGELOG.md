@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.24.4 — 9 november 2026
+- Verbeterd: op de laptop en de iPad liggend staat de knop Nieuwe last in de zijbalk, onder de naam van de app en boven Overzicht. Ingeklapt is het een plusknop.
+- Verbeterd: de synchronisatiestatus staat in de zijbalk direct onder het versienummer. Ingeklapt zie je hem als gekleurde stip; wijs hem aan voor de status. Boven het werkvlak staat nu alleen de naam van het onderdeel.
+- Opgelost: op de iPad liggend stond het pictogram van de app in de ingeklapte zijbalk niet precies in het midden.
+
 ## 2.24.3 — 9 november 2026
 - Verbeterd: de code voor de overstap van versie 1 naar 2 uit oktober is opgeruimd, want alle apparaten zijn al over. Een back-up van vóór die tijd kun je nog steeds terugzetten.
 
