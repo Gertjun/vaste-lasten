@@ -1,0 +1,21 @@
+# DECISIONS – Vaste Lasten
+
+Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; een nieuw besluit vervangt een oud ("vervangt D3").
+
+### D1 – Gezamenlijk en eigen apart versleuteld (okt 2026)
+- **Besluit:** twee soorten bestanden: `samen.json` met het gezamenlijke wachtwoord, en per persoon `eigen-<p>.json` met een eigen wachtwoord.
+- **Waarom:** eigen lasten blijven onzichtbaar voor de partner; alles blijft geheim voor de buitenwereld.
+
+### D2 – Inkomens zijn gedeeld (nov 2026, 2.28.0)
+- **Besluit:** ingevulde inkomens staan in het gezamenlijke bestand; de app rekent het aandeel in de gezamenlijke lasten uit op basis van wat ieder overmaakt (ieder 75% van het netto-inkomen). Eigen vaste lasten = die bijdrage plus eigen kosten, niet het aandeel in de gezamenlijke lasten.
+- **Waarom:** Geert en Wies kennen elkaars inkomen al.
+
+### D3 – Elke wijziging een versie (okt 2026)
+- **Besluit:** eigen versienummer per wijziging, met changelog, wishlist en het versienummer in de bestandsnaam van een download.
+
+### D4 – Claude pusht zelf (okt 2026)
+- **Besluit:** Claude haalt de code aan het begin uit `Gertjun/vaste-lasten` en pusht nieuwe versies zelf naar `main`.
+
+### D5 – PBKDF2 600.000 rondes voor nieuwe wachtwoorden (10 nov 2026, 2.29.0)
+- **Besluit:** nieuwe salts (wachtwoord wijzigen, nieuwe koppeling) gebruiken 600.000 rondes; bestaande bestanden houden 310.000 tot het wachtwoord gewijzigd wordt. Het aantal staat per bestand in `kdf.iter` en per apparaat in `cfg.iter`.
+- **Waarom:** gelijk beveiligingsniveau als de andere apps, zonder dat Wies' apparaat meteen moet bijwerken. Alleen bij een wachtwoordwijziging moet het andere apparaat eerst bijgewerkt zijn.
