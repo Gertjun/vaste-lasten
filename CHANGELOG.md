@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.25.0 — 10 november 2026
+- Nieuw: maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening, vul dat percentage dan in bij Instellingen → Huishouden → Inkomen, bijvoorbeeld 75. Inzicht rekent je vaste lasten dan als die bijdrage plus je eigen lasten, in plaats van je deel van de gezamenlijke lasten.
+- Verbeterd: onder Inkomen en wat overblijft zie je hoe je vaste lasten zijn opgebouwd: je bijdrage aan de gezamenlijke rekening en je eigen lasten. Wat als rekent vrij te besteden op dezelfde manier.
+- Verbeterd: de bijdrage staat net als je inkomen alleen in je eigen versleutelde bestand. Laat je het veld leeg, dan blijft alles zoals het was.
+
 ## 2.24.4 — 9 november 2026
 - Verbeterd: op de laptop en de iPad liggend staat de knop Nieuwe last in de zijbalk, onder de naam van de app en boven Overzicht. Ingeklapt is het een plusknop.
 - Verbeterd: de synchronisatiestatus staat in de zijbalk direct onder het versienummer. Ingeklapt zie je hem als gekleurde stip; wijs hem aan voor de status. Boven het werkvlak staat nu alleen de naam van het onderdeel.
