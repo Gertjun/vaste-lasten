@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.26.1 — 10 november 2026
+- Verbeterd: de handleiding (README.md) zegt nu dat je het percentage voor de gezamenlijke rekening bij Verdeling invult, en dat dat percentage gedeeld is en je inkomen niet.
+
 ## 2.26.0 — 10 november 2026
 - Nieuw: het percentage van jullie netto inkomen dat ieder naar de gezamenlijke rekening overmaakt, stel je nu samen in onder Instellingen → Huishouden → Verdeling. Het geldt voor jullie allebei; je hoeft het maar één keer in te vullen.
 - Nieuw: het blok Gezamenlijke rekening in het Overzicht toont dan wat ieder overmaakt, en of dat samen genoeg is voor de gezamenlijke lasten: wat er per maand overblijft of hoeveel er tekortkomt.

@@ -19,7 +19,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 - **Overzicht** (startscherm): wat er nu moet gebeuren. Contracten die aandacht vragen, *Tot je loon* (wat er tot je volgende loon nog van je eigen rekening afgaat, als je je loondag hebt ingesteld), de stand van deze maand, afschrijvingen om af te vinken (eerst wat een voorbije datum heeft, daarna wat binnenkort komt, aan het eind van de maand ook uit de volgende maand, of tot je volgende loon), de gezamenlijke rekening en verrekenen tussen jullie.
 - **Maand**: de afvinklijst per maand, met *Datum voorbij* (nog niet afgevinkt terwijl de datum geweest is), *Nog te betalen* en *Betaald*. Tik op een bedrag om het werkelijk afgeschreven bedrag in te vullen.
 - **Lasten**: al je vaste lasten, per categorie of gesorteerd, met zoeken. Eenmalige posten en beëindigde lasten staan apart.
-- **Inzicht**: de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie, inkomen en wat overblijft, en Wat als-scenario's. Maak je elke maand een vast deel van je inkomen over naar de gezamenlijke rekening (bijvoorbeeld 75%), vul dat percentage dan in bij *Huishouden → Inkomen*: je vaste lasten zijn dan die bijdrage plus je eigen lasten.
+- **Inzicht**: de kosten met een jaargrafiek, de vergelijking met vorig jaar, de verdeling per categorie, inkomen en wat overblijft, en Wat als-scenario's. Maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening (bijvoorbeeld 75%), vul dat percentage dan in bij *Huishouden → Verdeling*: je vaste lasten zijn dan die bijdrage plus je eigen lasten, en het blok *Gezamenlijke rekening* in het Overzicht laat zien wat ieder overmaakt en of dat genoeg is.
 - **Instellingen**: vijf groepen die je in- en uitklapt: *Synchronisatie* (koppelen en van wie dit apparaat is, met de status in de kop), *Huishouden* (inkomen, loondag, verdeling en categorieën), *Weergave* (Automatisch, Licht of Donker en een accentkleur, per apparaat), *Gegevens* (exporteren naar Excel of CSV en back-up) en *Over de app*. De app onthoudt welke groepen je open hebt.
 
 ## Wat is privé en wat gedeeld
@@ -27,7 +27,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | Gedeeld met je partner (`samen.json`) | Alleen voor jou (`eigen-p1.json` / `eigen-p2.json`) |
 |---|---|
 | Gezamenlijke lasten en het afvinken ervan | Je eigen lasten en het afvinken ervan |
-| Namen, verdeling en categorieën | Je inkomen, je bijdrage aan de gezamenlijke rekening en je loondag |
+| Namen, verdeling (ook het percentage voor de gezamenlijke rekening) en categorieën | Je inkomen en loondag |
 | Wie een gezamenlijke last betaalt en de verrekeningen | Je Wat als-scenario's |
 | Je inkomen, alleen als je kiest voor delen | |
 
