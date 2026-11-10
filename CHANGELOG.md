@@ -7,6 +7,12 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.26.0 — 10 november 2026
+- Nieuw: het percentage van jullie netto inkomen dat ieder naar de gezamenlijke rekening overmaakt, stel je nu samen in onder Instellingen → Huishouden → Verdeling. Het geldt voor jullie allebei; je hoeft het maar één keer in te vullen.
+- Nieuw: het blok Gezamenlijke rekening in het Overzicht toont dan wat ieder overmaakt, en of dat samen genoeg is voor de gezamenlijke lasten: wat er per maand overblijft of hoeveel er tekortkomt.
+- Verbeterd: het bedrag van je partner zie je zodra je partner het inkomen deelt onder Inkomen. Je eigen inkomen blijft privé tot je zelf kiest voor delen.
+- Let op: had je in 2.25.0 een percentage ingevuld bij Inkomen, dan staat dat nu bij Verdeling. Tik daar op Verdeling opslaan, dan geldt het ook voor je partner.
+
 ## 2.25.0 — 10 november 2026
 - Nieuw: maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening, vul dat percentage dan in bij Instellingen → Huishouden → Inkomen, bijvoorbeeld 75. Inzicht rekent je vaste lasten dan als die bijdrage plus je eigen lasten, in plaats van je deel van de gezamenlijke lasten.
 - Verbeterd: onder Inkomen en wat overblijft zie je hoe je vaste lasten zijn opgebouwd: je bijdrage aan de gezamenlijke rekening en je eigen lasten. Wat als rekent vrij te besteden op dezelfde manier.
