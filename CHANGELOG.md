@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.27.0 — 10 november 2026
+- Nieuw: deelt je partner het inkomen niet, vul dan zelf in hoeveel je partner per maand naar de gezamenlijke rekening overmaakt. Dat doe je onder Instellingen → Huishouden → Verdeling. Het blok Gezamenlijke rekening rekent daar dan mee, met het label Ingevuld.
+- Verbeterd: het ingevulde bedrag is gedeeld, dus je partner ziet het ook en kan het aanpassen. Deelt je partner later het inkomen, dan rekent de app weer met het afgesproken percentage daarvan.
+- Opgelost: een bedrag met een punt als duizendtal, zoals 1.800, werd gelezen als € 1,80. Nu is het € 1.800,00, in alle bedragvelden. Een bedrag als 152.35 blijft € 152,35.
+
 ## 2.26.1 — 10 november 2026
 - Verbeterd: de handleiding (README.md) zegt nu dat je het percentage voor de gezamenlijke rekening bij Verdeling invult, en dat dat percentage gedeeld is en je inkomen niet.
 
