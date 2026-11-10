@@ -7,6 +7,11 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.29.0 — 10 november 2026
+- Verbeterd: sterkere versleuteling, net als in je andere apps. Een nieuw wachtwoord (bij Wachtwoord wijzigen of een nieuwe koppeling) wordt voortaan met 600.000 rondes omgezet in een sleutel, in plaats van 310.000. Dat maakt raden ruim twee keer zo traag.
+- Verbeterd: je huidige bestanden en wachtwoorden blijven gewoon werken. Elk bestand onthoudt zelf met hoeveel rondes het versleuteld is.
+- Let op: werk eerst ook het apparaat van Wies bij voordat een van jullie het gezamenlijke wachtwoord wijzigt. Een oudere versie kan een bestand met het nieuwe aantal rondes niet openen en zegt dan dat het wachtwoord niet klopt. Na bijwerken werkt het weer; er gaat niets verloren.
+
 ## 2.28.1 — 10 november 2026
 - Verbeterd: de wishlist heeft bij #6 Vergrendelen met Face ID een extra eis: verwijder je de app en installeer je hem opnieuw, bijvoorbeeld voor een nieuw icoon, dan werkt je bestaande passkey meteen weer en hoef je geen nieuwe aan te maken.
 
