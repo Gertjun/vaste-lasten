@@ -2,13 +2,13 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 2.28.0, 10 november 2026
+Laatst bijgewerkt: versie 2.28.1, 10 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
 - #3 **Buffer voor de gezamenlijke rekening** (middel) — Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden.
 - #5 **Herinneringen via je agenda** (klein) — Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt.
-- #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf.
+- #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf. Eis: na het verwijderen en opnieuw installeren van de app (bijvoorbeeld voor een nieuw icoon) werkt je bestaande passkey meteen weer en vraagt de app niet om een nieuwe. Daarvoor vraagt de app om een passkey voor deze website zonder te weten welke, geeft dezelfde passkey altijd dezelfde sleutel (PRF), en staat de daarmee vergrendelde sleutel versleuteld in je privé-repository. Alleen het GitHub-token vul je na opnieuw installeren nog één keer in.
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Gerealiseerd

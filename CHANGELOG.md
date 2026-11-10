@@ -7,6 +7,9 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.28.1 — 10 november 2026
+- Verbeterd: de wishlist heeft bij #6 Vergrendelen met Face ID een extra eis: verwijder je de app en installeer je hem opnieuw, bijvoorbeeld voor een nieuw icoon, dan werkt je bestaande passkey meteen weer en hoef je geen nieuwe aan te maken.
+
 ## 2.28.0 — 10 november 2026
 - Nieuw: maken jullie ieder een vast percentage over naar de gezamenlijke rekening, dan rekent de app jullie aandeel in de gezamenlijke lasten zelf uit op basis van wat ieder overmaakt. Maak jij € 3.123,56 over en Wies € 1.678,00, dan is jouw aandeel 65%. Dat werkt ook met een ingevuld bedrag voor je partner.
 - Verbeterd: het berekende aandeel geldt overal waar het vaste percentage gold: de labels Samen · jij, Inzicht, Wat als en verrekenen. Een eigen verdeling bij een last blijft voorgaan.
