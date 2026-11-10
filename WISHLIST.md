@@ -2,7 +2,7 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 2.27.0, 10 november 2026
+Laatst bijgewerkt: versie 2.28.0, 10 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
@@ -47,3 +47,4 @@ Laatst bijgewerkt: versie 2.27.0, 10 november 2026
 - #36 **Nieuwe last en status in de zijbalk** — versie 2.24.4
 - #37 **Vaste bijdrage aan de gezamenlijke rekening** — versie 2.25.0
 - #38 **Bedrag van je partner zelf invullen** — versie 2.27.0
+- #39 **Aandeel naar bijdrage** — versie 2.28.0

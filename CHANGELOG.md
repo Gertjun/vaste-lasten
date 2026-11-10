@@ -7,6 +7,12 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - **MINOR** omhoog bij een nieuwe functie.
 - **PATCH** omhoog bij een kleine verbetering of foutoplossing.
 
+## 2.28.0 — 10 november 2026
+- Nieuw: maken jullie ieder een vast percentage over naar de gezamenlijke rekening, dan rekent de app jullie aandeel in de gezamenlijke lasten zelf uit op basis van wat ieder overmaakt. Maak jij € 3.123,56 over en Wies € 1.678,00, dan is jouw aandeel 65%. Dat werkt ook met een ingevuld bedrag voor je partner.
+- Verbeterd: het berekende aandeel geldt overal waar het vaste percentage gold: de labels Samen · jij, Inzicht, Wat als en verrekenen. Een eigen verdeling bij een last blijft voorgaan.
+- Verbeterd: jullie inkomens zijn voortaan zichtbaar voor elkaar. Het vinkje Deel mijn inkomen is weg; een ingevuld inkomen staat versleuteld in jullie gezamenlijke bestand, zodat beide apparaten met dezelfde bedragen rekenen. Je eigen lasten blijven alleen voor jou.
+- Let op: werk ook het apparaat van je partner bij. Een oudere versie rekent nog met het vaste percentage.
+
 ## 2.27.0 — 10 november 2026
 - Nieuw: deelt je partner het inkomen niet, vul dan zelf in hoeveel je partner per maand naar de gezamenlijke rekening overmaakt. Dat doe je onder Instellingen → Huishouden → Verdeling. Het blok Gezamenlijke rekening rekent daar dan mee, met het label Ingevuld.
 - Verbeterd: het ingevulde bedrag is gedeeld, dus je partner ziet het ook en kan het aanpassen. Deelt je partner later het inkomen, dan rekent de app weer met het afgesproken percentage daarvan.
