@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Vaste Lasten – PRF-hersteltest</title>
+<style>
+:root{color-scheme:light dark;font:16px/1.55 system-ui,sans-serif;background:#eef2f4;color:#17252d}
+*{box-sizing:border-box}body{margin:0;padding:28px 16px;display:grid;place-items:start center}
+main{width:min(100%,680px);background:white;color:#17252d;border:1px solid #d5dfe4;border-radius:18px;padding:24px;box-shadow:0 8px 30px #142a3612}
+h1{font-size:1.55rem;margin:0 0 8px}h2{font-size:1.08rem;margin:24px 0 8px}
+p{margin:8px 0 14px}.muted{color:#52636c;font-size:.93rem}
+button{border:0;border-radius:10px;background:#0d6570;color:white;font:600 1rem system-ui;padding:12px 16px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+input[type=file]{display:block;max-width:100%;margin:12px 0}
+.status{margin-top:18px;padding:14px;border-radius:10px;background:#edf3f5;white-space:pre-wrap;overflow-wrap:anywhere}
+.status[data-kind=ok]{background:#e5f4e9;color:#175b31}.status[data-kind=error]{background:#fcebea;color:#8b211b}
+hr{border:0;border-top:1px solid #d5dfe4;margin:22px 0}
+.warning{border-left:4px solid #b47b19;padding:8px 12px;background:#fff7e7}
+a{color:#0d6570}
+@media(prefers-color-scheme:dark){:root{background:#10191e;color:#edf4f6}main{background:#1c292f;color:#edf4f6;border-color:#35454d}.muted{color:#b5c4ca}.status{background:#27373e}.status[data-kind=ok]{background:#173d29;color:#c7f2d4}.status[data-kind=error]{background:#4a211f;color:#ffd1cc}.warning{background:#41351f;border-color:#d5a64c}hr{border-color:#35454d}a{color:#80cbd1}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Vaste Lasten – PRF-hersteltest</h1>
+  <p class="muted">Controleer of een passkey op dit apparaat een vaste PRF-sleutel kan leveren en of diezelfde sleutel na opnieuw installeren of op een ander apparaat terugkomt.</p>
+  <p class="warning"><strong>Dit is een aparte test.</strong> Er worden geen lasten, wachtwoorden of GitHub-tokens gelezen. De pagina maakt een aparte passkey met de naam “Vaste Lasten PRF-test”. De test maakt geen netwerkverbinding.</p>
+
+  <h2>1. Maak een testpasskey en herstelbestand</h2>
+  <p>Gebruik Face ID, Touch ID, Windows Hello of de passkeybeheerder die je normaal gebruikt. Bewaar het gedownloade JSON-bestand tijdelijk op een plek die je na het wissen van browsergegevens nog kunt openen.</p>
+  <button id="create" type="button">Maak testpasskey</button>
+
+  <hr>
+
+  <h2>2. Test herstel</h2>
+  <p>Open deze pagina op het andere apparaat of na het opnieuw installeren/verwijderen van de webapp. Kies hieronder het herstelbestand en tik op Controleer herstel. Selecteer de bestaande “Vaste Lasten PRF-test”-passkey.</p>
+  <input id="backup" type="file" accept=".json,application/json">
+  <button id="restore" type="button" disabled>Controleer herstel</button>
+
+  <div id="status" class="status" role="status" aria-live="polite" data-kind="info">Controle wordt voorbereid…</div>
+  <p class="muted">De PRF-uitvoer blijft alleen tijdelijk in het geheugen. De pagina bewaart of verstuurt deze niet. Het herstelbestand bevat uitsluitend een versleutelde testwaarde.</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const enc = new TextEncoder();
+  const PRF_INPUT = enc.encode('vastelasten.nl/prf-recovery-test/v1');
+  const AAD = enc.encode('vastelasten-prf-test-backup-v1');
+  const FORMAT = 'vastelasten-prf-test-v1';
+  let file = null;
+
+  function bytesToB64(bytes) {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(binary);
+  }
+  function b64ToBytes(value) {
+    const binary = atob(value);
+    return Uint8Array.from(binary, ch => ch.charCodeAt(0));
+  }
+  function randomBytes(length) {
+    return crypto.getRandomValues(new Uint8Array(length));
+  }
+  function setStatus(message, kind = 'info') {
+    $('status').textContent = message;
+    $('status').dataset.kind = kind;
+  }
+  function checkEnvironment() {
+    if (!isSecureContext || !navigator.credentials || !crypto.subtle) {
+      throw new Error('Deze pagina vereist HTTPS en ondersteuning voor WebAuthn en Web Crypto.');
+    }
+    if (!PublicKeyCredential || !navigator.credentials.create || !navigator.credentials.get) {
+      throw new Error('Deze browser biedt geen volledige WebAuthn-ondersteuning.');
+    }
+  }
+  async function createCredential() {
+    const credential = await navigator.credentials.create({
+      publicKey: {
+        challenge: randomBytes(32),
+        rp: { id: location.hostname, name: 'Vaste Lasten PRF-test' },
+        user: {
+          id: randomBytes(16),
+          name: 'vastelasten-prf-test',
+          displayName: 'Vaste Lasten PRF-test'
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+        timeout: 120000,
+        attestation: 'none',
+        extensions: { prf: { eval: { first: PRF_INPUT } } }
+      }
+    });
+    if (!credential) throw new Error('Er is geen testpasskey aangemaakt.');
+    return credential;
+  }
+  async function getPrfOutput() {
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: randomBytes(32),
+        rpId: location.hostname,
+        userVerification: 'required',
+        timeout: 120000,
+        extensions: { prf: { eval: { first: PRF_INPUT } } }
+      }
+    });
+    const result = assertion && assertion.getClientExtensionResults().prf;
+    const output = result && result.results && result.results.first;
+    if (!output) throw new Error('De gekozen passkey levert geen PRF-uitvoer. De browser of authenticator ondersteunt deze functie mogelijk niet.');
+    return new Uint8Array(output);
+  }
+  function prfFromRegistration(credential) {
+    const result = credential.getClientExtensionResults().prf;
+    const output = result && result.results && result.results.first;
+    return output ? new Uint8Array(output) : null;
+  }
+  async function deriveAesKey(prfOutput, salt) {
+    const material = await crypto.subtle.importKey('raw', prfOutput, 'HKDF', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'HKDF', hash: 'SHA-256', salt, info: enc.encode('vastelasten-prf-test-aes-gcm-v1') },
+      material,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+  function downloadBackup(value) {
+    const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vaste-lasten-prf-hersteltest.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  async function makeBackup(prfOutput) {
+    const salt = randomBytes(16);
+    const iv = randomBytes(12);
+    const key = await deriveAesKey(prfOutput, salt);
+    const marker = { purpose: FORMAT, proof: bytesToB64(randomBytes(24)) };
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv, additionalData: AAD },
+      key,
+      enc.encode(JSON.stringify(marker))
+    );
+    downloadBackup({
+      format: FORMAT,
+      kdf: 'HKDF-SHA-256',
+      salt: bytesToB64(salt),
+      iv: bytesToB64(iv),
+      ciphertext: bytesToB64(new Uint8Array(ciphertext))
+    });
+  }
+  async function restoreBackup(backup, prfOutput) {
+    if (!backup || backup.format !== FORMAT || backup.kdf !== 'HKDF-SHA-256') {
+      throw new Error('Dit is geen geldig Vaste Lasten PRF-herstelbestand.');
+    }
+    const key = await deriveAesKey(prfOutput, b64ToBytes(backup.salt));
+    const plaintext = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: b64ToBytes(backup.iv), additionalData: AAD },
+      key,
+      b64ToBytes(backup.ciphertext)
+    );
+    const marker = JSON.parse(new TextDecoder().decode(plaintext));
+    if (marker.purpose !== FORMAT || typeof marker.proof !== 'string') {
+      throw new Error('De herstelcontrole kon niet worden bevestigd.');
+    }
+  }
+
+  $('create').addEventListener('click', async () => {
+    $('create').disabled = true;
+    try {
+      checkEnvironment();
+      setStatus('Maak een aparte testpasskey aan en bevestig dit op je apparaat…');
+      const credential = await createCredential();
+      let output = prfFromRegistration(credential);
+      if (!output) {
+        setStatus('De passkey is aangemaakt. Controleer nu of de authenticator de PRF-uitvoer bij aanmelden levert…');
+        output = await getPrfOutput();
+      }
+      await makeBackup(output);
+      output.fill(0);
+      setStatus('Testpasskey aangemaakt en herstelbestand gedownload. Bewaar dit bestand. Je kunt nu op een ander apparaat of na het wissen van browsergegevens stap 2 uitvoeren.', 'ok');
+    } catch (error) {
+      setStatus(error.name === 'NotAllowedError'
+        ? 'De actie is geannuleerd of er is geen passkey gekozen.'
+        : error.message || 'De PRF-test is mislukt.', 'error');
+    } finally {
+      $('create').disabled = false;
+    }
+  });
+
+  $('backup').addEventListener('change', () => {
+    file = $('backup').files && $('backup').files[0] || null;
+    $('restore').disabled = !file;
+  });
+  $('restore').addEventListener('click', async () => {
+    $('restore').disabled = true;
+    try {
+      checkEnvironment();
+      if (!file) throw new Error('Kies eerst het herstelbestand.');
+      const backup = JSON.parse(await file.text());
+      setStatus('Kies de bestaande testpasskey en bevestig met biometrie of je apparaatcode…');
+      const output = await getPrfOutput();
+      await restoreBackup(backup, output);
+      output.fill(0);
+      setStatus('Herstel geslaagd. Deze passkey levert dezelfde PRF-sleutel als waarmee het herstelbestand is versleuteld. De test bewijst nog niet dat iedere browser of elk apparaat dit ondersteunt.', 'ok');
+    } catch (error) {
+      setStatus(error.name === 'NotAllowedError'
+        ? 'De actie is geannuleerd of er is geen passende passkey gekozen.'
+        : 'Herstel niet bevestigd. Dit kan betekenen dat een andere passkey is gekozen of dat PRF niet wordt ondersteund. Details: ' + (error.message || error.name), 'error');
+    } finally {
+      $('restore').disabled = !file;
+    }
+  });
+
+  try {
+    checkEnvironment();
+    setStatus('WebAuthn en Web Crypto zijn beschikbaar. De PRF-ondersteuning wordt getest zodra je stap 1 start.');
+  } catch (error) {
+    setStatus(error.message, 'error');
+    $('create').disabled = true;
+  }
+})();
+</script>
+</body>
+</html>
