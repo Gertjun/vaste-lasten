@@ -1749,14 +1749,29 @@ async function openEnv(env,key){
 
 class SyncError extends Error{}
 async function tokenFor(c){
-  const stored=await keyGet('githubToken'), token=stored||(c&&c.token);
+  const stored=await keyGet('githubToken'), key=await keyGet('githubTokenKey');
+  let token=null;
+  if(stored&&key){
+    try{const raw=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(stored.iv)},key,unb64(stored.ct));token=td.decode(raw);}
+    catch(e){throw new SyncError('De lokaal beveiligde GitHub-token kan niet worden geopend. Koppel opnieuw met je token.');}
+  }else token=c&&c.token||null; // alleen voor migratie van oudere koppelingen
   if(!token) throw new SyncError('De GitHub-token ontbreekt op dit apparaat. Vul hem opnieuw in bij het koppelen.');
   return token;
 }
 async function storeToken(c){
-  const stored=await keyGet('githubToken'), token=stored||(c&&c.token);
+  const stored=await keyGet('githubToken'), key=await keyGet('githubTokenKey');
+  let token=null;
+  if(stored&&key){
+    token=await tokenFor(c);
+  }else token=c&&c.token||null;
   if(!token) throw new SyncError('De GitHub-token ontbreekt op dit apparaat. Vul hem opnieuw in bij het koppelen.');
-  if(!stored) await idb('readwrite',s=>s.put(token,'githubToken'));
+  if(!stored||!key){
+    const k=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,te.encode(token));
+    await idb('readwrite',s=>s.put(k,'githubTokenKey'));
+    await idb('readwrite',s=>s.put({iv:b64(iv),ct:b64(new Uint8Array(ct))},'githubToken'));
+  }
   if(c&&c.token) delete c.token;
   saveCfg();
   return token;
