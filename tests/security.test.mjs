@@ -35,7 +35,7 @@ test('alle appversies zijn gelijk', async () => {
 
 
 test('ingebouwde changelog is geldige JSON', () => {
-  const match = html.match(/const CHANGELOG=\\/\\*CHANGELOG\\*\\/(\\[[\\s\\S]*?\\]);/);
+  const match = html.match(/const CHANGELOG=\/\*CHANGELOG\*\/(\[[\s\S]*?\]);/);
   assert.ok(match, 'ingebouwde changelog is aanwezig');
   assert.doesNotThrow(() => JSON.parse(match[1]));
 });
