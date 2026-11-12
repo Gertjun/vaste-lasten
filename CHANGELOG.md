@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.29.3 — 12 november 2026
+- Opgelost: een ontbrekende komma in de ingebouwde changelog is hersteld. Hierdoor kan de app-JavaScript weer correct worden ingelezen.
+- Nieuw: CI controleert voortaan of de ingebouwde changelog geldige JSON is.
+
 ## 2.29.2 — 12 november 2026
 - Verbeterd: de GitHub-token staat niet meer leesbaar in de lokale configuratie. De app bewaart hem versleuteld in IndexedDB met AES-GCM en een niet-exporteerbare sleutel.
 - Verbeterd: bestaande koppelingen worden bij het openen automatisch naar de nieuwe tokenopslag overgezet. Ontkoppelen wist ook de token en de lokale sleutel.
