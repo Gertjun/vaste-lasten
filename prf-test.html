@@ -26,8 +26,8 @@ a{color:#0d6570}
 <body>
 <main>
   <h1>Vaste Lasten – PRF-hersteltest</h1>
-  <p class="muted">Controleer of een passkey op dit apparaat een vaste PRF-sleutel kan leveren en of diezelfde sleutel na opnieuw installeren of op een ander apparaat terugkomt.</p>
-  <p class="warning"><strong>Dit is een aparte test.</strong> Er worden geen lasten, wachtwoorden of GitHub-tokens gelezen. De pagina maakt een aparte passkey met de naam “Vaste Lasten PRF-test”. De test maakt geen netwerkverbinding.</p>
+  <p class="muted">Controleer of dezelfde passkey op dit apparaat na opnieuw installeren of wissen van browsergegevens opnieuw dezelfde PRF-sleutel oplevert.</p>
+  <p class="warning"><strong>Dit is een aparte test.</strong> Er worden geen lasten, wachtwoorden of GitHub-tokens gelezen. De pagina maakt een aparte passkey met de naam “Vaste Lasten PRF-test”. De test maakt geen netwerkverbinding. Iedere apparaatgebonden passkey levert een eigen sleutel op; deze test controleert dus bewust alleen herstel met dezelfde passkey op hetzelfde apparaat.</p>
 
   <h2>1. Maak een testpasskey en herstelbestand</h2>
   <p>Gebruik Face ID, Touch ID, Windows Hello of de passkeybeheerder die je normaal gebruikt. Bewaar het gedownloade JSON-bestand tijdelijk op een plek die je na het wissen van browsergegevens nog kunt openen.</p>
@@ -36,7 +36,7 @@ a{color:#0d6570}
   <hr>
 
   <h2>2. Test herstel</h2>
-  <p>Open deze pagina op het andere apparaat of na het opnieuw installeren/verwijderen van de webapp. Kies hieronder het herstelbestand en tik op Controleer herstel. Selecteer de bestaande “Vaste Lasten PRF-test”-passkey.</p>
+  <p>Open deze pagina opnieuw op hetzelfde apparaat, bijvoorbeeld na het wissen van browsergegevens of opnieuw installeren van de webapp. Kies het herstelbestand en selecteer dezelfde “Vaste Lasten PRF-test”-passkey. Test een ander apparaat apart met een eigen testpasskey en herstelbestand.</p>
   <input id="backup" type="file" accept=".json,application/json">
   <button id="restore" type="button" disabled>Controleer herstel</button>
 
@@ -48,7 +48,7 @@ a{color:#0d6570}
   'use strict';
   const $ = id => document.getElementById(id);
   const enc = new TextEncoder();
-  const PRF_INPUT = enc.encode('vastelasten.nl/prf-recovery-test/v1');
+  const PRF_INPUT = new Uint8Array([58,28,26,172,129,245,33,158,157,63,207,226,217,31,234,164,196,163,42,176,119,37,10,107,6,214,254,191,205,51,158,108]); // SHA-256 van de vaste, app-specifieke testinvoer
   const AAD = enc.encode('vastelasten-prf-test-backup-v1');
   const FORMAT = 'vastelasten-prf-test-v1';
   let file = null;
@@ -75,7 +75,7 @@ a{color:#0d6570}
     if (!isSecureContext || !navigator.credentials || !crypto.subtle) {
       throw new Error('Deze pagina vereist HTTPS en ondersteuning voor WebAuthn en Web Crypto.');
     }
-    if (!PublicKeyCredential || !navigator.credentials.create || !navigator.credentials.get) {
+    if (typeof PublicKeyCredential === 'undefined' || !navigator.credentials.create || !navigator.credentials.get) {
       throw new Error('Deze browser biedt geen volledige WebAuthn-ondersteuning.');
     }
   }
@@ -185,8 +185,7 @@ a{color:#0d6570}
         setStatus('De passkey is aangemaakt. Controleer nu of de authenticator de PRF-uitvoer bij aanmelden levert…');
         output = await getPrfOutput();
       }
-      await makeBackup(output);
-      output.fill(0);
+      try { await makeBackup(output); } finally { output.fill(0); }
       setStatus('Testpasskey aangemaakt en herstelbestand gedownload. Bewaar dit bestand. Je kunt nu op een ander apparaat of na het wissen van browsergegevens stap 2 uitvoeren.', 'ok');
     } catch (error) {
       setStatus(error.name === 'NotAllowedError'
@@ -209,8 +208,7 @@ a{color:#0d6570}
       const backup = JSON.parse(await file.text());
       setStatus('Kies de bestaande testpasskey en bevestig met biometrie of je apparaatcode…');
       const output = await getPrfOutput();
-      await restoreBackup(backup, output);
-      output.fill(0);
+      try { await restoreBackup(backup, output); } finally { output.fill(0); }
       setStatus('Herstel geslaagd. Deze passkey levert dezelfde PRF-sleutel als waarmee het herstelbestand is versleuteld. De test bewijst nog niet dat iedere browser of elk apparaat dit ondersteunt.', 'ok');
     } catch (error) {
       setStatus(error.name === 'NotAllowedError'
