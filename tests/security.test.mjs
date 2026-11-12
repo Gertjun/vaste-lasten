@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
@@ -31,4 +32,19 @@ test('alle appversies zijn gelijk', async () => {
   assert.equal(html.match(/const APP_VERSION='([^']+)'/)[1], version);
   const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   assert.ok(sw.includes('vaste-lasten-' + version));
+});
+
+test('ingebedde changelog is geldige JSON', () => {
+  const start = html.indexOf('const CHANGELOG=/*CHANGELOG*/') + 'const CHANGELOG=/*CHANGELOG*/'.length;
+  const end = html.indexOf('/*END*/', start);
+  assert.ok(start > 0 && end > start, 'changelog-blok moet aanwezig zijn');
+  const changelog = JSON.parse(html.slice(start, end));
+  assert.equal(changelog[0].version, JSON.parse(require('node:fs').readFileSync(new URL('../version.json', import.meta.url), 'utf8')).version);
+});
+
+test('inline JavaScript is syntactisch geldig', () => {
+  const start = html.indexOf('<script>');
+  const end = html.indexOf('</script>', start);
+  assert.ok(start >= 0 && end > start, 'inline script moet aanwezig zijn');
+  assert.doesNotThrow(() => new vm.Script(html.slice(start + 8, end)));
 });
