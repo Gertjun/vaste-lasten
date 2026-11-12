@@ -16,6 +16,7 @@ function makeSecurityHarness() {
   assert.ok(source.every(Boolean), 'beveiligingsfuncties moeten in index.html aanwezig zijn');
   const context = {
     cfg: null,
+    CFGKEY: 'vaste-lasten.v2.sync',
     localStorage: {
       setItem: (k, v) => local.set(k, v),
       removeItem: k => local.delete(k)
