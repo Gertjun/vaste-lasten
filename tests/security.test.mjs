@@ -60,8 +60,8 @@ test('PRF-hersteltest is syntactisch geldige JavaScript', async () => {
 test('PRF-hersteltest bevat geen koppeling met productiegegevens of netwerk', async () => {
   const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
   assert.match(page, /connect-src 'none'/);
-  assert.doesNotMatch(page, /api\\.github\\.com|localStorage|indexedDB|github_pat_|samen\\.json|eigen-p[12]\\.json/i);
+  for (const forbidden of ['api.github.com', 'localStorage', 'indexedDB', 'github_pat_', 'samen.json', 'eigen-p1.json', 'eigen-p2.json']) assert.equal(page.includes(forbidden), false, forbidden + ' mag niet voorkomen');
   assert.match(page, /additionalData: AAD/);
-  assert.match(page, /crypto\\.subtle\\.decrypt/);
-  assert.match(page, /output\\.fill\\(0\\)/);
+  assert.ok(page.includes('crypto.subtle.decrypt'));
+  assert.ok(page.includes('output.fill(0)'));
 });
