@@ -10,7 +10,7 @@ function makeSecurityHarness() {
   const values = new Map();
   const local = new Map();
   const source = [
-    html.match(/function saveCfg\(\)\s*\{[\s\S]*?\n\}/)?.[0],
+    html.match(/function saveCfg\(\)\{[^\n]*\})?.[0],
     html.match(/async function tokenFor\(c\)\s*\{[\s\S]*?\n\}\nasync function storeToken\(c\)\s*\{[\s\S]*?\n\}/)?.[0]
   ];
   assert.ok(source.every(Boolean), 'beveiligingsfuncties moeten in index.html aanwezig zijn');
