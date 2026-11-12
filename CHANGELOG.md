@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.29.2 — 12 november 2026
+- Verbeterd: de GitHub-token staat niet meer leesbaar in de lokale configuratie. De app bewaart hem versleuteld in IndexedDB met AES-GCM en een niet-exporteerbare sleutel.
+- Verbeterd: bestaande koppelingen worden bij het openen automatisch naar de nieuwe tokenopslag overgezet. Ontkoppelen wist ook de token en de lokale sleutel.
+- Nieuw: automatische controles voor het versleuteld opslaan, ontsleutelen en opruimen van de token.
+
+
 ## 2.29.1 — 12 november 2026
 - Opgelost: synchroniseren meldt nu een fout als GitHub een wijziging na vier pogingen nog niet heeft bevestigd. De app toont dan niet langer ten onrechte 'Gesynchroniseerd'.
 - Nieuw: automatische tests controleren de uitkomsten van synchroniseren bij conflicten en herhaalde pogingen.

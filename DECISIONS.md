@@ -23,3 +23,8 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 ### D6 – Synchronisatie moet falen zonder bevestigde opslag (12 nov 2026, 2.29.1)
 - **Besluit:** na vier mislukte schrijfconflicten geeft `syncStore()` een foutmelding. De app mag de status Gesynchroniseerd alleen tonen wanneer de gegevens aantoonbaar gelijk zijn aan GitHub of de schrijfactie is bevestigd.
 - **Waarom:** een niet-bevestigde wijziging mag nooit als succesvol gesynchroniseerd worden gepresenteerd.
+
+
+### D7 – GitHub-token lokaal versleuteld bewaren (12 nov 2026, 2.29.2)
+- **Besluit:** de GitHub-token staat niet in de leesbare configuratie in `localStorage`, maar wordt met AES-GCM versleuteld in IndexedDB bewaard. De encryptiesleutel is niet-exporteerbaar en staat apart in IndexedDB. Bestaande koppelingen migreren automatisch; ontkoppelen wist beide records.
+- **Waarom:** voorkomen dat de token bij gewone inspectie van `localStorage` direct zichtbaar is. Dit beschermt niet tegen kwaadaardige scripts die binnen dezelfde oorsprong draaien; IndexedDB en de sleutel zijn dan via de app-context te gebruiken.

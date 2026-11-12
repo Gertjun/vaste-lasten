@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 12 november 2026 · versie **2.29.1**
+Laatst bijgewerkt: 12 november 2026 · versie **2.29.2**
 
 ---
 
@@ -13,10 +13,14 @@ Zie `CLAUDE.md`.
 PWA voor vaste lasten, samen met Wies. Gezamenlijke lasten in `samen.json`, eigen lasten per persoon in `eigen-<p>.json`, elk met een eigen wachtwoord versleuteld in een privé-repo. Gebruikt op laptop, iPhone en iPad.
 
 ## 3. Open punten en bekende problemen
+- Lokale gegevens staan nog als leesbare JSON in `localStorage`; versleuteling daarvan is een apart open beveiligingspunt. Ontwerp dit samen met Wishlist #6 (Face ID/passkey), zodat herstel na herinstallatie en gebruik op meerdere apparaten behouden blijven.
 - Wishlist #6 Vergrendelen met Face ID: bouwen met de standaardaanpak van de andere apps (vaste PRF-invoer, bestaande passkey kiezen na opnieuw installeren).
 - Later: native iPhone-app; updates moeten dan in zowel de native als de PWA-versie terechtkomen.
 
 ## 4. Sessielog (kort, nieuwste bovenaan)
+
+- **12 nov 2026:**
+  - 2.29.2: GitHub-token uit leesbare configuratie gehaald; lokaal versleuteld opgeslagen in IndexedDB. Migratie voor bestaande koppelingen en tests toegevoegd.
 
 - **12 nov 2026:**
   - 2.29.1: synchronisatie geeft nu expliciet een fout na vier onbevestigde GitHub-schrijfconflicten; gerichte tests toegevoegd.
