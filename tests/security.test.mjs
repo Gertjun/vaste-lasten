@@ -34,12 +34,12 @@ test('alle appversies zijn gelijk', async () => {
   assert.ok(sw.includes('vaste-lasten-' + version));
 });
 
-test('ingebedde changelog is geldige JSON', () => {
+test('ingebedde changelog is geldige JSON', async () => {
   const start = html.indexOf('const CHANGELOG=/*CHANGELOG*/') + 'const CHANGELOG=/*CHANGELOG*/'.length;
   const end = html.indexOf('/*END*/', start);
   assert.ok(start > 0 && end > start, 'changelog-blok moet aanwezig zijn');
   const changelog = JSON.parse(html.slice(start, end));
-  assert.equal(changelog[0].version, JSON.parse(require('node:fs').readFileSync(new URL('../version.json', import.meta.url), 'utf8')).version);
+  assert.equal(changelog[0].version, JSON.parse(await readFile(new URL('../version.json', import.meta.url), 'utf8')).version);
 });
 
 test('inline JavaScript is syntactisch geldig', () => {
