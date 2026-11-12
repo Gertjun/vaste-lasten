@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
@@ -23,4 +24,18 @@ test('GitHub-token wordt ontsleuteld voordat een API-aanroep wordt gedaan', () =
 test('ontkoppelen wist ook de lokale tokensleutel en versleutelde token', () => {
   const unlink = html.match(/async function unlink\(\)\s*\{[\s\S]*?\n\}/)?.[0] || '';
   assert.match(unlink, /keyClear\(\)/);
+});
+
+test('ingebedde JavaScript is syntactisch geldig', () => {
+  const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
+  assert.ok(scripts.length > 0, 'de appscript moet aanwezig zijn');
+  for (const script of scripts) new vm.Script(script[1]);
+});
+
+test('alle appversies zijn gelijk', async () => {
+  const version = JSON.parse(await readFile(new URL('../version.json', import.meta.url), 'utf8')).version;
+  assert.match(html, /const APP_VERSION='([^']+)'/);
+  assert.equal(html.match(/const APP_VERSION='([^']+)'/)[1], version);
+  const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.ok(sw.includes('vaste-lasten-' + version));
 });
