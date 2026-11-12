@@ -27,7 +27,7 @@ test('ontkoppelen wist ook de lokale tokensleutel en versleutelde token', () => 
 });
 
 test('ingebedde JavaScript is syntactisch geldig', () => {
-  const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
+  const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
   assert.ok(scripts.length > 0, 'de appscript moet aanwezig zijn');
   for (const script of scripts) new vm.Script(script[1]);
 });
