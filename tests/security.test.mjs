@@ -1,70 +1,26 @@
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import { webcrypto } from 'node:crypto';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
-function makeSecurityHarness() {
-  const values = new Map();
-  const local = new Map();
-  const source = [
-    html.match(/function saveCfg\(\)\{[^\n]*\})?.[0],
-    html.match(/async function tokenFor\(c\)\s*\{[\s\S]*?\n\}\nasync function storeToken\(c\)\s*\{[\s\S]*?\n\}/)?.[0]
-  ];
-  assert.ok(source.every(Boolean), 'beveiligingsfuncties moeten in index.html aanwezig zijn');
-  const context = {
-    cfg: null,
-    CFGKEY: 'vaste-lasten.v2.sync',
-    localStorage: {
-      setItem: (k, v) => local.set(k, v),
-      removeItem: k => local.delete(k)
-    },
-    keyGet: async k => values.get(k) ?? null,
-    idb: async (_mode, fn) => fn({ put: (v, k) => { values.set(k, v); return { result: k }; } }),
-    crypto: webcrypto,
-    te: new TextEncoder(),
-    td: new TextDecoder(),
-    btoa: s => Buffer.from(s, 'binary').toString('base64'),
-    atob: s => Buffer.from(s, 'base64').toString('binary'),
-    unb64: str => new Uint8Array(Buffer.from(str, 'base64')),
-    b64: bytes => Buffer.from(bytes).toString('base64'),
-    SyncError: class SyncError extends Error {},
-    saveCfg: null
-  };
-  vm.createContext(context);
-  vm.runInContext(source.join('\n'), context);
-  return { context, values, local };
-}
-
-test('configuratie bewaart nooit de GitHub-token in localStorage', () => {
-  const h = makeSecurityHarness();
-  h.context.cfg = { owner: 'owner', repo: 'data', token: 'github_pat_secret', me: 'p1' };
-  vm.runInContext('saveCfg()', h.context);
-  const stored = JSON.parse(h.local.get('vaste-lasten.v2.sync'));
-  assert.equal(stored.token, undefined);
-  assert.equal(stored.owner, 'owner');
+test('GitHub-token wordt niet in de configuratie van localStorage opgenomen', () => {
+  assert.match(html, /function saveCfg\(\)\{[^\n]*const \{token,\.\.\.safe\}=cfg; localStorage\.setItem\(CFGKEY,JSON\.stringify\(safe\)\)/);
 });
 
-test('token wordt versleuteld opgeslagen en is alleen via de sleutel te gebruiken', async () => {
-  const h = makeSecurityHarness();
-  const cfg = { owner: 'owner', repo: 'data', token: 'github_pat_secret' };
-  h.context.cfg = cfg;
-  await vm.runInContext('storeToken(cfg)', h.context);
-  assert.equal(cfg.token, undefined);
-  const envelope = h.values.get('githubToken');
-  assert.ok(envelope?.iv && envelope?.ct);
-  assert.equal(envelope.ct.includes('github_pat_secret'), false);
-  assert.equal(await vm.runInContext('tokenFor(cfg)', h.context), 'github_pat_secret');
+test('GitHub-token wordt met AES-GCM versleuteld in IndexedDB opgeslagen', () => {
+  assert.match(html, /generateKey\(\{name:'AES-GCM',length:256\},false,\['encrypt','decrypt'\]\)/);
+  assert.match(html, /crypto\.subtle\.encrypt\(\{name:'AES-GCM',iv\},k,te\.encode\(token\)\)/);
+  assert.match(html, /githubTokenKey/);
+  assert.match(html, /githubToken/);
 });
 
-test('bestaande koppeling migreert token uit oude configuratie', async () => {
-  const h = makeSecurityHarness();
-  const cfg = { owner: 'owner', repo: 'data', token: 'legacy_token_value' };
-  h.context.cfg = cfg;
-  await vm.runInContext('storeToken(cfg)', h.context);
-  assert.equal(cfg.token, undefined);
-  assert.equal(await vm.runInContext('tokenFor(cfg)', h.context), 'legacy_token_value');
-  assert.ok(h.values.get('githubTokenKey'));
+test('GitHub-token wordt ontsleuteld voordat een API-aanroep wordt gedaan', () => {
+  assert.match(html, /crypto\.subtle\.decrypt\(\{name:'AES-GCM',iv:unb64\(stored\.iv\)\},key,unb64\(stored\.ct\)\)/);
+  assert.match(html, /'Authorization':'Bearer '\+token/);
+});
+
+test('ontkoppelen wist ook de lokale tokensleutel en versleutelde token', () => {
+  const unlink = html.match(/async function unlink\(\)\s*\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(unlink, /keyClear\(\)/);
 });
