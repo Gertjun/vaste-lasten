@@ -13,6 +13,7 @@ Zie `CLAUDE.md`.
 PWA voor vaste lasten, samen met Wies. Gezamenlijke lasten in `samen.json`, eigen lasten per persoon in `eigen-<p>.json`, elk met een eigen wachtwoord versleuteld in een privé-repo. Gebruikt op laptop, iPhone en iPad.
 
 ## 3. Open punten en bekende problemen
+- Lokale gegevens staan nog als leesbare JSON in `localStorage`; versleuteling daarvan is een apart open beveiligingspunt. Ontwerp dit samen met Wishlist #6 (Face ID/passkey), zodat herstel na herinstallatie en gebruik op meerdere apparaten behouden blijven.
 - Wishlist #6 Vergrendelen met Face ID: bouwen met de standaardaanpak van de andere apps (vaste PRF-invoer, bestaande passkey kiezen na opnieuw installeren).
 - Later: native iPhone-app; updates moeten dan in zowel de native als de PWA-versie terechtkomen.
 
