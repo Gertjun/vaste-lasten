@@ -48,3 +48,20 @@ test('inline JavaScript is syntactisch geldig', () => {
   assert.ok(start >= 0 && end > start, 'inline script moet aanwezig zijn');
   assert.doesNotThrow(() => new vm.Script(html.slice(start + 8, end)));
 });
+
+test('PRF-hersteltest is syntactisch geldige JavaScript', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  const start = page.indexOf('<script>');
+  const end = page.indexOf('</script>', start);
+  assert.ok(start >= 0 && end > start, 'PRF-testscript moet aanwezig zijn');
+  assert.doesNotThrow(() => new vm.Script(page.slice(start + 8, end)));
+});
+
+test('PRF-hersteltest bevat geen koppeling met productiegegevens of netwerk', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  assert.match(page, /connect-src 'none'/);
+  assert.doesNotMatch(page, /api\\.github\\.com|localStorage|indexedDB|github_pat_|samen\\.json|eigen-p[12]\\.json/i);
+  assert.match(page, /additionalData: AAD/);
+  assert.match(page, /crypto\\.subtle\\.decrypt/);
+  assert.match(page, /output\\.fill\\(0\\)/);
+});
