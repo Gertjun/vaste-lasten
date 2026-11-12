@@ -28,3 +28,11 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 ### D7 – GitHub-token lokaal versleuteld bewaren (12 nov 2026, 2.29.2)
 - **Besluit:** de GitHub-token staat niet in de leesbare configuratie in `localStorage`, maar wordt met AES-GCM versleuteld in IndexedDB bewaard. De encryptiesleutel is niet-exporteerbaar en staat apart in IndexedDB. Bestaande koppelingen migreren automatisch; ontkoppelen wist beide records.
 - **Waarom:** voorkomen dat de token bij gewone inspectie van `localStorage` direct zichtbaar is. Dit beschermt niet tegen kwaadaardige scripts die binnen dezelfde oorsprong draaien; IndexedDB en de sleutel zijn dan via de app-context te gebruiken.
+
+
+### D8 – Lokale gegevensversleuteling vereist herstelontwerp (12 nov 2026)
+- **Status:** nog geen implementatiebesluit.
+- **Uitgangspunt:** de bestaande `localStorage`-kopie van de lasten is leesbaar en moet uiteindelijk versleuteld worden. De gezamenlijke en eigen gegevens moeten hun afzonderlijke vertrouwelijkheid behouden.
+- **Randvoorwaarden:** herstel na verwijderen/herinstalleren, meerdere apparaten, iOS/iPadOS en laptop, gebruik door twee personen, offline gebruik, bestaande back-ups en veilige migratie zonder gegevensverlies.
+- **Voorkeursrichting voor onderzoek:** willekeurige gegevenssleutels per gegevensdeel, versleuteld met een sleutel die via WebAuthn PRF/passkey kan worden afgeleid; daarnaast een expliciete herstelroute. Eerst browserondersteuning en credential-sync testen. Geen passkey of PRF als enige kopie van een sleutel zonder herstelmechanisme.
+- **Beveiligingsgrens:** encryptie met een sleutel die alleen in dezelfde browser-origin opgeslagen is, verbergt gegevens niet voor kwaadaardige scripts op die origin. Een CSP en het verwijderen/zelf hosten van dynamische externe scripts moeten als aparte beveiligingsmaatregelen worden onderzocht.
