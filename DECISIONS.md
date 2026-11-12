@@ -19,3 +19,7 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 ### D5 – PBKDF2 600.000 rondes voor nieuwe wachtwoorden (10 nov 2026, 2.29.0)
 - **Besluit:** nieuwe salts (wachtwoord wijzigen, nieuwe koppeling) gebruiken 600.000 rondes; bestaande bestanden houden 310.000 tot het wachtwoord gewijzigd wordt. Het aantal staat per bestand in `kdf.iter` en per apparaat in `cfg.iter`.
 - **Waarom:** gelijk beveiligingsniveau als de andere apps, zonder dat Wies' apparaat meteen moet bijwerken. Alleen bij een wachtwoordwijziging moet het andere apparaat eerst bijgewerkt zijn.
+
+### D6 – Synchronisatie moet falen zonder bevestigde opslag (12 nov 2026, 2.29.1)
+- **Besluit:** na vier mislukte schrijfconflicten geeft `syncStore()` een foutmelding. De app mag de status Gesynchroniseerd alleen tonen wanneer de gegevens aantoonbaar gelijk zijn aan GitHub of de schrijfactie is bevestigd.
+- **Waarom:** een niet-bevestigde wijziging mag nooit als succesvol gesynchroniseerd worden gepresenteerd.

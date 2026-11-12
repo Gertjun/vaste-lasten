@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.29.1 — 12 november 2026
+- Opgelost: synchroniseren meldt nu een fout als GitHub een wijziging na vier pogingen nog niet heeft bevestigd. De app toont dan niet langer ten onrechte 'Gesynchroniseerd'.
+- Nieuw: automatische tests controleren de uitkomsten van synchroniseren bij conflicten en herhaalde pogingen.
+
+
 Alle wijzigingen aan Vaste Lasten, de nieuwste bovenaan.
 
 Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
