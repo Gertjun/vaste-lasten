@@ -32,3 +32,10 @@ test('alle appversies zijn gelijk', async () => {
   const sw = await readFile(new URL('../sw.js', import.meta.url), 'utf8');
   assert.ok(sw.includes('vaste-lasten-' + version));
 });
+
+
+test('ingebouwde changelog is geldige JSON', () => {
+  const match = html.match(/const CHANGELOG=\/\*CHANGELOG\*\/(\[[\s\S]*?\])\/\*END\*\/;/);
+  assert.ok(match, 'ingebouwde changelog is aanwezig');
+  assert.doesNotThrow(() => JSON.parse(match[1]));
+});
