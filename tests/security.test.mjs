@@ -39,3 +39,36 @@ test('ingebouwde changelog is geldige JSON', () => {
   assert.ok(match, 'ingebouwde changelog is aanwezig');
   assert.doesNotThrow(() => JSON.parse(match[1]));
 });
+
+
+test('PRF-hersteltest is syntactisch geldige JavaScript', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  const start = page.indexOf('<script>');
+  const end = page.indexOf('</script>', start);
+  assert.ok(start >= 0 && end > start, 'PRF-testscript moet aanwezig zijn');
+  assert.doesNotThrow(() => new vm.Script(page.slice(start + 8, end)));
+});
+
+test('PRF-hersteltest is geïsoleerd van productiegegevens en netwerk', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  assert.match(page, /connect-src 'none'/);
+  for (const forbidden of ['api.github.com', 'localStorage', 'indexedDB', 'github_pat_', 'samen.json', 'eigen-p1.json', 'eigen-p2.json']) {
+    assert.equal(page.includes(forbidden), false, forbidden + ' mag niet voorkomen');
+  }
+  assert.match(page, /extensions: \{ prf:/);
+  assert.match(page, /crypto\.subtle\.decrypt/);
+  assert.match(page, /output\.fill\(0\)/);
+});
+
+test('PRF-hersteltest gebruikt een vaste invoer van 32 bytes', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  const match = page.match(/const PRF_INPUT = new Uint8Array\(\[([\s\S]*?)\]\)/);
+  assert.ok(match, 'vaste PRF-invoer moet aanwezig zijn');
+  assert.equal(match[1].split(',').filter(x => x.trim()).length, 32);
+});
+
+test('PRF-hersteltest schrijft duidelijk voor dat herstel dezelfde passkey vereist', async () => {
+  const page = await readFile(new URL('../prf-test.html', import.meta.url), 'utf8');
+  assert.match(page, /dezelfde “Vaste Lasten PRF-test”-passkey/);
+  assert.match(page, /eigen testpasskey en herstelbestand/);
+});
