@@ -36,3 +36,8 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Randvoorwaarden:** herstel na verwijderen/herinstalleren, meerdere apparaten, iOS/iPadOS en laptop, gebruik door twee personen, offline gebruik, bestaande back-ups en veilige migratie zonder gegevensverlies.
 - **Voorkeursrichting voor onderzoek:** willekeurige gegevenssleutels per gegevensdeel, versleuteld met een sleutel die via WebAuthn PRF/passkey kan worden afgeleid; daarnaast een expliciete herstelroute. Eerst browserondersteuning en credential-sync testen. Geen passkey of PRF als enige kopie van een sleutel zonder herstelmechanisme.
 - **Beveiligingsgrens:** encryptie met een sleutel die alleen in dezelfde browser-origin opgeslagen is, verbergt gegevens niet voor kwaadaardige scripts op die origin. Een CSP en het verwijderen/zelf hosten van dynamische externe scripts moeten als aparte beveiligingsmaatregelen worden onderzocht.
+
+
+### D9 – PRF eerst per browser testen, geen productieafhankelijkheid (12 nov 2026)
+- **Besluit:** WebAuthn PRF wordt eerst getest met een aparte pagina en een tijdelijke passkey. De test mag geen productiegegevens, GitHub-token of bestaande synchronisatiesleutels benaderen. Er wordt pas een productiesleutelarchitectuur gekozen nadat herstel aantoonbaar werkt op iPhone/Safari, iPad/Safari en de laptopbrowser.
+- **Waarom:** PRF-ondersteuning en passkey-synchronisatie hangen af van browser, platform en authenticator. Een passkey die alleen op één apparaat werkt mag niet de enige manier worden om de lokale lasten te herstellen.
