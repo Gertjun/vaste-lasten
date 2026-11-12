@@ -114,6 +114,7 @@ Vorige versies van vóór de wijziging kun je nog terugzetten op apparaten die t
 - De gegevensbestanden worden op het apparaat versleuteld (AES-256-GCM, sleutel via PBKDF2) voordat ze naar GitHub gaan. De GitHub-token wordt daarnaast lokaal met AES-GCM versleuteld in IndexedDB opgeslagen; de sleutel is niet-exporteerbaar.
 - Wachtwoorden worden nergens opgeslagen. Elk apparaat bewaart alleen een afgeleide sleutel die niet exporteerbaar is.
 - De lokale tokenversleuteling beschermt tegen het direct uitlezen van de token uit `localStorage`, maar niet tegen kwaadaardige scripts die binnen dezelfde website draaien. Houd browser en apparaat daarom bijgewerkt en gebruik geen onbekende browseruitbreidingen.
+- Let op: de lasten zelf staan op dit moment lokaal nog als leesbare gegevens in `localStorage`. De kopie in GitHub is wel versleuteld. Gebruik daarom een apparaatprofiel met schermvergrendeling; lokale gegevensversleuteling wordt samen met Face ID/passkey verder uitgewerkt.
 - Vergeet je een wachtwoord, dan is dat bestand in GitHub onbruikbaar. De gegevens op je apparaten blijven wel staan.
 - Iemand met een token kan de bestanden technisch overschrijven of verwijderen, maar niet lezen zonder het bijbehorende wachtwoord. GitHub bewaart elke oude versie in de geschiedenis.
 - Apparaat kwijt? Trek de token van die persoon in op GitHub en maak een nieuwe aan.
