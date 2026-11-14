@@ -2370,7 +2370,6 @@ async function unlockCore(){
     next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
   }
   next=await mergeStagedLegacyState(next);
-  next=await mergeStagedLegacyState(next);
   state=next; coreReady=true; corePersistError=''; syncError='';
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
@@ -2381,9 +2380,10 @@ async function unlockCoreBiometric(){
   if(!coreRuntime.isBiometricEnrolled('shared')||!coreRuntime.isBiometricEnrolled(id)){
     throw new SyncError('Stel eerst voor beide actieve kluizen een passkey in.');
   }
-  const next=navigator.onLine
+  let next=navigator.onLine
     ?await coreRuntime.unlockWithBiometric({me:cfg.me,settings:await coreSettings()})
     :await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
+  next=await mergeStagedLegacyState(next);
   state=next; coreReady=true; corePersistError=''; syncError='';
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
