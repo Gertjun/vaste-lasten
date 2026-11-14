@@ -2399,7 +2399,7 @@ async function unlockCore(){
   render(); renderSyncPanel(); pillIdle();
 }
 async function unlockCoreBiometric(){
-  await ensureCoreRuntime();
+  if(!coreRuntime) await ensureCoreRuntime();
   const id=`personal-${cfg.me}`;
   if(!coreRuntime.isBiometricEnrolled('shared')||!coreRuntime.isBiometricEnrolled(id)){
     throw new SyncError('Stel eerst voor beide actieve kluizen een passkey in.');
