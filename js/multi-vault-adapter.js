@@ -161,18 +161,18 @@ export async function openAndSyncDomain({
       try { localEnvelope = localRaw ? JSON.parse(localRaw) : null; } catch { /* behoud unlockError */ }
       if (!remote || !localEnvelope) throw unlockError;
       await entry.vault.importEnvelope(remote.envelope, password);
-      let localData;
       try {
-        localData = await entry.vault.decryptRemote(localEnvelope);
-      } catch {
+        const localData = await entry.vault.decryptRemote(localEnvelope);
+        entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
+        const remoteData = entry.vault.getData();
+        const preserved = mergeDomainPayload(remoteData, localData, id, mergeStore);
+        if (canonicalize(preserved) !== canonicalize(remoteData)) await entry.vault.setData(preserved);
+        await entry.vault.flush();
+      } catch (error) {
         try { storage.setItem(vaultKey, localRaw); } finally { entry.vault.lock(); }
-        throw unlockError;
+        if (error === unlockError) throw error;
+        throw new Error('De lokale Core-kluis kon niet veilig met de remote kluis worden samengevoegd. De oorspronkelijke lokale kluis is hersteld.', { cause: error });
       }
-      entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
-      const remoteData = entry.vault.getData();
-      const preserved = mergeDomainPayload(remoteData, localData, id, mergeStore);
-      if (canonicalize(preserved) !== canonicalize(remoteData)) await entry.vault.setData(preserved);
-      await entry.vault.flush();
     }
   } else if (remote) {
     await entry.vault.importEnvelope(remote.envelope, password);
