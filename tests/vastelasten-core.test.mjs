@@ -23,7 +23,7 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
     createVault: ({ storagePrefix }) => {
       const id = domainForPrefix(storagePrefix);
       let unlocked = false;
-      let data = { items: [], del: {}, paid: {}, meta: null, schema: 1, domain: id };
+      let data = { items: [], del: {}, paid: {}, ...(id === 'shared' ? { meta: null } : {}), schema: 1, domain: id };
       const vault = {
         hasVault: () => true,
         isUnlocked: () => unlocked,
@@ -71,10 +71,8 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
       const id = settings.path.endsWith('samen.json')
         ? 'shared'
         : settings.path.endsWith('eigen-p1.json') ? 'personal-p1' : 'personal-p2';
-      return {
-        sha: 'remote-' + id,
-        envelope: { payload: { items: [], del: {}, paid: {}, meta: null, schema: 1, domain: id } },
-      };
+      const payload = { items: [], del: {}, paid: {}, ...(id === 'shared' ? { meta: null } : {}), schema: 1, domain: id };
+      return { sha: 'remote-' + id, envelope: { payload } };
     },
   });
   const core = createVasteLastenCore({
