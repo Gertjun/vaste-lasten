@@ -61,6 +61,7 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
     createBiometric: ({ storagePrefix }) => ({
       async unlock() { events.push(domainForPrefix(storagePrefix) + ':biometric-prompt'); return biometricKey; },
       async enroll(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':enroll'); },
+      async enrollExisting(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':enroll-existing'); },
       isEnrolled: () => true,
     }),
   };
@@ -191,6 +192,19 @@ test('persistState writes the current shared and active personal snapshots only'
   assert.deepEqual(vaults['personal-p2'].getData().items, []);
   assert.ok(events.includes('shared:setData'));
   assert.ok(events.includes('personal-p1:setData'));
+  await core.lock();
+});
+
+test('existing passkeys can be relinked to the imported Core data keys', async () => {
+  const { core, events } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  await core.enrollExistingBiometric('shared');
+  await core.enrollExistingBiometric('personal-p1');
+  assert.ok(events.includes('shared:enroll-existing'));
+  assert.ok(events.includes('personal-p1:enroll-existing'));
   await core.lock();
 });
 
