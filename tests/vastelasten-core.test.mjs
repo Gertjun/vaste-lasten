@@ -195,6 +195,21 @@ test('persistState writes the current shared and active personal snapshots only'
   await core.lock();
 });
 
+test('Core password changes update only the selected active vault and sync it', async () => {
+  const { core, events, syncCalls } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  await core.connect(connection);
+  const result = await core.changePassword('shared', 'shared-password', 'new-shared-password');
+  assert.equal(result, 'up-to-date');
+  assert.ok(events.includes('shared:password-change'));
+  assert.equal(events.includes('personal-p1:password-change'), false);
+  assert.equal(syncCalls.length, 3); // connect synchronizes both; password change syncs shared
+  await core.lock();
+});
+
 test('existing passkeys can be relinked to the imported Core data keys', async () => {
   const { core, events } = setup();
   await core.unlockLocal({
