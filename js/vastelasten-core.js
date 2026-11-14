@@ -55,6 +55,11 @@ export function createVasteLastenCore({
       if (!registry[id].vault.isUnlocked()) throw new Error('Niet alle actieve Core-kluizen zijn ontgrendeld.');
     }
   };
+  const requireActiveVault = (id) => {
+    if (!session) throw new Error('De Core-kluizen zijn vergrendeld.');
+    if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
+    if (!registry[id].vault.isUnlocked()) throw new Error(`De kluis ${id} is vergrendeld.`);
+  };
 
   async function resolveSettings(input) {
     if (!input || !input.owner || !input.repo || !input.token) {
@@ -109,8 +114,7 @@ export function createVasteLastenCore({
   }
 
   async function syncDomain(id) {
-    requireSession();
-    if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
+    requireActiveVault(id);
     return registry[id].sync.syncNow(syncOptions(id));
   }
 
@@ -202,18 +206,26 @@ export function createVasteLastenCore({
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
     settings = resolved;
-    const result = await migrateActiveDomains({
-      state,
-      getState: getLatestState,
-      me,
-      passwords,
-      registry,
-      settings,
-      createClient: clientFactory,
-      mergeStore,
-      legacySync,
-      raiseBarrier,
-    });
+    let result;
+    try {
+      result = await migrateActiveDomains({
+        state,
+        getState: getLatestState,
+        me,
+        passwords,
+        registry,
+        settings,
+        createClient: clientFactory,
+        mergeStore,
+        legacySync,
+        raiseBarrier,
+      });
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'Migratie mislukte en de sessie kon niet veilig worden vrijgegeven.');
+      }
+      throw error;
+    }
     if (!result.complete) {
       await release();
       return result;
