@@ -17,7 +17,8 @@ import {
 
 const clone = (value) => structuredClone(value);
 const emptyPayload = (id) => ({
-  items: [], del: {}, paid: {}, meta: null,
+  items: [], del: {}, paid: {},
+  ...(id === 'shared' ? { meta: null } : {}),
   schema: 1, domain: VAULT_DOMAINS[id].domain,
 });
 
