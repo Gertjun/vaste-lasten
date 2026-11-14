@@ -755,6 +755,8 @@ const DKEY=BASE+'.v2';
 const CFGKEY=BASE+'.v2.sync';
 const UIKEY=BASE+'.ui';
 const CORE_MODE_KEY=BASE+'.v3.core';
+const CORE_STAGING_KEY=BASE+'.v3.legacy-staging';
+let coreStagingMerged=false;
 let coreProfile=null, coreMode=false;
 try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
 let coreRuntime=null, coreReady=false, corePersistError='';
@@ -1928,7 +1930,7 @@ async function sync(){
     syncing=true; setPill('busy','Synchroniseren…');
     try{
       const result=await coreRuntime.sync();
-      state=result.state; corePersistError=''; lastSync=new Date(); syncError=''; pillIdle(); render(); renderSyncPanel();
+      state=result.state; await clearCoreStagingAfterSync(); corePersistError=''; lastSync=new Date(); syncError=''; pillIdle(); render(); renderSyncPanel();
     }catch(e){
       syncError=e.message||'Synchroniseren via PWA-Core is mislukt.';
       setPill('err','Sync-fout',syncError); renderSyncPanel();
@@ -2367,6 +2369,8 @@ async function unlockCore(){
   }else{
     next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
   }
+  next=await mergeStagedLegacyState(next);
+  next=await mergeStagedLegacyState(next);
   state=next; coreReady=true; corePersistError=''; syncError='';
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
@@ -2384,10 +2388,36 @@ async function unlockCoreBiometric(){
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
 }
+async function clearCoreStagingAfterSync(){
+  if(!coreStagingMerged) return;
+  localStorage.removeItem(CORE_STAGING_KEY);
+  localStorage.removeItem(DKEY);
+  coreStagingMerged=false;
+}
+async function mergeStagedLegacyState(baseState){
+  const raw=localStorage.getItem(CORE_STAGING_KEY)||localStorage.getItem(DKEY);
+  if(!raw) return baseState;
+  let incoming;
+  try{incoming=migrateAll(JSON.parse(raw));}
+  catch(e){throw new SyncError('Een wijziging uit een nog geopend oud app-tabblad kon niet veilig worden gelezen. De lokale bron is behouden.');}
+  if(!incoming) return baseState;
+  const merged={samen:merge(baseState.samen,incoming.samen),eigen:merge(baseState.eigen,incoming.eigen)};
+  await coreRuntime.persistState(merged);
+  await coreRuntime.flushLocal();
+  coreStagingMerged=true;
+  if(navigator.onLine){
+    const result=await coreRuntime.connect(await coreSettings());
+    coreStagingMerged=false;
+    localStorage.removeItem(CORE_STAGING_KEY);
+    localStorage.removeItem(DKEY);
+    return result.state;
+  }
+  return merged;
+}
 async function connectCore(){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
   const result=await coreRuntime.connect(await coreSettings());
-  state=result.state; syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+  state=result.state; await clearCoreStagingAfterSync(); syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
 }
 async function enrollCorePasskeys(){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
@@ -3077,6 +3107,15 @@ if(IS_PWA){
 
 /* meerdere tabbladen of vensters: wat een ander tabblad bewaart, wordt hier samengevoegd (2.18.2) */
 function fromOtherTab(raw){
+  if(coreMode){
+    try{localStorage.setItem(CORE_STAGING_KEY,raw);}catch(e){syncError='Een wijziging uit een oud tabblad kon niet lokaal worden veiliggesteld.';return;}
+    if(coreReady&&coreRuntime){
+      mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
+        state=next; render(); scheduleSync();
+      }).catch(e=>{syncError=e.message||'Een wijziging uit een oud tabblad kon niet worden samengevoegd.';renderSyncPanel();});
+    }
+    return;
+  }
   let inc; try{inc=migrateAll(JSON.parse(raw));}catch(x){return;}
   if(!inc) return;
   const next={};
