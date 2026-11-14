@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, "fix/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sync-tests:
+    name: Synchronisatietests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository ophalen
+        uses: actions/checkout@v4
+      - name: Node.js instellen
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests uitvoeren
+        run: node --test tests/*.test.mjs
