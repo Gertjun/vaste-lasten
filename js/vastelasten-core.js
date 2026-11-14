@@ -214,39 +214,47 @@ export function createVasteLastenCore({
   }
 
   async function unlockWithBiometric({ me: meValue, settings: inputSettings } = {}) {
-    const resolved = await resolveSettings(inputSettings);
-    await acquire(meValue);
-    settings = resolved;
+    if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+    // Start WebAuthn direct vanuit de gebruikersactie, vóór repository/netwerkcontrole.
+    const ids = ['shared', `personal-${meValue}`];
+    const keys = {};
     try {
-      for (const id of activeIds()) {
-        const key = await registry[id].biometric.unlock();
-        await registry[id].vault.unlockWithKey(key);
-        await syncDomain(id);
-      }
+      for (const id of ids) keys[id] = await registry[id].biometric.unlock();
+      await acquire(meValue);
+      for (const id of ids) await registry[id].vault.unlockWithKey(keys[id]);
+      settings = await resolveSettings(inputSettings);
+      for (const id of ids) await syncDomain(id);
       return getState();
     } catch (error) {
-      try { await release(); } catch (releaseError) {
-        throw new AggregateError([error, releaseError], 'Biometrisch ontgrendelen mislukte en de sessie kon niet veilig worden vrijgegeven.');
+      if (session) {
+        try { await release(); } catch (releaseError) {
+          throw new AggregateError([error, releaseError], 'Biometrisch ontgrendelen mislukte en de sessie kon niet veilig worden vrijgegeven.');
+        }
       }
       throw error;
     }
   }
 
   async function unlockWithBiometricLocal({ me: meValue } = {}) {
-    await acquire(meValue);
-    settings = null;
+    if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+    const ids = ['shared', `personal-${meValue}`];
+    const keys = {};
     try {
-      for (const id of activeIds()) {
+      for (const id of ids) keys[id] = await registry[id].biometric.unlock();
+      for (const id of ids) {
         if (!registry[id].vault.hasVault()) {
           throw new Error(`De lokale kluis ${id} ontbreekt. Gebruik online ontgrendelen om de remote kluis te importeren.`);
         }
-        const key = await registry[id].biometric.unlock();
-        await registry[id].vault.unlockWithKey(key);
       }
+      await acquire(meValue);
+      settings = null;
+      for (const id of ids) await registry[id].vault.unlockWithKey(keys[id]);
       return getState();
     } catch (error) {
-      try { await release(); } catch (releaseError) {
-        throw new AggregateError([error, releaseError], 'Biometrische lokale ontgrendeling mislukte en de sessie kon niet veilig worden vrijgegeven.');
+      if (session) {
+        try { await release(); } catch (releaseError) {
+          throw new AggregateError([error, releaseError], 'Biometrische lokale ontgrendeling mislukte en de sessie kon niet veilig worden vrijgegeven.');
+        }
       }
       throw error;
     }
