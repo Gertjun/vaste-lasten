@@ -755,7 +755,8 @@ const DKEY=BASE+'.v2';
 const CFGKEY=BASE+'.v2.sync';
 const UIKEY=BASE+'.ui';
 const CORE_MODE_KEY=BASE+'.v3.core';
-let coreMode=localStorage.getItem(CORE_MODE_KEY)==='1';
+let coreProfile=null, coreMode=false;
+try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
 let coreRuntime=null, coreReady=false, corePersistError='';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 /* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
@@ -981,6 +982,10 @@ let view={y:now.getFullYear(),m:now.getMonth()};
 let editing=null;
 let cfg=null;
 try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}
+if(coreMode&&!cfg&&coreProfile&&coreProfile.owner&&coreProfile.repo&&['p1','p2'].includes(coreProfile.me)){
+  cfg={owner:coreProfile.owner,repo:coreProfile.repo,me:coreProfile.me,salt:{},iter:{}};
+  try{localStorage.setItem(CFGKEY,JSON.stringify(cfg));}catch(e){}
+}
 
 const mkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
 const daysIn=(y,m)=>new Date(y,m+1,0).getDate();
@@ -2275,9 +2280,11 @@ async function ensureLegacyKeysForMigration(passwords){
 }
 async function syncLegacyBeforeMigration(){
   if(syncing) throw new SyncError('Er loopt al een synchronisatie. Probeer de migratie zo nog eens.');
+  if(!navigator.onLine) throw new SyncError('De eerste migratie vereist internet, zodat de bestaande gegevens eerst veilig kunnen worden gesynchroniseerd.');
   if(timer){clearTimeout(timer);timer=null;}
   syncError='';
   await sync();
+  if(timer){clearTimeout(timer);timer=null;}
   if(syncError) throw new SyncError(syncError);
   if(!hasKeys()) throw new SyncError('De bestaande synchronisatie is nog niet ontgrendeld.');
 }
@@ -2314,7 +2321,8 @@ async function migrateToCore(){
     throw new SyncError(reason+' De bestaande lokale gegevens en legacybestanden zijn behouden. Je kunt de migratie opnieuw proberen.');
   }
   state=result.state;
-  localStorage.setItem(CORE_MODE_KEY,'1');
+  coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0'};
+  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
   coreMode=true;
   coreReady=true;
   localStorage.removeItem(DKEY); // pas nadat beide Core-kluizen lokaal én remote zijn bevestigd
@@ -2375,22 +2383,28 @@ async function lockCore(){
   render(); renderSyncPanel();
 }
 function renderCoreGate(){
-  if(!coreMode||coreReady){$('coreGate')?.remove();return;}
-  if(!cfg) return;
+  if(!coreMode||coreReady){
+    document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
+    $('coreGate')?.remove(); return;
+  }
   let gate=$('coreGate');
   if(!gate){
     gate=document.createElement('div'); gate.id='coreGate';
     gate.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg,#fff);display:grid;place-items:center;padding:24px;overflow:auto;';
     document.body.appendChild(gate);
   }
-  const id=`personal-${cfg.me}`;
-  const biometric=coreRuntime&&coreRuntime.isBiometricEnrolled('shared')&&coreRuntime.isBiometricEnrolled(id);
-  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2><p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
-    '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
-    '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
-    '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Ontgrendelen</button>'+
-    (biometric?'<button class="btn" id="core-biometric">Ontgrendel met Face ID / passkey</button>':'')+
-    '</div><p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p></section>';
+  const id=cfg&&cfg.me?`personal-${cfg.me}`:null;
+  const biometric=!!(coreRuntime&&id&&coreRuntime.isBiometricEnrolled('shared')&&coreRuntime.isBiometricEnrolled(id));
+  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2>'+
+    (cfg?'<p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
+      '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
+      '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
+      '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Ontgrendelen</button>'+
+      (biometric?'<button class="btn" id="core-biometric">Ontgrendel met Face ID / passkey</button>':'')+'</div>'+
+      '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'
+      :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel de GitHub-koppeling om verder te gaan.</p>')+
+    '</section>';
+  document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
 }
 
    Het bestand in GitHub wordt opnieuw versleuteld met het nieuwe wachtwoord en een nieuwe salt. Andere apparaten zien de nieuwe salt
