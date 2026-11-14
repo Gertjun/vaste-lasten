@@ -105,6 +105,7 @@ export function createVasteLastenCore({
   }
 
   function syncOptions(id) {
+    if (!settings) throw new Error('Er is nog geen actieve GitHub-verbinding; synchroniseren kan pas na verbinden.');
     const spec = VAULT_DOMAINS[id];
     return {
       settings: { ...settings, path: spec.path },
@@ -117,6 +118,12 @@ export function createVasteLastenCore({
   async function syncDomain(id) {
     requireActiveVault(id);
     return registry[id].sync.syncNow(syncOptions(id));
+  }
+
+  async function connect(inputSettings) {
+    requireSession();
+    settings = await resolveSettings(inputSettings);
+    return sync();
   }
 
   async function sync() {
@@ -176,6 +183,25 @@ export function createVasteLastenCore({
     }
   }
 
+  async function unlockLocal({ me: meValue, passwords } = {}) {
+    await acquire(meValue);
+    settings = null;
+    try {
+      for (const id of activeIds()) {
+        if (!registry[id].vault.hasVault()) {
+          throw new Error(`De lokale kluis ${id} ontbreekt. Verbind met internet om de bestaande remote kluis te importeren.`);
+        }
+        await registry[id].vault.unlockWithPassword(passwords?.[id]);
+      }
+      return getState();
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'Lokale ontgrendeling mislukte en de sessie kon niet veilig worden vrijgegeven.');
+      }
+      throw error;
+    }
+  }
+
   async function unlockWithBiometric({ me: meValue, settings: inputSettings } = {}) {
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
@@ -190,6 +216,26 @@ export function createVasteLastenCore({
     } catch (error) {
       try { await release(); } catch (releaseError) {
         throw new AggregateError([error, releaseError], 'Biometrisch ontgrendelen mislukte en de sessie kon niet veilig worden vrijgegeven.');
+      }
+      throw error;
+    }
+  }
+
+  async function unlockWithBiometricLocal({ me: meValue } = {}) {
+    await acquire(meValue);
+    settings = null;
+    try {
+      for (const id of activeIds()) {
+        if (!registry[id].vault.hasVault()) {
+          throw new Error(`De lokale kluis ${id} ontbreekt. Gebruik online ontgrendelen om de remote kluis te importeren.`);
+        }
+        const key = await registry[id].biometric.unlock();
+        await registry[id].vault.unlockWithKey(key);
+      }
+      return getState();
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'Biometrische lokale ontgrendeling mislukte en de sessie kon niet veilig worden vrijgegeven.');
       }
       throw error;
     }
@@ -236,6 +282,7 @@ export function createVasteLastenCore({
 
   async function changePassword(id, currentPassword, nextPassword) {
     requireSession();
+    if (!settings) throw new Error('Wachtwoord wijzigen vereist een actieve GitHub-verbinding.');
     if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
     await registry[id].vault.changePassword(currentPassword, nextPassword);
     return syncDomain(id);
@@ -250,6 +297,7 @@ export function createVasteLastenCore({
 
   async function restoreDomain(id, envelope, asNewest) {
     requireSession();
+    if (!settings) throw new Error('Herstellen vereist een actieve GitHub-verbinding.');
     if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
     if (typeof asNewest !== 'function') throw new TypeError('De bestaande app-herstelbewerking ontbreekt.');
     const vault = registry[id].vault;
@@ -286,7 +334,10 @@ export function createVasteLastenCore({
 
   return {
     unlock,
+    unlockLocal,
     unlockWithBiometric,
+    unlockWithBiometricLocal,
+    connect,
     migrate,
     getState,
     persistState,
