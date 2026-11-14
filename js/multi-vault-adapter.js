@@ -148,6 +148,9 @@ export async function openAndSyncDomain({
   const remote = await client.getFile();
 
   if (entry.vault.hasVault()) {
+    if (!remote && !allowCreate) {
+      throw new Error(`Het remote Core-bestand voor ${id} ontbreekt. De bestaande lokale kluis wordt niet automatisch opnieuw gepubliceerd.`);
+    }
     try {
       await entry.vault.unlockWithPassword(password);
     } catch (unlockError) {
