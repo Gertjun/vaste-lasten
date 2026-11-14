@@ -64,6 +64,10 @@ export function mergeDomainPayload(local, remote, id, mergeStore) {
   if (typeof mergeStore !== 'function') throw new TypeError('De bestaande app-mergefunctie ontbreekt.');
   const merged = mergeStore(local, remote);
   if (!isRecord(merged)) throw new Error('De samenvoeging leverde geen geldig gegevensobject op.');
+  // De bestaande app-merge start met EMPTY(), dat standaard meta:null bevat.
+  // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
+  const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
+  for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
   return validateDomainPayload({ ...merged, schema: 1, domain: VAULT_DOMAINS[id].domain }, id);
 }
 
