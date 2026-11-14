@@ -50,6 +50,17 @@ test('each Core payload is bound to exactly one domain', () => {
   assert.equal(mergeDomainPayload(shared, shared, 'shared', mergeStore).domain, 'shared');
 });
 
+test('real app merge defaults do not reintroduce empty shared metadata into a personal vault', () => {
+  const personal = { items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1' };
+  const appMerge = (a, b) => ({ ...mergeStore(a, b), meta: null });
+  const result = mergeDomainPayload(personal, personal, 'personal-p1', appMerge);
+  assert.equal(Object.hasOwn(result, 'meta'), false);
+  assert.equal(result.domain, 'personal-p1');
+  assert.throws(() => mergeDomainPayload(personal, personal, 'personal-p1',
+    (a, b) => ({ ...mergeStore(a, b), meta: { leaked: true } })),
+  /buiten het toegestane gegevensdomein/);
+});
+
 test('registry creates three independent vault, sync, lock and biometric instances', () => {
   const calls = { vault: [], sync: [], lock: [], biometric: [] };
   const createVault = (options) => { calls.vault.push(options); return { id: options.storagePrefix }; };
