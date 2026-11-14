@@ -2082,7 +2082,8 @@ function renderSyncPanel(){
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
       (passkeys?'<span class="chip eigen">Passkeys actief</span>':'<button class="btn" id="core-passkey-existing">Bestaande passkeys koppelen</button><button class="btn" id="core-passkey">Nieuwe passkeys instellen</button>')+
-      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+
+      (pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+
+      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+pwHtml()+
       '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
     renderCoreGate(); return;
   }
@@ -2426,6 +2427,21 @@ function pwHtml(){
 }
 async function changePw(){
   const st=pwc.st, s=st==='samen', other=s?'eigen':'samen', old=$('c-old').value, n1=$('c-n1').value, n2=$('c-n2').value;
+  if(coreMode){
+    if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+    if(!navigator.onLine) throw new SyncError('Een Core-wachtwoord wijzigen vereist internet.');
+    if(!old) throw new SyncError('Vul je huidige '+(s?'gezamenlijke':'eigen')+' wachtwoord in.');
+    checkPw(n1,n1,s?'gezamenlijk wachtwoord':'eigen wachtwoord');
+    if(n1!==n2) throw new SyncError('De twee nieuwe wachtwoorden zijn niet gelijk.');
+    if(n1===old) throw new SyncError('Het nieuwe wachtwoord is gelijk aan het huidige. Kies een ander wachtwoord.');
+    await connectCore();
+    const id=s?'shared':`personal-${cfg.me}`;
+    await coreRuntime.changePassword(id,old,n1);
+    state=coreRuntime.getState(); pwc={open:false,st:'samen'}; syncError=''; corePersistError='';
+    lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+    toast(s?'Gezamenlijk Core-wachtwoord gewijzigd':'Eigen Core-wachtwoord gewijzigd');
+    return;
+  }
   if(!old) throw new SyncError('Vul je huidige '+(s?'gezamenlijke':'eigen')+' wachtwoord in.');
   checkPw(n1,n1,s?'gezamenlijk wachtwoord':'eigen wachtwoord');
   if(n1!==n2) throw new SyncError('De twee nieuwe wachtwoorden zijn niet gelijk.');
