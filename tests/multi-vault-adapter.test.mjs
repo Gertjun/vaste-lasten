@@ -202,7 +202,7 @@ test('migration coordinator keeps partial success explicit and does not retire l
       },
     },
     settings: {},
-    createClient: () => ({}),
+    createClient: () => ({ getFile: async () => null }),
     mergeStore,
     legacySync: async () => calls.push('legacy-sync'),
     raiseBarrier: async () => calls.push('barrier'),
