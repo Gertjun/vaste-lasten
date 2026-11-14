@@ -19,7 +19,7 @@ jobs:
           node-version: 22
       - name: PWA-Core-modules controleren
         run: |
-          for file in js/core/*.js; do node --experimental-default-type=module --check "$file"; done
+          for file in js/core/*.js js/vastelasten-core.js; do node --experimental-default-type=module --check "$file"; done
       - name: Release-pin controleren
         run: node tools/pin.mjs verify
       - name: Service-worker-precache controleren
