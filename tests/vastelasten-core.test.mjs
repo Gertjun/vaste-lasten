@@ -223,6 +223,25 @@ test('existing passkeys can be relinked to the imported Core data keys', async (
   await core.lock();
 });
 
+test('app saves cannot roll back a newer Core device and deletion ledger snapshot', async () => {
+  const { core, vaults } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  const stale = core.getState();
+  const sharedVault = core.getRegistry().shared.vault;
+  await sharedVault.setData({ ...sharedVault.getData(), __pwaSync: { devices: { deviceA: { lastSeenAt: 10 } }, deletions: { itemA: 10 } } });
+  stale.samen.items.push({ id: 'app-change', u: 20 });
+  await core.persistState(stale);
+  assert.deepEqual(vaults.shared.getData().__pwaSync, {
+    devices: { deviceA: { lastSeenAt: 10 } },
+    deletions: { itemA: 10 },
+  });
+  assert.deepEqual(vaults.shared.getData().items.map((x) => x.id), ['app-change']);
+  await core.lock();
+});
+
 test('lock flushes and locks both active vaults before releasing their session locks', async () => {
   const { core, events } = setup();
   await core.unlock({
