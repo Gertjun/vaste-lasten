@@ -1813,7 +1813,7 @@ async function readRemote(c,file,ref){
   if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository. Controleer of hij leesrechten heeft op Contents.');
   if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
   const j=await r.json();
-  let env; try{env=JSON.parse(atob(j.content.replace(/\\s/g,'')));}catch(e){throw new SyncError('Het bestand '+file+' in de repository is beschadigd of niet door deze app gemaakt.');}
+  let env; try{env=JSON.parse(atob(j.content.replace(/\s/g,'')));}catch(e){throw new SyncError('Het bestand '+file+' in de repository is beschadigd of niet door deze app gemaakt.');}
   if(!env||!env.kdf||!env.kdf.salt||!env.iv||!env.ct) throw new SyncError('Het bestand '+file+' in de repository is niet door deze app gemaakt.');
   return {env,sha:j.sha};
 }
@@ -1830,7 +1830,7 @@ async function readCoreRemote(c,file,ref){
     if(!blob.ok) throw new SyncError('De Core-back-up kon niet worden opgehaald.');
     const data=await blob.json(); content=data.content;
   }
-  let env; try{env=JSON.parse(atob(content.replace(/\\s/g,'')));}catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
+  let env; try{env=JSON.parse(atob(content.replace(/\s/g,'')));}catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
   if(!env||env.format!=='pwa-vault'||!env.kdf||!env.payload||!env.wrappedKey) throw new SyncError('Dit is geen geldig PWA-Core-kluisbestand.');
   return {env,sha:j.sha};
 }
