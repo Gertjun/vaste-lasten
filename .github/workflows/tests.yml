@@ -20,6 +20,16 @@ jobs:
       - name: PWA-Core-modules controleren
         run: |
           for file in js/core/*.js js/vastelasten-core.js; do node --experimental-default-type=module --check "$file"; done
+      - name: Inline app-JavaScript controleren
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
+          if (scripts.length !== 1) throw new Error(`Verwacht één inline app-script, gevonden: ${scripts.length}`);
+          fs.writeFileSync('/tmp/vaste-lasten-app.js', scripts[0][1]);
+          NODE
+          node --check /tmp/vaste-lasten-app.js
       - name: Release-pin controleren
         run: node tools/pin.mjs verify
       - name: Service-worker-precache controleren
