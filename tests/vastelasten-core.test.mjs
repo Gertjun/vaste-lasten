@@ -135,6 +135,22 @@ test('offline password unlock opens local encrypted vaults without contacting Gi
   await core.lock();
 });
 
+test('offline edits can be durably flushed without a GitHub connection', async () => {
+  const { core, vaults, events } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  const state = core.getState();
+  state.samen.items.push({ id: 'offline-change', u: 3 });
+  await core.persistState(state);
+  await core.flushLocal();
+  assert.deepEqual(vaults.shared.getData().items.map((x) => x.id), ['offline-change']);
+  assert.ok(events.includes('shared:flush'));
+  assert.ok(events.includes('personal-p1:flush'));
+  await core.lock();
+});
+
 test('offline biometric unlock opens local encrypted vaults without contacting GitHub', async () => {
   const { core, vaults, syncCalls } = setup();
   const state = await core.unlockWithBiometricLocal({ me: 'p2' });
