@@ -177,6 +177,74 @@ test('existing Core remote envelope is imported before legacy data is merged', a
   assert.equal(calls.length, 1);
 });
 
+test('remote password change adopts the new wrapper while preserving local edits under the same DEK', async () => {
+  const localPayload = { ...store([{ id: 'local-unsynced', u: 20 }]), schema: 1, domain: 'shared' };
+  const remotePayload = { ...store([{ id: 'remote', u: 10 }]), schema: 1, domain: 'shared' };
+  const localEnvelope = { dek: 'same', payload: localPayload };
+  const remoteEnvelope = { dek: 'same', payload: remotePayload };
+  const storageValues = new Map([['shared:vault', JSON.stringify(localEnvelope)]]);
+  const storage = {
+    getItem: (key) => storageValues.get(key) ?? null,
+    setItem: (key, value) => storageValues.set(key, value),
+  };
+  let data = null, syncMeta = { sha: 'old-sha', dirty: true };
+  const vault = {
+    KEYS: { vault: 'shared:vault' },
+    hasVault: () => true,
+    async unlockWithPassword() { throw new Error('Onjuist wachtwoord.'); },
+    async importEnvelope(env, password) { assert.equal(password, 'new-password'); data = structuredClone(env.payload); },
+    async decryptRemote(env) {
+      if (env.dek !== 'same') throw new Error('different DEK');
+      return structuredClone(env.payload);
+    },
+    getData: () => structuredClone(data),
+    async setData(next) { data = structuredClone(next); syncMeta.dirty = true; },
+    getSyncMeta: () => ({ ...syncMeta }),
+    setSyncMeta: (next) => { syncMeta = { ...next }; },
+    async flush() {},
+  };
+  const entry = { vault, storage, sync: { syncNow: async () => 'merged' } };
+  const result = await openAndSyncDomain({
+    id: 'shared',
+    password: 'new-password',
+    legacyData: { ...store(), schema: 1, domain: 'shared' },
+    registry: { shared: entry },
+    settings: {},
+    createClient: () => ({ getFile: async () => ({ sha: 'new-sha', envelope: remoteEnvelope }) }),
+    mergeStore,
+  });
+  assert.equal(result.result, 'merged');
+  assert.deepEqual(result.data.items.map((item) => item.id).sort(), ['local-unsynced', 'remote']);
+  assert.equal(vault.getSyncMeta().sha, 'new-sha');
+});
+
+test('remote password change with a different DEK restores the original local envelope', async () => {
+  const localEnvelope = { dek: 'old', payload: { ...store(), schema: 1, domain: 'shared' } };
+  const remoteEnvelope = { dek: 'new', payload: { ...store(), schema: 1, domain: 'shared' } };
+  const raw = JSON.stringify(localEnvelope), values = new Map([['shared:vault', raw]]);
+  const storage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  let data = null;
+  const vault = {
+    KEYS: { vault: 'shared:vault' },
+    hasVault: () => true,
+    async unlockWithPassword() { throw new Error('Onjuist wachtwoord.'); },
+    async importEnvelope(env) { data = structuredClone(env.payload); },
+    async decryptRemote(env) { if (env.dek !== 'old') throw new Error('different DEK'); return env.payload; },
+    lock() { data = null; },
+    getData: () => data,
+    async flush() {},
+  };
+  await assert.rejects(openAndSyncDomain({
+    id: 'shared', password: 'new-password',
+    legacyData: { ...store(), schema: 1, domain: 'shared' },
+    registry: { shared: { vault, storage, sync: { syncNow: async () => 'up-to-date' } } },
+    settings: {},
+    createClient: () => ({ getFile: async () => ({ sha: 'new-sha', envelope: remoteEnvelope }) }),
+    mergeStore,
+  }), /Onjuist wachtwoord/);
+  assert.equal(values.get('shared:vault'), raw);
+});
+
 test('missing remote Core file cannot silently recreate a retired vault', async () => {
   const vault = fakeVault();
   await assert.rejects(openAndSyncDomain({
