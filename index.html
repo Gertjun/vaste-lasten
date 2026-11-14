@@ -1832,7 +1832,11 @@ async function readCoreRemote(c,file,ref){
     if(!blob.ok) throw new SyncError('De Core-back-up kon niet worden opgehaald.');
     const data=await blob.json(); content=data.content;
   }
-  let env; try{env=JSON.parse(atob(content.replace(/\s/g,'')));}catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
+  let env;
+  try{
+    const bytes=Uint8Array.from(atob(content.replace(/\s/g,'')),char=>char.charCodeAt(0));
+    env=JSON.parse(new TextDecoder().decode(bytes));
+  }catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
   if(!env||env.format!=='pwa-vault'||!env.kdf||!env.payload||!env.wrappedKey) throw new SyncError('Dit is geen geldig PWA-Core-kluisbestand.');
   return {env,sha:j.sha};
 }
