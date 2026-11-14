@@ -759,7 +759,7 @@ const CORE_STAGING_KEY=BASE+'.v3.legacy-staging';
 let coreStagingMerged=false;
 let coreProfile=null, coreMode=false;
 try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
-let coreRuntime=null, coreReady=false, corePersistError='';
+let coreRuntime=null, coreReady=false, coreConnected=false, corePersistError='';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 /* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
 const BASE_CATS=[
@@ -1862,7 +1862,7 @@ function pillIdle(){
     if(!cfg) return setPill();
     if(!coreReady) return setPill('warn','Core vergrendeld','Ontgrendel beide Core-kluizen');
     if(syncError||corePersistError) return setPill('err','Sync-fout',syncError||corePersistError);
-    if(!navigator.onLine) return setPill('warn','Offline','Wijzigingen blijven lokaal versleuteld opgeslagen');
+    if(!navigator.onLine||!coreConnected) return setPill('warn','Alleen lokaal','Wijzigingen zijn versleuteld opgeslagen; synchroniseer zodra je verbindt');
     if(timer) return setPill('busy','Wacht op synchroniseren','Je wijzigingen worden gebundeld');
     return setPill('ok','PWA-Core actief',lastSync?'Laatst: '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'');
   }
@@ -1878,7 +1878,7 @@ function pillIdle(){
 const SYNC_DELAY=10000;
 function scheduleSync(){
   if(coreMode){
-    if(!coreReady) return;
+    if(!coreReady||!coreConnected){if(timer){clearTimeout(timer);timer=null;} pillIdle(); return;}
     clearTimeout(timer); timer=setTimeout(()=>{timer=null; sync();},SYNC_DELAY);
     if(!syncing) pillIdle();
     return;
@@ -1890,7 +1890,7 @@ function scheduleSync(){
 function syncNow(){
   if(coreMode){
     if(timer){clearTimeout(timer);timer=null;}
-    if(coreReady) coreRuntime.flushLocal().then(()=>{if(navigator.onLine) return sync();}).catch(e=>{
+    if(coreReady) coreRuntime.flushLocal().then(()=>{if(navigator.onLine&&coreConnected) return sync();}).catch(e=>{
       corePersistError=e.message||'Lokaal opslaan is mislukt.'; syncError=corePersistError; setPill('err','Opslagfout',corePersistError);
     });
     return;
@@ -1927,14 +1927,14 @@ async function sync(){
   if(coreMode){
     if(!coreReady||!coreRuntime) return pillIdle();
     if(syncing){again=true;return;}
-    if(!navigator.onLine){
+    if(!navigator.onLine||!coreConnected){
       try{await coreRuntime.flushLocal();}catch(e){corePersistError=e.message||'Lokaal opslaan is mislukt.';syncError=corePersistError;setPill('err','Opslagfout',corePersistError);renderSyncPanel();return;}
       return pillIdle();
     }
     syncing=true; setPill('busy','Synchroniseren…');
     try{
       const result=await coreRuntime.sync();
-      state=result.state; await clearCoreStagingAfterSync(); corePersistError=''; lastSync=new Date(); syncError=''; pillIdle(); render(); renderSyncPanel();
+      state=result.state; coreConnected=true; await clearCoreStagingAfterSync(); corePersistError=''; lastSync=new Date(); syncError=''; pillIdle(); render(); renderSyncPanel();
     }catch(e){
       syncError=e.message||'Synchroniseren via PWA-Core is mislukt.';
       setPill('err','Sync-fout',syncError); renderSyncPanel();
@@ -2382,7 +2382,7 @@ async function migrateToCore(){
   coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0'};
   localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
   coreMode=true;
-  coreReady=true;
+  coreReady=true; coreConnected=true;
   localStorage.removeItem(DKEY); // pas nadat beide Core-kluizen lokaal én remote zijn bevestigd
   corePersistError=''; syncError=''; lastSync=new Date();
   if(timer){clearTimeout(timer);timer=null;}
@@ -2399,7 +2399,7 @@ async function unlockCoreLocal(){
   try{
     let next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
     next=await mergeStagedLegacyState(next,{connectIfOnline:false});
-    state=next; coreReady=true; corePersistError='';
+    state=next; coreReady=true; coreConnected=false; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
   }catch(error){
@@ -2423,7 +2423,7 @@ async function unlockCore(){
       next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
     }
     next=await mergeStagedLegacyState(next);
-    state=next; coreReady=true; corePersistError='';
+    state=next; coreReady=true; coreConnected=!!navigator.onLine; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
   }catch(error){
@@ -2443,7 +2443,7 @@ async function unlockCoreBiometric(){
     const settings=navigator.onLine?await coreSettings():undefined;
     let next=await coreRuntime.finishBiometricUnlock({me:cfg.me,settings});
     next=await mergeStagedLegacyState(next);
-    state=next; coreReady=true; corePersistError='';
+    state=next; coreReady=true; coreConnected=!!settings; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
   }catch(error){
@@ -2485,7 +2485,7 @@ async function mergeStagedLegacyState(baseState,{connectIfOnline=true}={}){
 async function connectCore(){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
   const result=await coreRuntime.connect(await coreSettings());
-  state=result.state; await clearCoreStagingAfterSync(); syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+  state=result.state; coreConnected=true; await clearCoreStagingAfterSync(); syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
 }
 async function enrollCorePasskey(id){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
@@ -2501,7 +2501,7 @@ async function relinkCorePasskey(id){
 }
 async function lockCore(){
   if(coreRuntime&&coreReady) await coreRuntime.lock();
-  coreReady=false; state={samen:EMPTY(),eigen:EMPTY()};
+  coreReady=false; coreConnected=false; state={samen:EMPTY(),eigen:EMPTY()};
   render(); renderSyncPanel();
 }
 function renderCoreGate(){
