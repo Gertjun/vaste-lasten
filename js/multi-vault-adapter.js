@@ -188,7 +188,10 @@ export async function raiseLegacyUpdateBarrier({
     if (!remote?.env) throw new Error('Het bestaande gezamenlijke legacybestand ontbreekt; migratie is afgebroken.');
     const data = await openLegacy(remote.env);
     if (!isRecord(data)) throw new Error('Het gezamenlijke legacybestand bevat geen geldig gegevensobject.');
-    if (data.minApp && compareVersions(data.minApp, minApp) >= 0) {
+    if (data.minApp && compareVersions(data.minApp, minApp) > 0) {
+      throw new Error(`De legacygegevens vereisen appversie ${data.minApp} of nieuwer.`);
+    }
+    if (data.minApp && compareVersions(data.minApp, minApp) === 0) {
       return { alreadyMarked: true, sha: remote.sha };
     }
     const next = { ...data, minApp };
@@ -203,7 +206,7 @@ export async function raiseLegacyUpdateBarrier({
  * worden de reeds bevestigde resultaten teruggegeven; de legacybron blijft behouden.
  */
 export async function migrateActiveDomains({
-  state, me, passwords, registry, settings, createClient, mergeStore,
+  state, getState, me, passwords, registry, settings, createClient, mergeStore,
   legacySync, raiseBarrier,
 } = {}) {
   if (!['p1', 'p2'].includes(me)) throw new TypeError('Persoon moet p1 of p2 zijn.');
@@ -213,7 +216,8 @@ export async function migrateActiveDomains({
   await legacySync();
   await raiseBarrier();
 
-  const split = splitLegacyState(state, me);
+  const latestState = typeof getState === 'function' ? getState() : state;
+  const split = splitLegacyState(latestState, me);
   const active = ['shared', `personal-${me}`];
   const results = {};
   for (const id of active) {
