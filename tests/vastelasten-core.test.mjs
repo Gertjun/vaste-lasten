@@ -227,7 +227,7 @@ test('history restore rejects a payload from another vault domain', async () => 
     'shared',
     { payload: { items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1' } },
     (old) => old,
-  ), /buiten het toegestane gegevensdomein/);
+  ), /hoort niet bij het domein shared/);
   await core.lock();
 });
 
