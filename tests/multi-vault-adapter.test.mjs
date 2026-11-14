@@ -196,7 +196,10 @@ test('migration coordinator keeps partial success explicit and does not retire l
     me: 'p1',
     passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
     registry: {
-      shared: {}, 'personal-p1': {},
+      shared: {
+        vault: fakeVault(),
+        sync: { syncNow: async () => 'uploaded' },
+      },
     },
     settings: {},
     createClient: () => ({}),
@@ -206,6 +209,35 @@ test('migration coordinator keeps partial success explicit and does not retire l
   });
   assert.deepEqual(calls, ['legacy-sync', 'barrier']);
   assert.equal(result.complete, false);
-  assert.equal(result.failedDomain, 'shared');
+  assert.equal(result.failedDomain, 'personal-p1');
+  assert.equal(result.results.shared.result, 'uploaded');
   assert.equal(result.legacySourceCanBeRetired, undefined);
+});
+
+
+test('migration completes only after both active vaults confirm remote sync', async () => {
+  const state = { samen: store([{ id: 'shared' }]), eigen: store([{ id: 'private-p2' }]) };
+  const registry = {};
+  for (const id of ['shared', 'personal-p2']) {
+    registry[id] = {
+      vault: fakeVault(),
+      sync: { syncNow: async ({ settings }) => {
+        assert.equal(settings.path, VAULT_DOMAINS[id].path);
+        return 'uploaded';
+      } },
+    };
+  }
+  const result = await migrateActiveDomains({
+    state, me: 'p2',
+    passwords: { shared: 'shared-password', 'personal-p2': 'personal-password' },
+    registry,
+    settings: { owner: 'synthetic', repo: 'synthetic', branch: 'main', token: 'synthetic' },
+    createClient: (settings) => ({ getFile: async () => { assert.ok(settings.path); return null; } }),
+    mergeStore,
+    legacySync: async () => {},
+    raiseBarrier: async () => {},
+  });
+  assert.equal(result.complete, true);
+  assert.equal(result.legacySourceCanBeRetired, true);
+  assert.deepEqual(Object.keys(result.results), ['shared', 'personal-p2']);
 });
