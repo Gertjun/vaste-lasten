@@ -345,9 +345,10 @@ export function createVasteLastenCore({
     if (typeof asNewest !== 'function') throw new TypeError('De bestaande app-herstelbewerking ontbreekt.');
     const vault = registry[id].vault;
     const current = vault.getData();
-    const previous = await vault.decryptRemote(envelope);
-    const newest = asNewest(previous, current, Date.now());
-    await vault.setData(vault.reconcileRestoredBackup(newest));
+    const previous = validateDomainPayload(await vault.decryptRemote(envelope), id);
+    const newest = validateDomainPayload(asNewest(previous, current, Date.now()), id);
+    const reconciled = validateDomainPayload(vault.reconcileRestoredBackup(newest), id);
+    await vault.setData(reconciled);
     await vault.flush();
     return syncDomain(id);
   }
