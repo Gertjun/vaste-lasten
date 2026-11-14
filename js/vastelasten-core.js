@@ -126,14 +126,17 @@ export function createVasteLastenCore({
     return sync();
   }
 
-  async function sync() {
+  async function flushLocal() {
     requireSession();
     await persistQueue;
+    for (const id of activeIds()) await registry[id].vault.flush();
+  }
+
+  async function sync() {
+    requireSession();
+    await flushLocal();
     const results = {};
-    for (const id of activeIds()) {
-      await registry[id].vault.flush();
-      results[id] = await syncDomain(id);
-    }
+    for (const id of activeIds()) results[id] = await syncDomain(id);
     return { results, state: getState() };
   }
 
@@ -341,6 +344,7 @@ export function createVasteLastenCore({
     migrate,
     getState,
     persistState,
+    flushLocal,
     sync,
     syncDomain,
     changePassword,
