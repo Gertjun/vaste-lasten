@@ -166,6 +166,21 @@ test('existing Core remote envelope is imported before legacy data is merged', a
   assert.equal(calls.length, 1);
 });
 
+test('missing remote Core file cannot silently recreate a retired vault', async () => {
+  const vault = fakeVault();
+  await assert.rejects(openAndSyncDomain({
+    id: 'shared',
+    password: 'shared-password',
+    legacyData: { ...store(), schema: 1, domain: 'shared' },
+    registry: { shared: { vault, sync: { syncNow: async () => 'uploaded' } } },
+    settings: { owner: 'synthetic', repo: 'synthetic', branch: 'main', token: 'synthetic' },
+    createClient: () => ({ getFile: async () => null }),
+    mergeStore,
+    allowCreate: false,
+  }), /er wordt geen nieuwe kluis aangemaakt/);
+  assert.equal(vault.hasVault(), false);
+});
+
 test('concurrent first creation adopts the winning remote DEK and preserves local data', async () => {
   const vault = fakeVault();
   const localData = { ...store([{ id: 'local' }]), schema: 1, domain: 'shared' };
