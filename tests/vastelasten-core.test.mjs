@@ -122,6 +122,25 @@ test('biometric unlock can open and sync the two vaults sequentially', async () 
   await core.lock();
 });
 
+test('passkey unlock prompts each vault separately before any network call', async () => {
+  const { core, vaults, events, syncCalls } = setup();
+  await core.prepareBiometricUnlock('shared', 'p1');
+  assert.equal(vaults.shared.isUnlocked(), false);
+  assert.equal(events.includes('repo-check'), false);
+  await core.prepareBiometricUnlock('personal-p1', 'p1');
+  assert.equal(events.includes('repo-check'), false);
+  assert.equal(events.includes('shared:acquire'), false);
+  const state = await core.finishBiometricUnlock({ me: 'p1', settings: connection });
+  assert.equal(state.eigen.domain, 'personal-p1');
+  assert.equal(vaults.shared.isUnlocked(), true);
+  assert.equal(vaults['personal-p1'].isUnlocked(), true);
+  assert.equal(vaults['personal-p2'].isUnlocked(), false);
+  assert.ok(events.indexOf('shared:biometric-prompt') < events.indexOf('repo-check'));
+  assert.ok(events.indexOf('personal-p1:biometric-prompt') < events.indexOf('repo-check'));
+  assert.equal(syncCalls.length, 2);
+  await core.lock();
+});
+
 test('offline password unlock opens local encrypted vaults without contacting GitHub', async () => {
   const { core, vaults, syncCalls, events } = setup();
   const state = await core.unlockLocal({
