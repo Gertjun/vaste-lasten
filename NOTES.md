@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde CI-run: **#190**, 39 tests geslaagd, 0 mislukt. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
+Laatste geverifieerde CI-run: **#203**, 39 tests geslaagd, 0 mislukt. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
 
 ## 3. Open punten
 
@@ -48,5 +48,5 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
   - Drie onafhankelijke Core-kluizen en veilige legacy-migratie voorbereid.
   - Runtime-integratie toegevoegd aan `index.html`: Core-mode, wachtwoordontgrendeling, offline werking, synchronisatie, passkeybeheer, wachtwoordwijziging en versieherstel.
   - Migratie zet de legacy-updatebarrière pas na succesvolle legacy-sync en verwijdert lokale plaintext pas na bevestiging van beide Core-kluizen.
-  - CI #190: 39/39 tests geslaagd; inline app-JavaScript syntaxiscontrole, release-pin en service-worker-precache groen.
+  - CI #203: 39/39 tests geslaagd; inline app-JavaScript syntaxiscontrole, release-pin en service-worker-precache groen. Expliciete lokale ontgrendeling is toegevoegd.
   - PR #5 blijft draft; geen merge of deploy uitgevoerd.
