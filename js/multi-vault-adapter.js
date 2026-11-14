@@ -172,3 +172,64 @@ export async function openAndSyncDomain({
     return { id, result, data: entry.vault.getData(), path: remoteSettings.path, recoveredConcurrentCreate: true };
   }
 }
+
+
+/** Verhoogt alleen de minimumversie in het legacy gedeelde bestand; het envelope-formaat blijft legacy. */
+export async function raiseLegacyUpdateBarrier({
+  readLegacy, openLegacy, writeLegacy, minApp = '3.0.0', attempts = 4, compareVersions,
+} = {}) {
+  for (const name of ['readLegacy', 'openLegacy', 'writeLegacy', 'compareVersions']) {
+    if (typeof ({ readLegacy, openLegacy, writeLegacy, compareVersions })[name] !== 'function') {
+      throw new TypeError(`${name} ontbreekt voor de legacy-updatebarrière.`);
+    }
+  }
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const remote = await readLegacy();
+    if (!remote?.env) throw new Error('Het bestaande gezamenlijke legacybestand ontbreekt; migratie is afgebroken.');
+    const data = await openLegacy(remote.env);
+    if (!isRecord(data)) throw new Error('Het gezamenlijke legacybestand bevat geen geldig gegevensobject.');
+    if (data.minApp && compareVersions(data.minApp, minApp) >= 0) {
+      return { alreadyMarked: true, sha: remote.sha };
+    }
+    const next = { ...data, minApp };
+    const sha = await writeLegacy(next, remote.sha);
+    if (sha) return { alreadyMarked: false, sha };
+  }
+  throw new Error('De updatebarrière kon na vier pogingen niet veilig worden bevestigd.');
+}
+
+/**
+ * Migreert gedeeld + de actieve persoonlijke kluis. Bij gedeeltelijk succes
+ * worden de reeds bevestigde resultaten teruggegeven; de legacybron blijft behouden.
+ */
+export async function migrateActiveDomains({
+  state, me, passwords, registry, settings, createClient, mergeStore,
+  legacySync, raiseBarrier,
+} = {}) {
+  if (!['p1', 'p2'].includes(me)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+  if (typeof legacySync !== 'function' || typeof raiseBarrier !== 'function') {
+    throw new TypeError('De bestaande legacy-sync en updatebarrière zijn verplicht.');
+  }
+  await legacySync();
+  await raiseBarrier();
+
+  const split = splitLegacyState(state, me);
+  const active = ['shared', `personal-${me}`];
+  const results = {};
+  for (const id of active) {
+    try {
+      results[id] = await openAndSyncDomain({
+        id,
+        password: passwords?.[id],
+        legacyData: split[id],
+        registry,
+        settings,
+        createClient,
+        mergeStore,
+      });
+    } catch (error) {
+      return { complete: false, results, failedDomain: id, error };
+    }
+  }
+  return { complete: true, results, legacySourceCanBeRetired: true };
+}
