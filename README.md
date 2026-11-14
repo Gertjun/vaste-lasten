@@ -40,17 +40,33 @@ De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of 
 - **iPad liggend en laptop**: een vaste zijbalk met de onderdelen, die je met het pijltje bovenin (of de toets `[`) inklapt tot alleen pictogrammen. Bovenin de zijbalk staan de naam van de app, het versienummer met de synchronisatiestatus eronder, en de knop *Nieuwe last* boven *Overzicht*. Ingeklapt zie je de status als stip en *Nieuwe last* als plusknop. Boven het werkvlak staat de naam van het onderdeel; het werkvlak gebruikt twee tot drie kolommen.
 - **Laptop-sneltoetsen**: `N` nieuwe last, `/` zoeken, `←` `→` vorige of volgende maand, `1` tot `5` onderdelen, `[` zijbalk in- of uitklappen, `Esc` sluit het formulier.
 
-## Hoe de gegevens zijn verdeeld
+## PWA-Core v1.1.0 en de gegevensverdeling
 
-In de privé-repository staan drie bestanden, die de app zelf aanmaakt:
+Vanaf appversie **3.0.0** gebruikt Vaste Lasten PWA-Core v1.1.0 als gedeelde technische basis. De Core-code wordt meegeleverd in deze app-repository; de app haalt tijdens gebruik geen code uit de PWA-Core-repository op. De exacte release is vastgezet in `core-manifest.json` en `pwa-core.lock.json`, en de service worker precachet de Core-modules voor offline gebruik.
 
-| Bestand | Inhoud | Versleuteld met |
-|---|---|---|
-| `samen.json` | Gezamenlijke lasten, afvinken, namen en verdeling | Gezamenlijk wachtwoord (kennen jullie allebei) |
-| `eigen-p1.json` | Eigen lasten van persoon 1 | Eigen wachtwoord van persoon 1 |
-| `eigen-p2.json` | Eigen lasten van persoon 2 | Eigen wachtwoord van persoon 2 |
+De app gebruikt drie onafhankelijke kluizen:
 
-Ieder ziet dus de gezamenlijke lasten plus zijn of haar eigen lasten, maar niet die van de ander.
+| Kluis | Remote bestand in de privé-repository | Inhoud | Sleutel |
+|---|---|---|---|
+| Gezamenlijk | `pwa-core-v1/samen.json` | Gezamenlijke lasten, afvinken, namen, verdeling, categorieën, inkomen en verrekeningen | Gezamenlijk wachtwoord |
+| Persoonlijk persoon 1 | `pwa-core-v1/eigen-p1.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 1 | Eigen wachtwoord persoon 1 |
+| Persoonlijk persoon 2 | `pwa-core-v1/eigen-p2.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 2 | Eigen wachtwoord persoon 2 |
+
+Elke kluis heeft een eigen datasleutel, wachtwoord, lokale opslagruimte, synchronisatie en optionele passkey. Een apparaat ontgrendelt alleen de gezamenlijke kluis en de persoonlijke kluis van de gebruiker van dat apparaat. De persoonlijke kluis van de andere gebruiker wordt niet geopend.
+
+De oude bestanden `samen.json`, `eigen-p1.json` en `eigen-p2.json` blijven tijdens en na de migratie bewaard als terugvalbron. De migratie zet in het oude gezamenlijke bestand een versiebarrière van 3.0.0, zodat oudere appversies geen gegevens meer kunnen terugschrijven.
+
+## Migreren naar PWA-Core
+
+1. Werk eerst alle apparaten bij naar appversie **3.0.0**.
+2. Open de geïnstalleerde PWA en ga naar **Instellingen → Synchronisatie**.
+3. Vul bij **Overstappen naar PWA-Core** het bestaande gezamenlijke en eigen wachtwoord in. Die wachtwoorden worden ook de wachtwoorden van de nieuwe Core-kluizen; je kunt ze daarna afzonderlijk wijzigen.
+4. Herhaal de migratie op ieder apparaat. Gebruik op alle apparaten dezelfde wachtwoorden voor dezelfde kluizen.
+5. Laat de oude bestanden in de privé-repository staan. Verwijder ze niet handmatig.
+
+Na de migratie werkt het apparaat met de Core-kluizen. Een apparaat dat nog niet is gemigreerd kan tijdelijk nog met de legacybestanden werken; wijzigingen daarvan worden meegenomen wanneer dat apparaat zelf migreert. Oudere versies dan 3.0.0 worden door de versiebarrière geblokkeerd.
+
+Ieder ziet dus de gezamenlijke lasten plus zijn of haar eigen persoonlijke lasten, maar niet die van de ander.
 
 ## 1. App publiceren (publieke repository)
 
