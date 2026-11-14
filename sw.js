@@ -1,4 +1,4 @@
-const CACHE='vaste-lasten-2.29.3-core-v1.1.0-bridge1';
+const CACHE='vaste-lasten-3.0.0-core-v1.1.0';
 const PRECACHE=[
   "./index.html",
   "./manifest.webmanifest",
@@ -26,6 +26,7 @@ const PRECACHE=[
   "./js/core/ui.js",
   "./js/core/vault-factory.js",
   "./js/core/vault.js",
+  "./js/multi-vault-adapter.js",
   "./js/vastelasten-core.js"
 ];
 const ASSETS=PRECACHE;
