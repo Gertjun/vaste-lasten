@@ -50,6 +50,10 @@ export function validateDomainPayload(payload, id) {
   if (!isRecord(payload) || payload.schema !== 1 || payload.domain !== VAULT_DOMAINS[id].domain) {
     throw new Error(`De inhoud van de kluis hoort niet bij het domein ${id} of heeft een onbekend schema.`);
   }
+  const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
+  if (forbidden.some((key) => Object.hasOwn(payload, key))) {
+    throw new Error(`De kluis ${id} bevat velden buiten het toegestane gegevensdomein.`);
+  }
   return payload;
 }
 
@@ -60,7 +64,7 @@ export function mergeDomainPayload(local, remote, id, mergeStore) {
   if (typeof mergeStore !== 'function') throw new TypeError('De bestaande app-mergefunctie ontbreekt.');
   const merged = mergeStore(local, remote);
   if (!isRecord(merged)) throw new Error('De samenvoeging leverde geen geldig gegevensobject op.');
-  return { ...merged, schema: 1, domain: VAULT_DOMAINS[id].domain };
+  return validateDomainPayload({ ...merged, schema: 1, domain: VAULT_DOMAINS[id].domain }, id);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
@@ -72,17 +76,22 @@ export function createVaultRegistry({
     if (typeof fn !== 'function') throw new TypeError(`${name} ontbreekt.`);
   }
   const registry = {};
-  for (const [id, spec] of Object.entries(VAULT_DOMAINS)) {
-    const vault = createVault({ storagePrefix: spec.storagePrefix, kdfIterations, storage });
-    registry[id] = {
-      vault,
-      sync: createSync({ vault, appName }),
-      lock: createSessionLock({ storagePrefix: spec.storagePrefix }),
-      biometric: createBiometric({ storagePrefix: spec.storagePrefix, appName, storage }),
-      path: spec.path,
-    };
+  try {
+    for (const [id, spec] of Object.entries(VAULT_DOMAINS)) {
+      const vault = createVault({ storagePrefix: spec.storagePrefix, kdfIterations, storage });
+      registry[id] = { vault, path: spec.path };
+      registry[id].sync = createSync({ vault, appName });
+      registry[id].lock = createSessionLock({ storagePrefix: spec.storagePrefix });
+      registry[id].biometric = createBiometric({ storagePrefix: spec.storagePrefix, appName, storage });
+    }
+    return registry;
+  } catch (error) {
+    for (const entry of Object.values(registry)) {
+      try { entry.vault.lock?.(); } catch { /* behoud de oorspronkelijke fout */ }
+      try { void entry.vault.dispose?.(); } catch { /* behoud de oorspronkelijke fout */ }
+    }
+    throw error;
   }
-  return registry;
 }
 
 /** Verkrijgt de twee benodigde locks; bij gedeeltelijk succes wordt teruggedraaid. */
@@ -98,6 +107,10 @@ export async function acquireActiveLocks(registry, me) {
     }
     return {
       async release() {
+        // Eerst alle lokale writes bevestigen; bij een fout blijven de locks vast.
+        for (const id of ids) await registry[id].vault.flush();
+        // Pas daarna de ontsleutelde data uit geheugen verwijderen.
+        for (const id of ids) registry[id].vault.lock();
         for (const handle of [...handles].reverse()) await handle.release();
       },
     };
