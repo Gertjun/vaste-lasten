@@ -148,7 +148,12 @@ export function createVasteLastenCore({
       for (const id of activeIds()) {
         const vault = registry[id].vault;
         const current = vault.getData();
-        const next = mergeDomainPayload(current, split[id], id, mergeStore);
+        // __pwaSync is owned by Core, not by the Vaste Lasten UI snapshot.
+        // Keep the latest deletion/device ledger even when the UI snapshot is older.
+        const appPayload = { ...split[id] };
+        if (Object.hasOwn(current, '__pwaSync')) appPayload.__pwaSync = clone(current.__pwaSync);
+        else delete appPayload.__pwaSync;
+        const next = mergeDomainPayload(current, appPayload, id, mergeStore);
         if (JSON.stringify(next) !== JSON.stringify(current)) await vault.setData(next);
         await vault.flush();
       }
