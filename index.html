@@ -2100,15 +2100,20 @@ function renderSyncPanel(){
       renderCoreGate(); return;
     }
     const personal=`personal-${cfg.me}`;
-    const passkeys=coreRuntime&&coreRuntime.isBiometricEnrolled('shared')&&coreRuntime.isBiometricEnrolled(personal);
+    const sharedPasskey=coreRuntime&&coreRuntime.isBiometricEnrolled('shared');
+    const personalPasskey=coreRuntime&&coreRuntime.isBiometricEnrolled(personal);
+    const passkeyControls='<div class="note">Passkeys per kluis: gezamenlijk '+(sharedPasskey?'ingesteld':'niet ingesteld')+' · eigen '+(personalPasskey?'ingesteld':'niet ingesteld')+'.</div>'+
+      '<div class="btns">'+
+      (!sharedPasskey?'<button class="btn" id="core-passkey-existing-shared">Bestaande gezamenlijke passkey koppelen</button><button class="btn" id="core-passkey-shared">Nieuwe gezamenlijke passkey instellen</button>':'')+
+      (!personalPasskey?'<button class="btn" id="core-passkey-existing-personal">Bestaande eigen passkey koppelen</button><button class="btn" id="core-passkey-personal">Nieuwe eigen passkey instellen</button>':'')+
+      '</div>';
     el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 · actief als <b>'+esc(nameOf(cfg.me))+'</b>.</div>'+
       '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
       (hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+
-      (passkeys?'<span class="chip eigen">Passkeys actief</span>':'<button class="btn" id="core-passkey-existing">Bestaande passkeys koppelen</button><button class="btn" id="core-passkey">Nieuwe passkeys instellen</button>')+
       (pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+
-      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+histHtml()+pwHtml()+
+      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+passkeyControls+histHtml()+pwHtml()+
       '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
     renderCoreGate(); return;
   }
@@ -2447,17 +2452,17 @@ async function connectCore(){
   const result=await coreRuntime.connect(await coreSettings());
   state=result.state; await clearCoreStagingAfterSync(); syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
 }
-async function enrollCorePasskeys(){
+async function enrollCorePasskey(id){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
-  const ids=['shared',`personal-${cfg.me}`];
-  for(const id of ids) if(!coreRuntime.isBiometricEnrolled(id)) await coreRuntime.enrollBiometric(id);
-  renderSyncPanel(); toast('Nieuwe passkeys ingesteld voor beide actieve kluizen.');
+  if(coreRuntime.isBiometricEnrolled(id)) throw new SyncError('Voor deze kluis is al een passkey ingesteld.');
+  await coreRuntime.enrollBiometric(id);
+  renderSyncPanel(); toast(id==='shared'?'Passkey voor de gezamenlijke kluis ingesteld.':'Passkey voor je eigen kluis ingesteld.');
 }
-async function relinkCorePasskeys(){
+async function relinkCorePasskey(id){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen met je wachtwoorden.');
-  const ids=['shared',`personal-${cfg.me}`];
-  for(const id of ids) if(!coreRuntime.isBiometricEnrolled(id)) await coreRuntime.enrollExistingBiometric(id);
-  renderSyncPanel(); toast('Bestaande passkeys gekoppeld aan beide Core-kluizen.');
+  if(coreRuntime.isBiometricEnrolled(id)) throw new SyncError('Voor deze kluis is al een passkey ingesteld.');
+  await coreRuntime.enrollExistingBiometric(id);
+  renderSyncPanel(); toast(id==='shared'?'Bestaande passkey voor de gezamenlijke kluis gekoppeld.':'Bestaande passkey voor je eigen kluis gekoppeld.');
 }
 async function lockCore(){
   if(coreRuntime&&coreReady) await coreRuntime.lock();
@@ -2762,8 +2767,10 @@ document.addEventListener('click',e=>{
   if(id==='core-biometric-finish') busy(id,'Kluizen openen…',unlockCoreBiometric,'core-gate-err');
   if(id==='core-token-save') busy(id,'Token controleren…',replaceCoreToken,'core-token-err');
   if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
-  if(id==='core-passkey') busy(id,'Passkeys instellen…',enrollCorePasskeys,'s-err');
-  if(id==='core-passkey-existing') busy(id,'Bestaande passkeys koppelen…',relinkCorePasskeys,'s-err');
+  if(id==='core-passkey-shared') busy(id,'Passkey instellen…',()=>enrollCorePasskey('shared'),'s-err');
+  if(id==='core-passkey-personal') busy(id,'Passkey instellen…',()=>enrollCorePasskey(`personal-${cfg.me}`),'s-err');
+  if(id==='core-passkey-existing-shared') busy(id,'Passkey koppelen…',()=>relinkCorePasskey('shared'),'s-err');
+  if(id==='core-passkey-existing-personal') busy(id,'Passkey koppelen…',()=>relinkCorePasskey(`personal-${cfg.me}`),'s-err');
   if(id==='core-lock') busy(id,'Vergrendelen…',lockCore,'s-err');
   if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now'){clearTimeout(timer); timer=null; sync();}
