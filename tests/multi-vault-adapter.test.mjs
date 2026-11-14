@@ -44,6 +44,9 @@ test('each Core payload is bound to exactly one domain', () => {
   assert.equal(validateDomainPayload(shared, 'shared'), shared);
   assert.throws(() => validateDomainPayload(personal, 'shared'), /hoort niet bij het domein/);
   assert.throws(() => mergeDomainPayload(shared, personal, 'shared', mergeStore), /hoort niet bij het domein/);
+  assert.throws(() => validateDomainPayload({ ...shared, prof: { income: 1 } }, 'shared'), /buiten het toegestane gegevensdomein/);
+  assert.throws(() => validateDomainPayload({ ...personal, cats: {} }, 'personal-p1'), /buiten het toegestane gegevensdomein/);
+  assert.throws(() => mergeDomainPayload(shared, shared, 'shared', (a, b) => ({ ...mergeStore(a, b), scen: {} })), /buiten het toegestane gegevensdomein/);
   assert.equal(mergeDomainPayload(shared, shared, 'shared', mergeStore).domain, 'shared');
 });
 
@@ -75,6 +78,45 @@ test('active lock acquisition rolls back the first lock if the second is busy', 
   await assert.rejects(acquireActiveLocks(registry, 'p1'), /al ontgrendeld/);
   assert.deepEqual(events, ['shared released']);
 });
+
+test('releasing active locks flushes and locks vaults before releasing Web Locks', async () => {
+  const events = [];
+  const makeEntry = (id) => ({
+    vault: {
+      flush: async () => events.push(`${id}:flush`),
+      lock: () => events.push(`${id}:lock`),
+    },
+    lock: { acquireSessionLock: async () => ({ release: async () => events.push(`${id}:release`) }) },
+  });
+  const session = await acquireActiveLocks({ shared: makeEntry('shared'), 'personal-p1': makeEntry('personal-p1') }, 'p1');
+  await session.release();
+  assert.deepEqual(events, [
+    'shared:flush', 'personal-p1:flush',
+    'shared:lock', 'personal-p1:lock',
+    'personal-p1:release', 'shared:release',
+  ]);
+});
+
+test('registry disposes earlier vault instances if later factory creation fails', () => {
+  const disposed = [];
+  let syncCount = 0;
+  assert.throws(() => createVaultRegistry({
+    createVault: ({ storagePrefix }) => ({
+      id: storagePrefix,
+      lock: () => {},
+      dispose: () => disposed.push(storagePrefix),
+    }),
+    createSync: ({ vault }) => {
+      syncCount++;
+      if (syncCount === 2) throw new Error('synthetic factory failure');
+      return { id: vault.id };
+    },
+    createSessionLock: () => ({}),
+    createBiometric: () => ({}),
+  }), /synthetic factory failure/);
+  assert.deepEqual(disposed, ['vaste-lasten-shared', 'vaste-lasten-personal-p1']);
+});
+
 
 function fakeVault({ remotePayload = null } = {}) {
   let data = null;
