@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   VAULT_DOMAINS, splitLegacyState, validateDomainPayload, mergeDomainPayload,
   createVaultRegistry, acquireActiveLocks, openAndSyncDomain,
+  raiseLegacyUpdateBarrier, migrateActiveDomains,
 } from '../js/multi-vault-adapter.js';
 
 const store = (items = [], extra = {}) => ({ items, del: {}, paid: {}, meta: null, ...extra });
@@ -154,4 +155,57 @@ test('concurrent first creation adopts the winning remote DEK and preserves loca
   assert.deepEqual(result.data.items.map((x) => x.id).sort(), ['local', 'winner']);
   assert.equal(vault.getSyncMeta().sha, 'winner-sha');
   assert.equal(syncCalls, 2);
+});
+
+
+test('legacy update barrier preserves encrypted store data and retries a conflict', async () => {
+  let attempts = 0;
+  let stored = { minApp: '2.20.0', items: [{ id: 'shared' }], inc: { p1: 1 } };
+  const result = await raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: { marker: true }, sha: `sha-${attempts}` }),
+    openLegacy: async () => structuredClone(stored),
+    writeLegacy: async (next, sha) => {
+      attempts++;
+      if (attempts === 1) return null;
+      stored = next;
+      return 'sha-updated';
+    },
+    compareVersions: (a, b) => a.localeCompare(b, undefined, { numeric: true }),
+  });
+  assert.equal(result.alreadyMarked, false);
+  assert.equal(result.sha, 'sha-updated');
+  assert.equal(attempts, 2);
+  assert.equal(stored.minApp, '3.0.0');
+  assert.deepEqual(stored.items, [{ id: 'shared' }]);
+  assert.deepEqual(stored.inc, { p1: 1 });
+});
+
+test('legacy update barrier refuses to proceed when the shared file is missing', async () => {
+  await assert.rejects(raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: null }),
+    openLegacy: async () => ({}),
+    writeLegacy: async () => 'sha',
+    compareVersions: () => 0,
+  }), /legacybestand ontbreekt/);
+});
+
+test('migration coordinator keeps partial success explicit and does not retire legacy source', async () => {
+  const calls = [];
+  const result = await migrateActiveDomains({
+    state: { samen: store([{ id: 'shared' }]), eigen: store([{ id: 'private' }]) },
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+    registry: {
+      shared: {}, 'personal-p1': {},
+    },
+    settings: {},
+    createClient: () => ({}),
+    mergeStore,
+    legacySync: async () => calls.push('legacy-sync'),
+    raiseBarrier: async () => calls.push('barrier'),
+  });
+  assert.deepEqual(calls, ['legacy-sync', 'barrier']);
+  assert.equal(result.complete, false);
+  assert.equal(result.failedDomain, 'shared');
+  assert.equal(result.legacySourceCanBeRetired, undefined);
 });
