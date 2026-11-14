@@ -2493,6 +2493,7 @@ function renderCoreGate(){
   document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
 }
 
+/* ---------- wachtwoord wijzigen (2.24.0) ----------
    Het bestand in GitHub wordt opnieuw versleuteld met het nieuwe wachtwoord en een nieuwe salt. Andere apparaten zien de nieuwe salt
    bij het synchroniseren en vragen dan één keer om het nieuwe wachtwoord. De oude sleutel blijft op dit apparaat bewaard voor de geschiedenis. */
 let pwc={open:false,st:'samen'};
