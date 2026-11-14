@@ -298,6 +298,16 @@ export function createVasteLastenCore({
     return registry[id].biometric.isEnrolled();
   }
 
+  async function enrollExistingBiometric(id) {
+    requireSession();
+    if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
+    if (typeof registry[id].biometric.enrollExisting !== 'function') {
+      throw new Error('Deze Core-release ondersteunt het opnieuw koppelen van een bestaande passkey niet.');
+    }
+    await registry[id].biometric.enrollExisting(registry[id].vault.getDataKey());
+    return registry[id].biometric.isEnrolled();
+  }
+
   async function restoreDomain(id, envelope, asNewest) {
     requireSession();
     if (!settings) throw new Error('Herstellen vereist een actieve GitHub-verbinding.');
@@ -349,6 +359,7 @@ export function createVasteLastenCore({
     syncDomain,
     changePassword,
     enrollBiometric,
+    enrollExistingBiometric,
     restoreDomain,
     hasVault,
     isBiometricEnrolled,
