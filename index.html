@@ -1884,7 +1884,9 @@ function scheduleSync(){
 function syncNow(){
   if(coreMode){
     if(timer){clearTimeout(timer);timer=null;}
-    if(coreReady) sync();
+    if(coreReady) coreRuntime.flushLocal().then(()=>{if(navigator.onLine) return sync();}).catch(e=>{
+      corePersistError=e.message||'Lokaal opslaan is mislukt.'; syncError=corePersistError; setPill('err','Opslagfout',corePersistError);
+    });
     return;
   }
   if(timer){clearTimeout(timer); timer=null; sync();}
@@ -1919,7 +1921,10 @@ async function sync(){
   if(coreMode){
     if(!coreReady||!coreRuntime) return pillIdle();
     if(syncing){again=true;return;}
-    if(!navigator.onLine) return pillIdle();
+    if(!navigator.onLine){
+      try{await coreRuntime.flushLocal();}catch(e){corePersistError=e.message||'Lokaal opslaan is mislukt.';syncError=corePersistError;setPill('err','Opslagfout',corePersistError);renderSyncPanel();return;}
+      return pillIdle();
+    }
     syncing=true; setPill('busy','Synchroniseren…');
     try{
       const result=await coreRuntime.sync();
