@@ -2076,7 +2076,7 @@ function renderSyncPanel(){
       '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
-      '<button class="btn" id="core-passkey">'+(passkeys?'Passkeys actief':'Passkeys instellen')+'</button>'+
+      (passkeys?'<span class="chip eigen">Passkeys actief</span>':'<button class="btn" id="core-passkey-existing">Bestaande passkeys koppelen</button><button class="btn" id="core-passkey">Nieuwe passkeys instellen</button>')+
       '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+
       '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
     renderCoreGate(); return;
@@ -2361,7 +2361,13 @@ async function enrollCorePasskeys(){
   if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
   const ids=['shared',`personal-${cfg.me}`];
   for(const id of ids) if(!coreRuntime.isBiometricEnrolled(id)) await coreRuntime.enrollBiometric(id);
-  renderSyncPanel(); toast('Passkeys ingesteld voor beide actieve kluizen.');
+  renderSyncPanel(); toast('Nieuwe passkeys ingesteld voor beide actieve kluizen.');
+}
+async function relinkCorePasskeys(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen met je wachtwoorden.');
+  const ids=['shared',`personal-${cfg.me}`];
+  for(const id of ids) if(!coreRuntime.isBiometricEnrolled(id)) await coreRuntime.enrollExistingBiometric(id);
+  renderSyncPanel(); toast('Bestaande passkeys gekoppeld aan beide Core-kluizen.');
 }
 async function lockCore(){
   if(coreRuntime&&coreReady) await coreRuntime.lock();
@@ -2609,6 +2615,7 @@ document.addEventListener('click',e=>{
   if(id==='core-biometric') busy(id,'Face ID starten…',unlockCoreBiometric,'core-gate-err');
   if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
   if(id==='core-passkey') busy(id,'Passkeys instellen…',enrollCorePasskeys,'s-err');
+  if(id==='core-passkey-existing') busy(id,'Bestaande passkeys koppelen…',relinkCorePasskeys,'s-err');
   if(id==='core-lock') busy(id,'Vergrendelen…',lockCore,'s-err');
   if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now'){clearTimeout(timer); timer=null; sync();}
