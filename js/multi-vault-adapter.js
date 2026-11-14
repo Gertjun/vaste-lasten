@@ -130,6 +130,7 @@ const keyMismatch = (error) => /met een andere sleutel versleuteld/i.test(error?
  */
 export async function openAndSyncDomain({
   id, password, legacyData, registry, settings, createClient, mergeStore, canonicalize = JSON.stringify,
+  allowCreate = true,
 } = {}) {
   assertDomainId(id);
   if (!password) throw new Error(`Het wachtwoord voor ${id} ontbreekt.`);
@@ -148,6 +149,9 @@ export async function openAndSyncDomain({
     await entry.vault.importEnvelope(remote.envelope, password);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
   } else {
+    if (!allowCreate) {
+      throw new Error(`Het Core-bestand voor ${id} ontbreekt; er wordt geen nieuwe kluis aangemaakt omdat de lokale legacybron niet meer beschikbaar is.`);
+    }
     await entry.vault.create(password, clone(legacyData));
   }
 
