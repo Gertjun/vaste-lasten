@@ -1,6 +1,5 @@
 const CACHE='vaste-lasten-2.29.3-core-v1.1.0';
 const PRECACHE=[
-  "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
