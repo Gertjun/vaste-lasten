@@ -2688,6 +2688,14 @@ $('thisMonth').onclick=()=>{const T=today(); view={y:T.y,m:T.m}; render();};
 $('verBtn').onclick=()=>{newVersion?applyUpdate():showVersionInfo();};
 $('syncPill').onclick=()=>{showTab('instellingen'); openGroup('sync'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
 
+function appBackupSnapshot(){
+  const clean=st=>{
+    const value=structuredClone(state[st]);
+    delete value.schema; delete value.domain; delete value.__pwaSync;
+    return value;
+  };
+  return {v:2,samen:clean('samen'),eigen:clean('eigen')};
+}
 let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const eye=e.target.closest('[data-eye]');
@@ -2711,10 +2719,10 @@ document.addEventListener('click',e=>{
   const bar=e.target.closest('[data-month]'); if(bar){view={y:today().y,m:+bar.dataset.month}; showTab('maand'); render(); toTop(); return;}
   const id=e.target.id;
   if(id==='clearEx'){STORES.forEach(st=>state[st].items=state[st].items.filter(i=>!i.example)); save(); render(); toast('Voorbeelden gewist');}
-  if(id==='copyBk'){const txt=JSON.stringify({v:2,samen:state.samen,eigen:state.eigen});
+  if(id==='copyBk'){const txt=JSON.stringify(appBackupSnapshot());
     const fb=()=>{$('bkText').value=txt;$('bkText').select();toast('Back-up staat in het tekstvak, kopieer hem daar');};
     try{navigator.clipboard.writeText(txt).then(()=>toast('Back-up gekopieerd'),fb);}catch(err){fb();}}
-  if(id==='dlBk') deliver('vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify({v:2,samen:state.samen,eigen:state.eigen},null,2)],{type:'application/json'}),'Back-up');
+  if(id==='dlBk') deliver('vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify(appBackupSnapshot(),null,2)],{type:'application/json'}),'Back-up');
   if(id==='restoreBk') restore($('bkText').value);
   if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
   if(id==='m-save') saveSplit();
