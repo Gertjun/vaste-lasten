@@ -1,9 +1,9 @@
 # PWA-Core-migratie – Vaste Lasten
 
-Status: implementatieontwerp; nog geen appcode of gegevensbestanden gewijzigd.
+Status: migratievoorbereiding afgerond; Core v1.1.0 is lokaal vastgepind en geprecachet. De runtime-integratie in `index.html` moet nog worden gebouwd.
 Datum: 14 november 2026.
 Uitgangspunt: Vaste Lasten `main` `1bb8a603e9c1fe98be889e9b2d6090b06335b0a5`.
-Core-basis: PWA-Core `main` merge commit `942b4a6cd772bfd8376627387f3fb4789acd7bad`.
+Core-basis: PWA-Core `v1.1.0`, releasecommit `9763502c2233ca3824b6525fd5a5785fb3596c9c`.
 
 ## 1. Bestaande contracten
 
@@ -59,18 +59,22 @@ De bump naar 3.0.0 is bewust MAJOR: oudere apparaten moeten bijwerken voordat zi
 - Passkeyregistratie blijft per kluis gescheiden; de eerste versie kan dus twee biometrische acties vragen.
 - Geen echte passkeys, tokens, privédatarepo of remote JSON-bestanden gebruiken in CI.
 
-## 5. Nog te bouwen en te bewijzen
+## 5. Voortgang en nog te bouwen
 
-1. Adaptermodule voor domeinsplitsing, drie vault-/sync-/lock-/biometric-instanties en idempotente migratie.
-2. Unit-tests voor datagrens, verkeerde domeinen, tweede apparaat, gelijktijdige eerste creatie, fout na één geslaagde vault, retry en het behouden van de legacybron.
-3. Integratie in de huidige monolithische app, met gecontroleerde omschakeling van state/load/save/sync en herstelgeschiedenis.
-4. Core v1.1.0-release publiceren en appvendoring/lockfile exact op die release vastzetten; de merge naar Core main is nog geen gepubliceerde distributie.
-5. Draft PR, CI en diffreview. Geen merge, Pages-deploy of echte datamigratie zonder afzonderlijk akkoord.
+1. **Adapter voorbereid en getest:** domeinsplitsing, drie onafhankelijke vault-/sync-/lock-/biometric-instanties, import van bestaande envelopes, herstel bij gelijktijdige eerste creatie, legacy-updatebarrière en hervatbare migratiecoördinator.
+2. **Beveiligingsverharding:** payloads met velden uit een ander domein worden geweigerd; merge-resultaten worden opnieuw gevalideerd. Bij het vrijgeven van locks worden eerst beide vaults geflusht en vergrendeld. Gedeeltelijke factory-initialisatie wordt opgeruimd. Een ontbrekend remote bestand kan na migratie niet stilzwijgend als nieuwe lege kluis worden aangemaakt.
+3. **Synthetische tests:** de adaptertests dekken domeingrenzen, lock rollback/release, factory cleanup, remote import, concurrente creatie, updatebarrière, gedeeltelijk succes en fail-closed herstel.
+4. **PWA-Core v1.1.0 gedistribueerd:** alle 18 allowlisted bestanden zijn lokaal opgenomen. `core-manifest.json` en `pwa-core.lock.json` pinnen de release op commit `9763502c2233ca3824b6525fd5a5785fb3596c9c`; SHA-256 van de exacte manifestbytes: `4ed3aaac52e28c54c2e478068285fcbe1a95ac749605aea6ce7c39f74c85f3cb`.
+5. **Offline/CI-controle:** `sw.js` precachet de Core-bestanden, manifest en lockfile. CI controleert module-syntax, releasepin, volledige statische precache en alle tests. Run #87 is volledig geslaagd.
+6. **Nog te bouwen:** de runtime-integratie in de monolithische `index.html`: startup/unlock, lokale state laden en opslaan via de twee actieve kluizen, synchronisatie, wachtwoord/passkeybeheer, historie/herstel, lokale modus en veilige migratie-/rollbackstatus.
+7. **Acceptatie:** draft PR, CI en diffreview. Geen merge, Pages-deploy of echte datamigratie zonder afzonderlijk akkoord.
 
 ## 6. Grenzen van deze branch
 
 - Geen echte datarepository geopend.
 - Geen token of echte vaultbestanden gelezen.
 - Geen production writes.
-- Geen wijzigingen aan `main`.
-- Geen versie-, service-worker- of release-update totdat de migratiecode en tests gereed zijn.
+- Geen wijzigingen aan `main`; alle wijzigingen staan op de draft-migratiebranch.
+- `index.html` en de bestaande app-runtime zijn nog niet aangepast. Een byte-identieke backup staat in `backup/pwa-core-migration-2026-11-14/index.pre-core-integration.html`.
+- `sw.js` is op de branch aangepast om de gepinde Core-bestanden statisch te precachen; de oorspronkelijke service worker en de tussentijdse variant zijn byte-identiek geback-upt.
+- Geen appversie 3.0.0, Pages-deploy, echte migratie of wijziging van productiegegevens totdat de runtime-integratie en acceptatietests gereed zijn.
