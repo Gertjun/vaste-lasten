@@ -88,6 +88,7 @@ export function createVasteLastenCore({
   }
 
   async function release() {
+    clearBiometricPending();
     if (!session) return;
     // acquireActiveLocks flushes, locks and then releases both Web Locks.
     await session.release();
@@ -170,6 +171,7 @@ export function createVasteLastenCore({
   }
 
   async function unlock({ me: meValue, passwords, settings: inputSettings } = {}) {
+    clearBiometricPending();
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
     settings = resolved;
@@ -196,6 +198,7 @@ export function createVasteLastenCore({
   }
 
   async function unlockLocal({ me: meValue, passwords } = {}) {
+    clearBiometricPending();
     await acquire(meValue);
     settings = null;
     try {
