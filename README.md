@@ -24,7 +24,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 
 ## Wat is privé en wat gedeeld
 
-| Gedeeld met je partner (`samen.json`) | Alleen voor jou (`eigen-p1.json` / `eigen-p2.json`) |
+| Gedeeld met je partner (`pwa-core-v1/samen.json`) | Alleen voor jou (`pwa-core-v1/eigen-p1.json` / `pwa-core-v1/eigen-p2.json`) |
 |---|---|
 | Gezamenlijke lasten en het afvinken ervan | Je eigen lasten en het afvinken ervan |
 | Namen, verdeling (ook het percentage voor de gezamenlijke rekening) en categorieën | Je loondag |
