@@ -2363,6 +2363,7 @@ async function unlockCore(){
   const personalPassword=$('core-u-e')?.value||'';
   const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
+  syncError='';
   let next;
   if(navigator.onLine){
     next=await coreRuntime.unlock({me:cfg.me,passwords,settings:await coreSettings()});
@@ -2370,7 +2371,7 @@ async function unlockCore(){
     next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
   }
   next=await mergeStagedLegacyState(next);
-  state=next; coreReady=true; corePersistError=''; syncError='';
+  state=next; coreReady=true; corePersistError='';
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
 }
@@ -2380,11 +2381,12 @@ async function unlockCoreBiometric(){
   if(!coreRuntime.isBiometricEnrolled('shared')||!coreRuntime.isBiometricEnrolled(id)){
     throw new SyncError('Stel eerst voor beide actieve kluizen een passkey in.');
   }
+  syncError='';
   let next=navigator.onLine
     ?await coreRuntime.unlockWithBiometric({me:cfg.me,settings:await coreSettings()})
     :await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
   next=await mergeStagedLegacyState(next);
-  state=next; coreReady=true; corePersistError=''; syncError='';
+  state=next; coreReady=true; corePersistError='';
   if(shareMyIncome()) saveLocal();
   render(); renderSyncPanel(); pillIdle();
 }
@@ -2406,11 +2408,15 @@ async function mergeStagedLegacyState(baseState){
   await coreRuntime.flushLocal();
   coreStagingMerged=true;
   if(navigator.onLine){
-    const result=await coreRuntime.connect(await coreSettings());
-    coreStagingMerged=false;
-    localStorage.removeItem(CORE_STAGING_KEY);
-    localStorage.removeItem(DKEY);
-    return result.state;
+    try{
+      const result=await coreRuntime.connect(await coreSettings());
+      coreStagingMerged=false;
+      localStorage.removeItem(CORE_STAGING_KEY);
+      localStorage.removeItem(DKEY);
+      return result.state;
+    }catch(error){
+      syncError=error.message||'De Core-gegevens zijn lokaal bewaard; synchroniseren kan later opnieuw.';
+    }
   }
   return merged;
 }
