@@ -2389,6 +2389,25 @@ async function migrateToCore(){
   render(); renderSyncPanel(); pillIdle();
   toast('PWA-Core is actief. Beide kluizen zijn gemigreerd.');
 }
+async function unlockCoreLocal(){
+  if(!coreRuntime) await ensureCoreRuntime();
+  const sharedPassword=$('core-u-s')?.value||'';
+  const personalPassword=$('core-u-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
+  syncError='';
+  try{
+    let next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    state=next; coreReady=true; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Lokaal ontgrendelen is mislukt.';
+    throw error;
+  }
+}
 async function unlockCore(){
   if(!coreRuntime) await ensureCoreRuntime();
   const sharedPassword=$('core-u-s')?.value||'';
@@ -2439,7 +2458,7 @@ async function clearCoreStagingAfterSync(){
   localStorage.removeItem(DKEY);
   coreStagingMerged=false;
 }
-async function mergeStagedLegacyState(baseState){
+async function mergeStagedLegacyState(baseState,{connectIfOnline=true}={}){
   const raw=localStorage.getItem(CORE_STAGING_KEY)||localStorage.getItem(DKEY);
   if(!raw) return baseState;
   let incoming;
@@ -2450,7 +2469,7 @@ async function mergeStagedLegacyState(baseState){
   await coreRuntime.persistState(merged);
   await coreRuntime.flushLocal();
   coreStagingMerged=true;
-  if(navigator.onLine){
+  if(navigator.onLine&&connectIfOnline){
     try{
       const result=await coreRuntime.connect(await coreSettings());
       coreStagingMerged=false;
@@ -2511,7 +2530,7 @@ function renderCoreGate(){
     (cfg?'<p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
       '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
-      '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Ontgrendelen met wachtwoord</button></div>'+
+      '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Online ontgrendelen</button><button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
       biometricControls+
       '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'+
       '<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p>'+
@@ -2777,7 +2796,8 @@ document.addEventListener('click',e=>{
   if(id==='s-linkJoin') busy(id,'Bezig met koppelen…',linkJoin);
   if(id==='s-unlock') busy(id,'Controleren…',unlock);
   if(id==='core-migrate') busy(id,'Migreren…',migrateToCore,'core-mig-err');
-  if(id==='core-unlock') busy(id,'Ontgrendelen…',unlockCore,'core-gate-err');
+  if(id==='core-unlock') busy(id,'Online ontgrendelen…',unlockCore,'core-gate-err');
+  if(id==='core-unlock-local') busy(id,'Lokaal ontgrendelen…',unlockCoreLocal,'core-gate-err');
   if(id==='core-biometric-shared') busy(id,'Face ID…',()=>prepareCoreBiometric('shared'),'core-gate-err');
   if(id==='core-biometric-personal') busy(id,'Face ID…',()=>prepareCoreBiometric(`personal-${cfg.me}`),'core-gate-err');
   if(id==='core-biometric-finish') busy(id,'Kluizen openen…',unlockCoreBiometric,'core-gate-err');
