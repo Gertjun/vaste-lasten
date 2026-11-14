@@ -2284,6 +2284,29 @@ async function coreSettings(){
   if(!cfg) throw new SyncError('Koppel eerst de bestaande privé-repository.');
   return {owner:cfg.owner,repo:cfg.repo,token:await tokenFor(cfg)};
 }
+async function replaceCoreToken(){
+  if(!cfg) throw new SyncError('De repositorygegevens ontbreken op dit apparaat.');
+  if(!navigator.onLine) throw new SyncError('Een GitHub-token herstellen vereist internet.');
+  const token=$('core-token')?.value.trim()||'';
+  if(!token) throw new SyncError('Plak je nieuwe GitHub-token.');
+  let response;
+  try{
+    response=await fetch('https://api.github.com/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo),{
+      method:'GET',cache:'no-store',
+      headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+    });
+  }catch(e){throw new SyncError('GitHub is niet bereikbaar. Probeer het later opnieuw.');}
+  if(response.status===401) throw new SyncError('Deze GitHub-token is ongeldig of verlopen.');
+  if(response.status===403||response.status===404) throw new SyncError('Deze token heeft geen toegang tot de ingestelde privé-repository.');
+  if(!response.ok) throw new SyncError('GitHub gaf een foutmelding ('+response.status+').');
+  const info=await response.json();
+  if(!info.private) throw new SyncError('De gegevensrepository moet privé zijn.');
+  await idb('readwrite',store=>{store.delete('githubToken');store.delete('githubTokenKey');});
+  cfg={...cfg,token};
+  await storeToken(cfg);
+  renderCoreGate(); renderSyncPanel();
+  toast('GitHub-verbinding hersteld. Ontgrendel daarna je Core-kluizen.');
+}
 async function ensureLegacyKeysForMigration(passwords){
   if(!cfg) throw new SyncError('Er is geen bestaande GitHub-koppeling.');
   const next={...keys}, salt={...(cfg.salt||{})}, iter={samen:cfgIter(cfg,'samen'),eigen:cfgIter(cfg,'eigen')};
@@ -2461,8 +2484,11 @@ function renderCoreGate(){
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
       '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Ontgrendelen</button>'+
       (biometric?'<button class="btn" id="core-biometric">Ontgrendel met Face ID / passkey</button>':'')+'</div>'+
-      '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'
-      :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel de GitHub-koppeling om verder te gaan.</p>')+
+      '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'+
+      '<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p>'+
+      '<div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div>'+
+      '<div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>'
+      :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>')+
     '</section>';
   document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
 }
@@ -2715,6 +2741,7 @@ document.addEventListener('click',e=>{
   if(id==='core-migrate') busy(id,'Migreren…',migrateToCore,'core-mig-err');
   if(id==='core-unlock') busy(id,'Ontgrendelen…',unlockCore,'core-gate-err');
   if(id==='core-biometric') busy(id,'Face ID starten…',unlockCoreBiometric,'core-gate-err');
+  if(id==='core-token-save') busy(id,'Token controleren…',replaceCoreToken,'core-token-err');
   if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
   if(id==='core-passkey') busy(id,'Passkeys instellen…',enrollCorePasskeys,'s-err');
   if(id==='core-passkey-existing') busy(id,'Bestaande passkeys koppelen…',relinkCorePasskeys,'s-err');
