@@ -2591,6 +2591,12 @@ document.addEventListener('click',e=>{
   if(id==='s-linkNew') busy(id,'Bezig met koppelen…',linkNew);
   if(id==='s-linkJoin') busy(id,'Bezig met koppelen…',linkJoin);
   if(id==='s-unlock') busy(id,'Controleren…',unlock);
+  if(id==='core-migrate') busy(id,'Migreren…',migrateToCore,'core-mig-err');
+  if(id==='core-unlock') busy(id,'Ontgrendelen…',unlockCore,'core-gate-err');
+  if(id==='core-biometric') busy(id,'Face ID starten…',unlockCoreBiometric,'core-gate-err');
+  if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
+  if(id==='core-passkey') busy(id,'Passkeys instellen…',enrollCorePasskeys,'s-err');
+  if(id==='core-lock') busy(id,'Vergrendelen…',lockCore,'s-err');
   if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now'){clearTimeout(timer); timer=null; sync();}
   if(id==='h-open'){pwc={...pwc,open:false}; loadHist();}
