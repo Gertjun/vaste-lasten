@@ -1830,6 +1830,14 @@ function setPill(s,text,title){
 }
 const hasKeys=()=>!!(keys.samen&&keys.eigen);
 function pillIdle(){
+  if(coreMode){
+    if(!cfg) return setPill();
+    if(!coreReady) return setPill('warn','Core vergrendeld','Ontgrendel beide Core-kluizen');
+    if(syncError||corePersistError) return setPill('err','Sync-fout',syncError||corePersistError);
+    if(!navigator.onLine) return setPill('warn','Offline','Wijzigingen blijven lokaal versleuteld opgeslagen');
+    if(timer) return setPill('busy','Wacht op synchroniseren','Je wijzigingen worden gebundeld');
+    return setPill('ok','PWA-Core actief',lastSync?'Laatst: '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'');
+  }
   if(!cfg) return setPill();
   if(!hasKeys()) return setPill('warn','Wachtwoord nodig','Tik om de synchronisatie te ontgrendelen');
   if(needVer) return setPill('warn','Bijwerken nodig','Werk de app bij; tot die tijd synchroniseert hij niet');
@@ -1960,13 +1968,13 @@ const PW='type="password" autocomplete="new-password"';
 
 /* instellingen: groepen in- en uitklappen; je keuze wordt onthouden */
 function groupDefault(g){
-  if(g==='sync') return !IS_PWA||!cfg||!hasKeys();
+  if(g==='sync') return !IS_PWA||!cfg||(coreMode?!coreReady:!hasKeys());
   return g==='huis';
 }
 function setGroups(){
   const st=ui.groups||{};
   document.querySelectorAll('#v-instellingen details.set-group').forEach(d=>{
-    const g=d.dataset.g, must=g==='sync'&&IS_PWA&&cfg&&!hasKeys();   // wachtwoord nodig: altijd open
+    const g=d.dataset.g, must=g==='sync'&&IS_PWA&&cfg&&(coreMode?!coreReady:!hasKeys());   // ontgrendeling nodig: altijd open
     if(must) syncForced=true;
     autoOpen(d,must||(g in st?st[g]:groupDefault(g)));
   });
@@ -1980,7 +1988,7 @@ function applySetLayout(){
   const v=$('v-instellingen'), groups=v.querySelectorAll('details.set-group');
   if(WIDE.matches){
     const known=g=>g&&v.querySelector('details[data-g="'+g+'"]');
-    const s=IS_PWA&&cfg&&!hasKeys()?'sync':known(setCur)?setCur:known(ui.setSel)?ui.setSel:'sync';
+    const s=IS_PWA&&cfg&&(coreMode?!coreReady:!hasKeys())?'sync':known(setCur)?setCur:known(ui.setSel)?ui.setSel:'sync';
     setCur=s; setWide=true; v.classList.add('set-md');
     groups.forEach(d=>{const on=d.dataset.g===s; d.classList.toggle('sel',on); if(on) autoOpen(d,true);});
     v.querySelectorAll('#setNav [data-sg]').forEach(b=>b.setAttribute('aria-current',b.dataset.sg===s?'true':'false'));
@@ -2009,14 +2017,19 @@ function renderSetState(){
   const el=$('syncSt'); if(!el) return;
   let t='',s='';
   if(IS_PWA){
-    if(!cfg){t='Niet gekoppeld';}
+    if(coreMode){
+      if(!cfg){t='Core-koppeling ontbreekt';s='warn';}
+      else if(!coreReady){t='Core vergrendeld';s='warn';}
+      else if(syncError||corePersistError){t='Niet gelukt';s='warn';}
+      else {t='PWA-Core actief';s='ok';}
+    }else if(!cfg){t='Niet gekoppeld';}
     else if(!hasKeys()){t='Wachtwoord nodig';s='warn';}
     else if(syncError){t='Niet gelukt';s='warn';}
     else {t='Gekoppeld als '+nameOf(cfg.me);s='ok';}
   }
   el.textContent=t; el.dataset.s=s; el.hidden=!t;
   const sd=document.querySelector('#v-instellingen details[data-g="sync"]');
-  if(t==='Wachtwoord nodig'){syncForced=true; autoOpen(sd,true);}
+  if(t==='Wachtwoord nodig'||t==='Core vergrendeld'){syncForced=true; autoOpen(sd,true);}
   else if(syncForced){syncForced=false; if(!(ui.groups&&'sync' in ui.groups)) autoOpen(sd,groupDefault('sync'));}
   applySetLayout(); navStates();
 }
@@ -2985,7 +2998,7 @@ if(IS_PWA){
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}}
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){sync(); checkUpdate();} else syncNow();});
   window.addEventListener('pagehide',syncNow);
-  window.addEventListener('online',()=>{sync(); checkUpdate(true);});
+  window.addEventListener('online',()=>{if(coreMode&&coreReady) connectCore().catch(e=>{syncError=e.message;renderSyncPanel();}); else sync(); checkUpdate(true);});
   window.addEventListener('offline',pillIdle);
 }
 
@@ -3027,8 +3040,10 @@ if(IS_PWA) askPersist();
 setGroups(); applySetLayout(); navStates();
 showTab('overzicht');   // de app opent altijd op het overzicht
 if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
-shareMyIncome(); saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
-if(IS_PWA&&cfg){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(async([s,e])=>{keys={samen:s||null,eigen:e||null}; try{await storeToken(cfg);}catch(e){syncError=e.message;setPill('err','Sync-fout',e.message);} renderSyncPanel(); if(!syncError) sync();});}
+if(!coreMode) shareMyIncome();
+saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
+if(IS_PWA&&cfg&&!coreMode){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(async([s,e])=>{keys={samen:s||null,eigen:e||null}; try{await storeToken(cfg);}catch(e){syncError=e.message;setPill('err','Sync-fout',e.message);} renderSyncPanel(); if(!syncError) sync();});}
+if(IS_PWA&&cfg&&coreMode){ensureCoreRuntime().then(()=>{renderSyncPanel();renderCoreGate();}).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderSyncPanel();});}
 })();
 </script>
 
