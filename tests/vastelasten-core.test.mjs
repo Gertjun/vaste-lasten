@@ -66,7 +66,7 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
     }),
   };
   const clientFactory = (settings) => ({
-    async checkRepo() { return { private: true, defaultBranch: 'main' }; },
+    async checkRepo() { events.push('repo-check'); return { private: true, defaultBranch: 'main' }; },
     async getFile() {
       settingsSeen.push(settings);
       const id = settings.path.endsWith('samen.json')
@@ -117,6 +117,8 @@ test('biometric unlock can open and sync the two vaults sequentially', async () 
   assert.equal(syncCalls.length, 2);
   assert.ok(events.includes('shared:biometric'));
   assert.ok(events.includes('personal-p2:biometric'));
+  assert.ok(events.indexOf('shared:biometric-prompt') < events.indexOf('repo-check'));
+  assert.ok(events.indexOf('personal-p2:biometric-prompt') < events.indexOf('repo-check'));
   await core.lock();
 });
 
