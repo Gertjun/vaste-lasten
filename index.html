@@ -2038,11 +2038,36 @@ $('themePanel').addEventListener('change',e=>{
   if(t.name==='th-mode') ui.mode=t.value; else if(t.name==='th-acc') ui.accent=t.value; else return;
   saveUi(); applyTheme(); themeState();
 });
+function coreMigrationHtml(){
+  if(!cfg||coreMode) return '';
+  return '<div class="hist" id="coreMigration"><h4>Overstappen naar PWA-Core</h4>'+
+    '<p class="note">De migratie synchroniseert eerst je bestaande gegevens, blokkeert daarna oudere appversies en zet je gezamenlijke en eigen gegevens over naar twee aparte Core-kluizen. Gebruik hier je bestaande gezamenlijke en eigen wachtwoord; die worden ook de wachtwoorden van de nieuwe kluizen. De oude bestanden blijven als terugvaloptie bewaard.</p>'+
+    '<div class="two">'+fieldHtml('core-mig-s','Bestaand gezamenlijk wachtwoord','type="password" autocomplete="current-password"')+
+    fieldHtml('core-mig-e','Bestaand eigen wachtwoord','type="password" autocomplete="current-password"')+'</div>'+
+    '<div class="err" id="core-mig-err"></div><div class="btns"><button class="btn primary" id="core-migrate">Migreer naar PWA-Core</button></div></div>';
+}
 function renderSyncPanel(){
   renderSetState();
   const el=$('syncPanel');
   const h='<h4>Synchroniseren via GitHub</h4>';
   if(!IS_PWA){el.innerHTML=h+'<div class="note">Synchroniseren tussen apparaten en met je partner werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
+  if(coreMode){
+    if(!cfg){el.innerHTML=h+'<div class="err">De Core-kluizen zijn lokaal aanwezig, maar de GitHub-koppeling ontbreekt. Herstel eerst de koppeling met dezelfde privé-repository.</div>';renderCoreGate();return;}
+    if(!coreReady){
+      el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 is actief. De kluizen zijn vergrendeld.</div><div class="note">Ontgrendel beide kluizen om je gegevens te openen. De gezamenlijke kluis en jouw persoonlijke kluis blijven onafhankelijk versleuteld.</div>';
+      renderCoreGate(); return;
+    }
+    const personal=`personal-${cfg.me}`;
+    const passkeys=coreRuntime&&coreRuntime.isBiometricEnrolled('shared')&&coreRuntime.isBiometricEnrolled(personal);
+    el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 · actief als <b>'+esc(nameOf(cfg.me))+'</b>.</div>'+
+      '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
+      '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
+      '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
+      '<button class="btn" id="core-passkey">'+(passkeys?'Passkeys actief':'Passkeys instellen')+'</button>'+
+      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+
+      '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
+    renderCoreGate(); return;
+  }
   if(cfg){
     const where='<code>'+esc(cfg.owner)+'/'+esc(cfg.repo)+'</code>';
     if(!hasKeys()){
@@ -2055,7 +2080,7 @@ function renderSyncPanel(){
         :'Vul je '+(fs&&fe?'wachtwoorden':'wachtwoord')+' in om verder te synchroniseren.';
       el.innerHTML=h+'<div class="ok-line">Gekoppeld met '+where+' als '+esc(nameOf(cfg.me))+'.</div><div class="note'+(changed.length?' pw-new':'')+'">'+msg+'</div>'+
         (fs&&fe?'<div class="two">'+fs+fe+'</div>':fs+fe)+
-        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>';
+        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+coreMigrationHtml();
       return;
     }
     const keep=pwc.open?[...el.querySelectorAll('#pwBox input[type="password"],#pwBox input[type="text"]')].map(i=>[i.id,i.value,i.type]):[];
@@ -2064,7 +2089,7 @@ function renderSyncPanel(){
       '<div class="note">Gezamenlijke lasten staan in <code>samen.json</code> en zie je allebei. Je eigen lasten staan in <code>'+esc(fileOf('eigen'))+'</code>, versleuteld met jouw eigen wachtwoord.</div>'+
       '<div class="err" id="s-err">'+esc(syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button>'+(hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+(pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+'<button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+histHtml()+pwHtml()+
-      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>';
+      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>'+coreMigrationHtml();
     /* wat je in Wachtwoord wijzigen typte blijft staan als de synchronisatie het paneel opnieuw tekent */
     for(const [id,v,t] of keep){const i=$(id); if(i){i.value=v; if(t==='text'){i.type='text'; const b=el.querySelector('[data-eye="'+id+'"]'); if(b){b.setAttribute('aria-pressed','true'); b.setAttribute('aria-label',b.getAttribute('aria-label').replace('Toon','Verberg'));}} if(METER.includes(id)) updateMeter(id);}}
     if(foc&&$(foc)) $(foc).focus();
