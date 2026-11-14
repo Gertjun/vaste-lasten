@@ -119,6 +119,46 @@ test('biometric unlock can open and sync the two vaults sequentially', async () 
   await core.lock();
 });
 
+test('offline password unlock opens local encrypted vaults without contacting GitHub', async () => {
+  const { core, vaults, syncCalls, events } = setup();
+  const state = await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  assert.equal(state.samen.domain, 'shared');
+  assert.equal(state.eigen.domain, 'personal-p1');
+  assert.equal(vaults.shared.isUnlocked(), true);
+  assert.equal(vaults['personal-p1'].isUnlocked(), true);
+  assert.equal(vaults['personal-p2'].isUnlocked(), false);
+  assert.equal(syncCalls.length, 0);
+  assert.equal(events.includes('shared:acquire'), true);
+  await core.lock();
+});
+
+test('offline biometric unlock opens local encrypted vaults without contacting GitHub', async () => {
+  const { core, vaults, syncCalls } = setup();
+  const state = await core.unlockWithBiometricLocal({ me: 'p2' });
+  assert.equal(state.eigen.domain, 'personal-p2');
+  assert.equal(vaults.shared.isUnlocked(), true);
+  assert.equal(vaults['personal-p2'].isUnlocked(), true);
+  assert.equal(vaults['personal-p1'].isUnlocked(), false);
+  assert.equal(syncCalls.length, 0);
+  await core.lock();
+});
+
+test('an offline-unlocked session can connect later and sync both active vaults', async () => {
+  const { core, syncCalls } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  const result = await core.connect(connection);
+  assert.equal(syncCalls.length, 2);
+  assert.equal(result.state.samen.domain, 'shared');
+  assert.equal(result.state.eigen.domain, 'personal-p1');
+  await core.lock();
+});
+
 test('persistState writes the current shared and active personal snapshots only', async () => {
   const { core, vaults, events } = setup();
   await core.unlock({
