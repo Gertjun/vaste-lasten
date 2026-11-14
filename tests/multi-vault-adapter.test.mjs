@@ -177,6 +177,26 @@ test('existing Core remote envelope is imported before legacy data is merged', a
   assert.equal(calls.length, 1);
 });
 
+test('missing remote Core file does not silently republish an existing local vault during normal unlock', async () => {
+  let unlocks = 0, syncs = 0;
+  const vault = {
+    hasVault: () => true,
+    async unlockWithPassword() { unlocks++; },
+  };
+  await assert.rejects(openAndSyncDomain({
+    id: 'shared',
+    password: 'shared-password',
+    legacyData: { ...store(), schema: 1, domain: 'shared' },
+    registry: { shared: { vault, sync: { syncNow: async () => { syncs++; } } } },
+    settings: {},
+    createClient: () => ({ getFile: async () => null }),
+    mergeStore,
+    allowCreate: false,
+  }), /remote Core-bestand.*ontbreekt/);
+  assert.equal(unlocks, 0);
+  assert.equal(syncs, 0);
+});
+
 test('remote password change adopts the new wrapper while preserving local edits under the same DEK', async () => {
   const localPayload = { ...store([{ id: 'local-unsynced', u: 20 }]), schema: 1, domain: 'shared' };
   const remotePayload = { ...store([{ id: 'remote', u: 10 }]), schema: 1, domain: 'shared' };
