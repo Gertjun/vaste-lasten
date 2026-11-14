@@ -17,5 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: PWA-Core-modules controleren
+        run: |
+          for file in js/core/*.js; do node --experimental-default-type=module --check "$file"; done
+      - name: Release-pin controleren
+        run: node tools/pin.mjs verify
+      - name: Service-worker-precache controleren
+        run: node tools/precache.mjs --manifest core-manifest.json --service-worker sw.js
       - name: Tests uitvoeren
         run: node --test tests/*.test.mjs
