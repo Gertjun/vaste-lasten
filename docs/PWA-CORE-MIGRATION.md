@@ -1,13 +1,13 @@
 # PWA-Core-migratie – Vaste Lasten
 
-Status: migratievoorbereiding afgerond; Core v1.1.0 is lokaal vastgepind en geprecachet. De runtime-integratie in `index.html` moet nog worden gebouwd.
+Status: runtime-integratie staat op de draft-migratiebranch; nog niet gemerged, gedeployed of op echte gegevens uitgevoerd.
 Datum: 14 november 2026.
 Uitgangspunt: Vaste Lasten `main` `1bb8a603e9c1fe98be889e9b2d6090b06335b0a5`.
 Core-basis: PWA-Core `v1.1.0`, releasecommit `9763502c2233ca3824b6525fd5a5785fb3596c9c`.
 
 ## 1. Bestaande contracten
 
-- Huidige appversie: 2.29.3; monolithische klassieke `index.html`-script.
+- Baseline op `main`: appversie 2.29.3; deze branch bereidt versie 3.0.0 voor. De app gebruikt een monolithisch klassiek `index.html`-script.
 - Lokale gecombineerde state: `localStorage["vastelasten.v2"]`, met `{ samen, eigen }`. Dit bevat momenteel leesbare JSON.
 - Lokale UI: `vastelasten.ui`; synchronisatieconfig: `vastelasten.v2.sync`. De GitHub-token staat sinds 2.29.2 versleuteld in IndexedDB.
 - Remote bestanden in de ingestelde privé-repository:
@@ -63,11 +63,11 @@ De bump naar 3.0.0 is bewust MAJOR: oudere apparaten moeten bijwerken voordat zi
 
 1. **Adapter voorbereid en getest:** domeinsplitsing, drie onafhankelijke vault-/sync-/lock-/biometric-instanties, import van bestaande envelopes, herstel bij gelijktijdige eerste creatie, legacy-updatebarrière en hervatbare migratiecoördinator.
 2. **Beveiligingsverharding:** payloads met velden uit een ander domein worden geweigerd; merge-resultaten worden opnieuw gevalideerd. Bij het vrijgeven van locks worden eerst beide vaults geflusht en vergrendeld. Gedeeltelijke factory-initialisatie wordt opgeruimd. Een ontbrekend remote bestand kan na migratie niet stilzwijgend als nieuwe lege kluis worden aangemaakt.
-3. **Synthetische tests:** de adapter- en bridge-tests dekken domeingrenzen, lock rollback/release, factory cleanup, remote import, concurrente creatie, updatebarrière, gedeeltelijk succes, fail-closed herstel, wachtwoord-/biometrisch ontgrendelen, offline ontgrendelen, reconnect en expliciet lokaal flushen zonder netwerk. De laatste run #103 rapporteert 30 geslaagde tests en 0 fouten.
+3. **Synthetische tests:** de adapter- en bridge-tests dekken domeingrenzen, lock rollback/release, factory cleanup, remote import, concurrente creatie, updatebarrière, gedeeltelijk succes, fail-closed herstel, wachtwoord-/biometrisch ontgrendelen, staged passkeyprompts, offline ontgrendelen, reconnect, passkey-herkoppeling, wachtwoordrotatie en behoud van lokale wijzigingen. CI-run #180 rapporteerde 38 geslaagde tests en 0 fouten; een volgende run volgt na de laatste bridge-hardening.
 4. **PWA-Core v1.1.0 gedistribueerd:** alle 18 allowlisted bestanden zijn lokaal opgenomen. `core-manifest.json` en `pwa-core.lock.json` pinnen de release op commit `9763502c2233ca3824b6525fd5a5785fb3596c9c`; SHA-256 van de exacte manifestbytes: `4ed3aaac52e28c54c2e478068285fcbe1a95ac749605aea6ce7c39f74c85f3cb`.
-5. **Offline/CI-controle:** `sw.js` precachet de Core-bestanden, manifest en lockfile. CI controleert module-syntax, releasepin, volledige statische precache en alle tests. Run #87 is volledig geslaagd.
-6. **Runtimebrug gereed, appkoppeling nog te bouwen:** `js/vastelasten-core.js` koppelt de bestaande Store-merge aan de Core-factories en biedt migratie, online/offline ontgrendelen, opslaan, synchroniseren, wachtwoord wijzigen, passkeybeheer, herstel en apparaatbeheer. Vier bridge-tests plus de adaptertests draaien in CI. De brug is nog niet vanuit `index.html` aangeroepen; de volgende fase is de app-startup, UI, state/load/save en sync op deze brug aansluiten.
-7. **Acceptatie:** draft PR, CI en diffreview. Geen merge, Pages-deploy of echte datamigratie zonder afzonderlijk akkoord.
+5. **Offline/CI-controle:** `sw.js` precachet de Core-bestanden, adapter, runtime bridge, manifest en lockfile. CI controleert Core-module-syntax, de volledige inline app-JavaScript, releasepin, volledige statische precache en alle tests.
+6. **Runtime-integratie aangesloten:** `index.html` gebruikt de bridge voor Core-mode, startup en vergrendelde toestand, migratie vanuit legacy, state/load/save, online/offline ontgrendelen, sync, reconnect, wachtwoord wijzigen, versieherstel en passkeybeheer. Passkeys worden per kluis afzonderlijk aangevraagd zodat elke WebAuthn-actie een eigen gebruikersactie heeft. Core-metadata blijft behouden bij app-saves en oude-tabwijzigingen worden tijdelijk veiliggesteld en samengevoegd. Exportback-ups bevatten geen Core-interne metadata.
+7. **Nog open:** browser-/apparaatacceptatie van de volledige runtime, diffreview en eventuele fixes. B07 fysieke iPhone/iPad-acceptatie blijft uitgesteld totdat alle appmigraties klaar zijn. Geen merge, Pages-deploy of echte datamigratie zonder afzonderlijk akkoord.
 
 ## 6. Grenzen van deze branch
 
@@ -75,6 +75,6 @@ De bump naar 3.0.0 is bewust MAJOR: oudere apparaten moeten bijwerken voordat zi
 - Geen token of echte vaultbestanden gelezen.
 - Geen production writes.
 - Geen wijzigingen aan `main`; alle wijzigingen staan op de draft-migratiebranch.
-- `index.html` en de bestaande app-runtime zijn nog niet aangepast of gekoppeld. Een byte-identieke backup staat in `backup/pwa-core-migration-2026-11-14/index.pre-core-integration.html`.
-- `sw.js` is op de branch aangepast om de gepinde Core-bestanden, manifest, lockfile en `js/vastelasten-core.js` statisch te precachen; de oorspronkelijke service worker en de tussenvarianten zijn byte-identiek geback-upt.
-- Geen appversie 3.0.0, Pages-deploy, echte migratie of wijziging van productiegegevens totdat de runtime-integratie en acceptatietests gereed zijn.
+- `index.html` is aangepast op de migratiebranch. De oorspronkelijke byte-identieke backup staat in `backup/pwa-core-migration-2026-11-14/index.pre-core-integration.html`; aanvullende backups zijn per wijzigingsstap vastgelegd.
+- `sw.js` is op de branch aangepast om de gepinde Core-bestanden, manifest, lockfile, `js/multi-vault-adapter.js` en `js/vastelasten-core.js` statisch te precachen; de oorspronkelijke service worker is byte-identiek geback-upt.
+- Appversie 3.0.0 staat uitsluitend op de migratiebranch; geen Pages-deploy, echte migratie of wijziging van productiegegevens heeft plaatsgevonden.
