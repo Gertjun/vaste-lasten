@@ -2204,7 +2204,151 @@ async function unlock(){
   cfg.salt=salt; cfg.iter=iter; delete cfg.pwNew; saveCfg();
   renderSyncPanel(); sync();
 }
-/* ---------- wachtwoord wijzigen (2.24.0) ----------
+
+async function ensureCoreRuntime(){
+  if(coreRuntime) return coreRuntime;
+  const mod=await import('./js/vastelasten-core.js');
+  coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge});
+  return coreRuntime;
+}
+async function coreSettings(){
+  if(!cfg) throw new SyncError('Koppel eerst de bestaande privé-repository.');
+  return {owner:cfg.owner,repo:cfg.repo,token:await tokenFor(cfg)};
+}
+async function ensureLegacyKeysForMigration(passwords){
+  if(!cfg) throw new SyncError('Er is geen bestaande GitHub-koppeling.');
+  const next={...keys}, salt={...(cfg.salt||{})}, iter={samen:cfgIter(cfg,'samen'),eigen:cfgIter(cfg,'eigen')};
+  for(const st of STORES){
+    const password=passwords[st];
+    if(!password) throw new SyncError(st==='samen'?'Vul het gezamenlijke wachtwoord in.':'Vul je eigen wachtwoord in.');
+    const {env}=await readRemote(cfg,fileOf(st));
+    const useSalt=env&&env.kdf&&env.kdf.salt||salt[st];
+    if(!useSalt) throw new SyncError('De bestaande sleutelgegevens ontbreken voor '+(st==='samen'?'het gezamenlijke bestand.':'je eigen bestand.'));
+    const useIter=env?iterOf(env):iter[st];
+    const key=await deriveKey(password,useSalt,useIter);
+    if(env){
+      try{await openEnv(env,key);}
+      catch(e){throw new SyncError(st==='samen'?'Het gezamenlijke wachtwoord klopt niet.':'Je eigen wachtwoord klopt niet.');}
+    }
+    next[st]=key; salt[st]=useSalt; iter[st]=useIter;
+  }
+  keys=next; cfg.salt=salt; cfg.iter=iter; delete cfg.pwNew; saveCfg();
+  await keySet(KEYN.samen,keys.samen); await keySet(KEYN.eigen,keys.eigen);
+}
+async function syncLegacyBeforeMigration(){
+  if(syncing) throw new SyncError('Er loopt al een synchronisatie. Probeer de migratie zo nog eens.');
+  if(timer){clearTimeout(timer);timer=null;}
+  syncError='';
+  await sync();
+  if(syncError) throw new SyncError(syncError);
+  if(!hasKeys()) throw new SyncError('De bestaande synchronisatie is nog niet ontgrendeld.');
+}
+async function raiseCoreLegacyBarrier(){
+  const {raiseLegacyUpdateBarrier}=await import('./js/multi-vault-adapter.js');
+  return raiseLegacyUpdateBarrier({
+    minApp:'3.0.0',
+    readLegacy:()=>readRemote(cfg,'samen.json'),
+    openLegacy:(env)=>openEnv(env,keys.samen),
+    writeLegacy:(next,sha)=>writeRemote(next,sha,cfg,'samen.json',keys.samen,cfg.salt.samen,cfgIter(cfg,'samen')),
+    compareVersions:cmpVer,
+  });
+}
+async function migrateToCore(){
+  if(!IS_PWA) throw new SyncError('De migratie werkt alleen in de geïnstalleerde PWA.');
+  if(!cfg) throw new SyncError('Koppel eerst de bestaande privé-repository.');
+  const sharedPassword=$('core-mig-s')?.value||'';
+  const personalPassword=$('core-mig-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul beide bestaande wachtwoorden in. Deze worden ook de wachtwoorden van de nieuwe Core-kluizen.');
+  await ensureCoreRuntime();
+  await ensureLegacyKeysForMigration({samen:sharedPassword,eigen:personalPassword});
+  const result=await coreRuntime.migrate({
+    state,
+    getState:()=>state,
+    me:cfg.me,
+    passwords,
+    settings:await coreSettings(),
+    legacySync:syncLegacyBeforeMigration,
+    raiseBarrier:raiseCoreLegacyBarrier,
+  });
+  if(!result.complete){
+    const reason=result.error?.message||'Een van de kluizen kon niet volledig worden gemigreerd.';
+    throw new SyncError(reason+' De bestaande lokale gegevens en legacybestanden zijn behouden. Je kunt de migratie opnieuw proberen.');
+  }
+  state=result.state;
+  localStorage.setItem(CORE_MODE_KEY,'1');
+  coreMode=true;
+  coreReady=true;
+  localStorage.removeItem(DKEY); // pas nadat beide Core-kluizen lokaal én remote zijn bevestigd
+  corePersistError=''; syncError=''; lastSync=new Date();
+  if(timer){clearTimeout(timer);timer=null;}
+  render(); renderSyncPanel(); pillIdle();
+  toast('PWA-Core is actief. Beide kluizen zijn gemigreerd.');
+}
+async function unlockCore(){
+  await ensureCoreRuntime();
+  const sharedPassword=$('core-u-s')?.value||'';
+  const personalPassword=$('core-u-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
+  let next;
+  if(navigator.onLine){
+    next=await coreRuntime.unlock({me:cfg.me,passwords,settings:await coreSettings()});
+  }else{
+    next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+  }
+  state=next; coreReady=true; corePersistError=''; syncError='';
+  if(shareMyIncome()) saveLocal();
+  render(); renderSyncPanel(); pillIdle();
+}
+async function unlockCoreBiometric(){
+  await ensureCoreRuntime();
+  const id=`personal-${cfg.me}`;
+  if(!coreRuntime.isBiometricEnrolled('shared')||!coreRuntime.isBiometricEnrolled(id)){
+    throw new SyncError('Stel eerst voor beide actieve kluizen een passkey in.');
+  }
+  const next=navigator.onLine
+    ?await coreRuntime.unlockWithBiometric({me:cfg.me,settings:await coreSettings()})
+    :await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
+  state=next; coreReady=true; corePersistError=''; syncError='';
+  if(shareMyIncome()) saveLocal();
+  render(); renderSyncPanel(); pillIdle();
+}
+async function connectCore(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+  const result=await coreRuntime.connect(await coreSettings());
+  state=result.state; syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+}
+async function enrollCorePasskeys(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+  const ids=['shared',`personal-${cfg.me}`];
+  for(const id of ids) if(!coreRuntime.isBiometricEnrolled(id)) await coreRuntime.enrollBiometric(id);
+  renderSyncPanel(); toast('Passkeys ingesteld voor beide actieve kluizen.');
+}
+async function lockCore(){
+  if(coreRuntime&&coreReady) await coreRuntime.lock();
+  coreReady=false; state={samen:EMPTY(),eigen:EMPTY()};
+  render(); renderSyncPanel();
+}
+function renderCoreGate(){
+  if(!coreMode||coreReady){$('coreGate')?.remove();return;}
+  if(!cfg) return;
+  let gate=$('coreGate');
+  if(!gate){
+    gate=document.createElement('div'); gate.id='coreGate';
+    gate.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg,#fff);display:grid;place-items:center;padding:24px;overflow:auto;';
+    document.body.appendChild(gate);
+  }
+  const id=`personal-${cfg.me}`;
+  const biometric=coreRuntime&&coreRuntime.isBiometricEnrolled('shared')&&coreRuntime.isBiometricEnrolled(id);
+  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2><p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
+    '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
+    '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
+    '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Ontgrendelen</button>'+
+    (biometric?'<button class="btn" id="core-biometric">Ontgrendel met Face ID / passkey</button>':'')+
+    '</div><p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p></section>';
+}
+
    Het bestand in GitHub wordt opnieuw versleuteld met het nieuwe wachtwoord en een nieuwe salt. Andere apparaten zien de nieuwe salt
    bij het synchroniseren en vragen dan één keer om het nieuwe wachtwoord. De oude sleutel blijft op dit apparaat bewaard voor de geschiedenis. */
 let pwc={open:false,st:'samen'};
