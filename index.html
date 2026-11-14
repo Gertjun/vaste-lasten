@@ -1813,8 +1813,25 @@ async function readRemote(c,file,ref){
   if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository. Controleer of hij leesrechten heeft op Contents.');
   if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
   const j=await r.json();
-  let env; try{env=JSON.parse(atob(j.content.replace(/\s/g,'')));}catch(e){throw new SyncError('Het bestand '+file+' in de repository is beschadigd of niet door deze app gemaakt.');}
+  let env; try{env=JSON.parse(atob(j.content.replace(/\\s/g,'')));}catch(e){throw new SyncError('Het bestand '+file+' in de repository is beschadigd of niet door deze app gemaakt.');}
   if(!env||!env.kdf||!env.kdf.salt||!env.iv||!env.ct) throw new SyncError('Het bestand '+file+' in de repository is niet door deze app gemaakt.');
+  return {env,sha:j.sha};
+}
+const corePathFor=st=>st==='samen'?'pwa-core-v1/samen.json':`pwa-core-v1/eigen-${cfg.me}.json`;
+async function readCoreRemote(c,file,ref){
+  const r=await gh('GET',cpath(c,file)+(ref?'?ref='+encodeURIComponent(ref):''),null,c);
+  if(r.status===404) return {env:null,sha:undefined};
+  if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository.');
+  if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
+  const j=await r.json();
+  let content=j.content;
+  if(j.encoding!=='base64'||!content){
+    const blob=await gh('GET','/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/git/blobs/'+j.sha,null,c);
+    if(!blob.ok) throw new SyncError('De Core-back-up kon niet worden opgehaald.');
+    const data=await blob.json(); content=data.content;
+  }
+  let env; try{env=JSON.parse(atob(content.replace(/\\s/g,'')));}catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
+  if(!env||env.format!=='pwa-vault'||!env.kdf||!env.payload||!env.wrappedKey) throw new SyncError('Dit is geen geldig PWA-Core-kluisbestand.');
   return {env,sha:j.sha};
 }
 async function writeRemote(obj,sha,c,file,key,salt,iter){
@@ -2081,9 +2098,10 @@ function renderSyncPanel(){
       '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
+      (hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+
       (passkeys?'<span class="chip eigen">Passkeys actief</span>':'<button class="btn" id="core-passkey-existing">Bestaande passkeys koppelen</button><button class="btn" id="core-passkey">Nieuwe passkeys instellen</button>')+
       (pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+
-      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+pwHtml()+
+      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+histHtml()+pwHtml()+
       '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
     renderCoreGate(); return;
   }
@@ -2500,8 +2518,10 @@ function histHtml(){
 async function loadHist(){
   hist={...hist,open:true,list:null,err:'',busy:true,armed:null}; renderSyncPanel();
   try{
-    if(timer){clearTimeout(timer); timer=null;} await sync();   // eerst je laatste wijzigingen wegschrijven
-    const r=await gh('GET','/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+'/commits?path='+encodeURIComponent(fileOf(hist.st))+'&per_page=30',null,cfg);
+    if(timer){clearTimeout(timer); timer=null;}
+    if(coreMode) await connectCore(); else await sync();   // eerst de laatste wijzigingen veilig synchroniseren
+    const historyPath=coreMode?corePathFor(hist.st):fileOf(hist.st);
+    const r=await gh('GET','/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+'/commits?path='+encodeURIComponent(historyPath)+'&per_page=30',null,cfg);
     if(!r.ok) throw new SyncError('De geschiedenis kon niet worden opgehaald ('+r.status+'). Probeer het later opnieuw.');
     hist.list=(await r.json()).map(c=>({sha:c.sha,date:c.commit&&(c.commit.committer||c.commit.author).date}));
   }catch(e){hist.err=e.message==='offline'?'Je bent offline. De geschiedenis staat in GitHub; probeer het opnieuw als je online bent.':e.message;}
@@ -2532,6 +2552,17 @@ function asNewest(old,cur,t){
 }
 async function restoreFrom(sha){
   const st=hist.st, c=hist.list.find(x=>x.sha===sha);
+  if(coreMode){
+    if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+    if(!navigator.onLine) throw new SyncError('Herstellen uit de geschiedenis vereist internet.');
+    const id=st==='samen'?'shared':`personal-${cfg.me}`;
+    const {env}=await readCoreRemote(cfg,corePathFor(st),sha);
+    if(!env) throw new SyncError('Deze Core-versie bestaat niet meer in GitHub.');
+    await coreRuntime.restoreDomain(id,env,(old,cur,t)=>asNewest(old,cur,t));
+    state=coreRuntime.getState(); hist={...hist,open:false,armed:null}; render(); renderSyncPanel();
+    toast('Core-kluis teruggezet naar '+histDate(c.date));
+    return;
+  }
   const {env}=await readRemote(cfg,fileOf(st),sha);
   if(!env) throw new SyncError('Deze versie bestaat niet meer in GitHub.');
   /* een versie van vóór een wachtwoordwijziging: gebruik de oude sleutel als dit apparaat die nog heeft (2.24.0) */
