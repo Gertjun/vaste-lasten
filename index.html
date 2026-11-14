@@ -2390,22 +2390,28 @@ async function migrateToCore(){
   toast('PWA-Core is actief. Beide kluizen zijn gemigreerd.');
 }
 async function unlockCore(){
-  await ensureCoreRuntime();
+  if(!coreRuntime) await ensureCoreRuntime();
   const sharedPassword=$('core-u-s')?.value||'';
   const personalPassword=$('core-u-e')?.value||'';
   const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
   syncError='';
-  let next;
-  if(navigator.onLine){
-    next=await coreRuntime.unlock({me:cfg.me,passwords,settings:await coreSettings()});
-  }else{
-    next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+  try{
+    let next;
+    if(navigator.onLine){
+      next=await coreRuntime.unlock({me:cfg.me,passwords,settings:await coreSettings()});
+    }else{
+      next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+    }
+    next=await mergeStagedLegacyState(next);
+    state=next; coreReady=true; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Ontgrendelen is mislukt.';
+    throw error;
   }
-  next=await mergeStagedLegacyState(next);
-  state=next; coreReady=true; corePersistError='';
-  if(shareMyIncome()) saveLocal();
-  render(); renderSyncPanel(); pillIdle();
 }
 async function prepareCoreBiometric(id){
   if(!coreRuntime) await ensureCoreRuntime();
@@ -2414,12 +2420,18 @@ async function prepareCoreBiometric(id){
 }
 async function unlockCoreBiometric(){
   if(!coreRuntime) await ensureCoreRuntime();
-  const settings=navigator.onLine?await coreSettings():undefined;
-  let next=await coreRuntime.finishBiometricUnlock({me:cfg.me,settings});
-  next=await mergeStagedLegacyState(next);
-  state=next; coreReady=true; corePersistError='';
-  if(shareMyIncome()) saveLocal();
-  render(); renderSyncPanel(); pillIdle();
+  try{
+    const settings=navigator.onLine?await coreSettings():undefined;
+    let next=await coreRuntime.finishBiometricUnlock({me:cfg.me,settings});
+    next=await mergeStagedLegacyState(next);
+    state=next; coreReady=true; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Biometrisch ontgrendelen is mislukt.';
+    throw error;
+  }
 }
 async function clearCoreStagingAfterSync(){
   if(!coreStagingMerged) return;
