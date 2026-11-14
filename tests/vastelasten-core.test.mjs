@@ -216,6 +216,21 @@ test('persistState writes the current shared and active personal snapshots only'
   await core.lock();
 });
 
+test('history restore rejects a payload from another vault domain', async () => {
+  const { core } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  await core.connect(connection);
+  await assert.rejects(core.restoreDomain(
+    'shared',
+    { payload: { items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1' } },
+    (old) => old,
+  ), /buiten het toegestane gegevensdomein/);
+  await core.lock();
+});
+
 test('Core password changes update only the selected active vault and sync it', async () => {
   const { core, events, syncCalls } = setup();
   await core.unlockLocal({
