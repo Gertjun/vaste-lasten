@@ -261,7 +261,7 @@ test('remote password change with a different DEK restores the original local en
     settings: {},
     createClient: () => ({ getFile: async () => ({ sha: 'new-sha', envelope: remoteEnvelope }) }),
     mergeStore,
-  }), /Onjuist wachtwoord/);
+  }), /oorspronkelijke lokale kluis is hersteld/);
   assert.equal(values.get('shared:vault'), raw);
 });
 
