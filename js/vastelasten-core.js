@@ -117,7 +117,10 @@ export function createVasteLastenCore({
 
   async function syncDomain(id) {
     requireActiveVault(id);
-    return registry[id].sync.syncNow(syncOptions(id));
+    const options = syncOptions(id);
+    const remote = await clientFactory(options.settings).getFile();
+    if (!remote) throw new Error(`Het remote Core-bestand voor ${id} ontbreekt. De bestaande lokale kluis wordt niet automatisch opnieuw gepubliceerd.`);
+    return registry[id].sync.syncNow(options);
   }
 
   async function connect(inputSettings) {
