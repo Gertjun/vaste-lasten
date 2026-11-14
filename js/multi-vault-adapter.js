@@ -83,7 +83,7 @@ export function createVaultRegistry({
   try {
     for (const [id, spec] of Object.entries(VAULT_DOMAINS)) {
       const vault = createVault({ storagePrefix: spec.storagePrefix, kdfIterations, storage });
-      registry[id] = { vault, path: spec.path };
+      registry[id] = { vault, path: spec.path, storage };
       registry[id].sync = createSync({ vault, appName });
       registry[id].lock = createSessionLock({ storagePrefix: spec.storagePrefix });
       registry[id].biometric = createBiometric({ storagePrefix: spec.storagePrefix, appName, storage });
@@ -148,7 +148,32 @@ export async function openAndSyncDomain({
   const remote = await client.getFile();
 
   if (entry.vault.hasVault()) {
-    await entry.vault.unlockWithPassword(password);
+    try {
+      await entry.vault.unlockWithPassword(password);
+    } catch (unlockError) {
+      // Een ander apparaat kan het wachtwoord hebben gewijzigd terwijl de DEK
+      // gelijk bleef. Open dan de remote envelope met het nieuwe wachtwoord,
+      // ontsleutel de oude lokale payload met diezelfde DEK en merge vóór sync.
+      const vaultKey = entry.vault.KEYS?.vault;
+      const storage = entry.storage || globalThis.localStorage;
+      const localRaw = vaultKey && storage?.getItem?.(vaultKey);
+      let localEnvelope = null;
+      try { localEnvelope = localRaw ? JSON.parse(localRaw) : null; } catch { /* behoud unlockError */ }
+      if (!remote || !localEnvelope) throw unlockError;
+      await entry.vault.importEnvelope(remote.envelope, password);
+      let localData;
+      try {
+        localData = await entry.vault.decryptRemote(localEnvelope);
+      } catch {
+        try { storage.setItem(vaultKey, localRaw); } finally { entry.vault.lock(); }
+        throw unlockError;
+      }
+      entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
+      const remoteData = entry.vault.getData();
+      const preserved = mergeDomainPayload(remoteData, localData, id, mergeStore);
+      if (canonicalize(preserved) !== canonicalize(remoteData)) await entry.vault.setData(preserved);
+      await entry.vault.flush();
+    }
   } else if (remote) {
     await entry.vault.importEnvelope(remote.envelope, password);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
