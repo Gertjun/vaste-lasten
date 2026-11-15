@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { webcrypto } from 'node:crypto';
 import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
-import { generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey } from '../js/bundle-biometric.js';
+import { createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey } from '../js/bundle-biometric.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
@@ -28,6 +28,56 @@ test('real Web Crypto passkey bundle wraps and restores both independent vault k
   const personalBox = await encryptJSON({ domain: 'personal-p1' }, restoredPersonal);
   assert.deepEqual(await decryptJSON(sharedBox, restoredShared), { domain: 'shared' });
   assert.deepEqual(await decryptJSON(personalBox, restoredPersonal), { domain: 'personal-p1' });
+});
+
+
+test('app passkey adapter stores and restores a wrapping-capable bundle key with WebAuthn PRF', async () => {
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const secret = new Uint8Array(32).fill(23);
+  const credentialId = new Uint8Array([1, 2, 3, 4]).buffer;
+  let createOptions = null;
+  let getOptions = null;
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { credentials: {
+      async create(options) {
+        createOptions = options;
+        return {
+          rawId: credentialId,
+          getClientExtensionResults: () => ({ prf: { enabled: true, results: { first: secret.buffer } } }),
+        };
+      },
+      async get(options) {
+        getOptions = options;
+        return { getClientExtensionResults: () => ({ prf: { results: { first: secret.buffer } } }) };
+      },
+    } },
+  });
+  try {
+    const values = new Map();
+    const storage = {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, String(value)),
+      removeItem: (key) => values.delete(key),
+    };
+    const biometric = createBundleBiometric({ storagePrefix: 'vaste-lasten-device-p1', storage });
+    const bundleKey = await generateBundleKey();
+    await biometric.enroll(bundleKey);
+    assert.equal(biometric.isEnrolled(), true);
+    assert.equal(createOptions.publicKey.extensions.prf.eval.first instanceof Uint8Array, true);
+    const unlocked = await biometric.unlock();
+    assert.deepEqual([...unlocked.usages].sort(), ['unwrapKey', 'wrapKey']);
+    assert.equal(getOptions.publicKey.userVerification, 'required');
+
+    const vaultKey = await generateDataKey();
+    const wrapped = await wrapVaultKey(vaultKey, unlocked);
+    const restored = await unwrapVaultKey(wrapped, unlocked);
+    const box = await encryptJSON({ restored: true }, restored);
+    assert.deepEqual(await decryptJSON(box, restored), { restored: true });
+  } finally {
+    if (previousNavigator) Object.defineProperty(globalThis, 'navigator', previousNavigator);
+    else delete globalThis.navigator;
+  }
 });
 
 const clone = (value) => structuredClone(value);
