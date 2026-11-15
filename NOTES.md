@@ -30,13 +30,13 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde code-/test-head `68fe44f17b6da48d1092b8861bfba044033bffca`: CI **#282 en #283**, 45 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De passkey-herkoppeling accepteert nu de eigen gedeelde en persoonlijke Core-passkeys en weigert de persoonlijke passkey van de andere gebruiker. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
+Laatste geverifieerde code-/test-head `5bce760708acbe46d0ffd4960178ecbd9b919dd7`: CI **#290 en #291**, 46 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De passkey-herkoppeling accepteert nu de eigen gedeelde en persoonlijke Core-passkeys en weigert de persoonlijke passkey van de andere gebruiker. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
 
 ## 3. Open punten
 
 1. Browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime, waaronder één biometrische actie voor twee actieve kluizen, wachtwoordmigratie, herstel en twee apparaten.
 2. B07 fysieke acceptatietests op iPhone/iPad, samen met de andere apps.
-3. Laatste diffreview en documentatiecontrole, plus browser-/apparaatacceptatie van de echte WebAuthn PRF-integratie.
+3. Fysieke browser-/apparaatacceptatie van de echte WebAuthn PRF-integratie; de statische diff-/beveiligingsreview is uitgevoerd en een race bij vergrendelen is opgelost.
 4. Daarna pas versie 3.0.0 gereedmaken voor merge/deploy; daarvoor is apart akkoord nodig.
 
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
@@ -57,3 +57,6 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
   - CI #263 op PR-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: 43/43 tests geslaagd; release-pin en precache groen.
   - Beveiligingsreview vond dat de nieuwe device-bundel bestaande passkeys uit de Core-domeinen ten onrechte als andere app afwees. De toegestane userHandle-prefixen zijn beperkt uitgebreid tot gedeeld + de actieve persoonlijke kluis; een andere persoonlijke kluis blijft geweigerd.
   - CI #282/#283 op PR-head `68fe44f17b6da48d1092b8861bfba044033bffca`: 45/45 tests geslaagd, inclusief directe WebAuthn-herkoppelingstest; Core-pin en precache opnieuw groen.
+
+- Extra reviewronde: handmatig vergrendelen wacht nu op alle reeds gestarte `persistState`-bewerkingen voordat de vaults worden geflusht en vergrendeld. Regressietest toegevoegd; CI #290/#291: 46/46 geslaagd.
+- Handmatige acceptatiechecklist toegevoegd aan `docs/PWA-CORE-MIGRATION.md`; deze is nadrukkelijk nog niet uitgevoerd omdat de branch niet is gedeployed.
