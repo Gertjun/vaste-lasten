@@ -190,10 +190,9 @@ test('cancelling the single biometric prompt does not leave session locks held',
 
 test('the device passkey bundle contains exactly the shared and active personal key', async () => {
   const { core, storage, events } = setup();
-  await core.unlock({
+  await core.unlockLocal({
     me: 'p1',
     passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
-    settings: connection,
   });
   await core.enrollBiometric();
   const record = JSON.parse(storage.getItem('vaste-lasten:biometric-bundle:p1:v1'));
