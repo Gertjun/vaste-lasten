@@ -2431,6 +2431,7 @@ async function unlockCore(){
 }
 async function unlockCoreBiometric(){
   if(!coreRuntime) await ensureCoreRuntime();
+  syncError='';
   try{
     let next=await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
     next=await mergeStagedLegacyState(next,{connectIfOnline:false});
