@@ -93,6 +93,7 @@ export function createVasteLastenCore({
   let session = null;
   const deviceBiometrics = new Map();
   let persistQueue = Promise.resolve();
+  let persistFailure = null;
 
   const activeIds = () => {
     if (!me) throw new Error('Kies eerst wie dit apparaat gebruikt.');
@@ -139,6 +140,7 @@ export function createVasteLastenCore({
     // Wacht eerst alle al gestarte app-saves af; pas daarna flushen en vergrendelen.
     // Zo kan een persistState-bewerking niet na de lock nog data proberen te schrijven.
     await persistQueue;
+    if (persistFailure) throw persistFailure;
     // acquireActiveLocks flushes, locks and then releases both Web Locks.
     await session.release();
     session = null;
@@ -183,6 +185,7 @@ export function createVasteLastenCore({
   async function flushLocal() {
     requireSession();
     await persistQueue;
+    if (persistFailure) throw persistFailure;
     for (const id of activeIds()) await registry[id].vault.flush();
   }
 
@@ -213,9 +216,13 @@ export function createVasteLastenCore({
       }
     };
     const run = persistQueue.then(work);
-    // Een volgende volledige snapshot mag een eerdere mislukte write inhalen;
-    // de aanroeper van deze specifieke write krijgt de fout wel terug.
-    persistQueue = run.catch(() => {});
+    // Een volgende volledige snapshot mag een eerdere mislukte write inhalen.
+    // Bewaar de fout totdat zo'n latere volledige opslag daadwerkelijk slaagt,
+    // zodat flush/lock geen onbewaarde wijziging stilzwijgend kan afsluiten.
+    persistQueue = run.then(
+      () => { persistFailure = null; },
+      (error) => { persistFailure = error; },
+    );
     return run;
   }
 
