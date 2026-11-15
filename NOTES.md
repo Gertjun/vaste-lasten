@@ -30,11 +30,11 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde CI-run op de actuele PR-head `d307d9aaeb846add3864676b03762e7e5b42e7f8`: **#244**, 41 tests geslaagd, 0 mislukt, 0 overgeslagen. Ook Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn geslaagd. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
+Laatste geverifieerde code-/test-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: CI **#263**, 43 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De huidige PR-head `7f516dcab57062e0960007b1ebff5162591bf242` bevat daarna alleen documentatie-updates. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
 
 ## 3. Open punten
 
-1. Browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime, waaronder twee afzonderlijke passkeyprompts, wachtwoordmigratie, herstel en twee apparaten.
+1. Browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime, waaronder één biometrische actie voor twee actieve kluizen, wachtwoordmigratie, herstel en twee apparaten.
 2. B07 fysieke acceptatietests op iPhone/iPad, samen met de andere apps.
 3. Laatste diffreview en documentatiecontrole, plus browser-/apparaatacceptatie van de echte WebAuthn PRF-integratie.
 4. Daarna pas versie 3.0.0 gereedmaken voor merge/deploy; daarvoor is apart akkoord nodig.
