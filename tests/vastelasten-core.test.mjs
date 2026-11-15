@@ -3,9 +3,29 @@ import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { webcrypto } from 'node:crypto';
 import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
-import { createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey } from '../js/bundle-biometric.js';
+import {
+  createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey,
+  isForeignUserHandle,
+} from '../js/bundle-biometric.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
+
+test('existing passkey relinking accepts only the shared and matching personal vault userHandles', () => {
+  const encode = (value) => new TextEncoder().encode(value).buffer;
+  const allowed = [
+    'vaste-lasten-device-p1',
+    'vaste-lasten-shared',
+    'vaste-lasten-personal-p1',
+  ];
+  assert.equal(isForeignUserHandle(encode('vaste-lasten-shared:credential'), allowed), false);
+  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), allowed), false);
+  assert.equal(isForeignUserHandle(encode('vaste-lasten-device-p1:credential'), allowed), false);
+  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p2:credential'), allowed), true);
+  assert.equal(isForeignUserHandle(encode('cryptotracker:credential'), allowed), true);
+  // Legacy passkeys used random user handles without an app prefix.
+  assert.equal(isForeignUserHandle(encode('legacy-random-user-handle'), allowed), false);
+});
+
 
 test('real Web Crypto passkey bundle wraps and restores both independent vault keys', async () => {
   const bundleKey = await generateBundleKey();
