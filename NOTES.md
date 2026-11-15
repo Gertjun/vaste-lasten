@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 14 november 2026 · versie **3.0.0 in voorbereiding** (draft PR #5; nog niet gemerged of gedeployed).
+Laatst bijgewerkt: 15 november 2026 · versie **3.0.0 in voorbereiding** (draft PR #5; nog niet gemerged of gedeployed).
 
 ---
 
@@ -24,7 +24,7 @@ Elk apparaat opent alleen de gedeelde kluis en de persoonlijke kluis van de gebr
 De branch bevat:
 - multi-vault-adapter en migratiecoördinator;
 - runtime bridge voor online/offline ontgrendelen, opslaan, synchroniseren, wachtwoordbeheer, herstel en passkeybeheer;
-- passkey opnieuw koppelen na herinstallatie, per kluis;
+- één apparaatgebonden passkeybundel voor gedeeld + de actieve persoonlijke kluis, met afzonderlijke DEK-wrappers en een app-eigen WebAuthn PRF-module;
 - behoud van Core-deletion/device metadata tijdens app-saves;
 - bescherming tegen het opnieuw publiceren van ontbrekende remote kluizen;
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
@@ -36,7 +36,7 @@ Laatste geverifieerde CI-run op de actuele PR-head `d307d9aaeb846add3864676b0376
 
 1. Browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime, waaronder twee afzonderlijke passkeyprompts, wachtwoordmigratie, herstel en twee apparaten.
 2. B07 fysieke acceptatietests op iPhone/iPad, samen met de andere apps.
-3. Laatste diffreview en documentatiecontrole.
+3. Laatste diffreview en documentatiecontrole, plus browser-/apparaatacceptatie van de echte WebAuthn PRF-integratie.
 4. Daarna pas versie 3.0.0 gereedmaken voor merge/deploy; daarvoor is apart akkoord nodig.
 
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
@@ -50,3 +50,8 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
   - Migratie zet de legacy-updatebarrière pas na succesvolle legacy-sync en verwijdert lokale plaintext pas na bevestiging van beide Core-kluizen.
   - CI #244 op PR-head `d307d9aa`: 41/41 tests geslaagd, 0 overgeslagen; Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache groen. Expliciete lokale ontgrendeling is toegevoegd.
   - PR #5 blijft draft; geen merge of deploy uitgevoerd.
+- **15 nov 2026:**
+  - Biometrische bundelcryptografie verplaatst naar app-eigen module; Core v1.1.0-bestanden zijn ongewijzigd en pinvalidatie slaagt.
+  - Echte Web Crypto-wrap/unwrap en gesimuleerde WebAuthn PRF-enrollment/ontgrendeling toegevoegd als regressietests.
+  - `backup/` uitgesloten van Pages en app-bundelmodule toegevoegd aan service-worker-precache.
+  - CI #263 op PR-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: 43/43 tests geslaagd; release-pin en precache groen.
