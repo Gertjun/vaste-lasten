@@ -41,7 +41,26 @@ export function unwrapBundleKey(wrapped, passkeyKek) {
   );
 }
 
-export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten', storage = globalThis.localStorage } = {}) {
+/** Herkent app-eigen, gestructureerde WebAuthn userHandles bij opnieuw koppelen. */
+export function isForeignUserHandle(userHandle, allowedPrefixes = []) {
+  if (!userHandle || userHandle.byteLength === 0) return false;
+  const id = new Uint8Array(userHandle);
+  const colon = id.indexOf(0x3a);
+  // Oude credentials gebruikten een willekeurige userHandle; die blijven koppelbaar.
+  if (colon < 1 || colon > 40) return false;
+  return !allowedPrefixes.some((prefix) => {
+    if (typeof prefix !== 'string' || !prefix) return false;
+    const tag = encoder.encode(`${prefix}:`);
+    return id.length >= tag.length && tag.every((byte, index) => id[index] === byte);
+  });
+}
+
+export function createBundleBiometric({
+  storagePrefix,
+  appName = 'Vaste Lasten',
+  storage = globalThis.localStorage,
+  allowedUserHandlePrefixes = [storagePrefix],
+} = {}) {
   if (typeof storagePrefix !== 'string' || !/^[a-z0-9][a-z0-9._-]*$/i.test(storagePrefix)) {
     throw new TypeError('storagePrefix is ongeldig.');
   }
@@ -53,15 +72,8 @@ export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten',
   const prfLabel = `${storagePrefix}:biometric-bundle-prf:v1`;
   const hkdfInfo = `${storagePrefix}:biometric-bundle-kek:v1`;
   const userTag = encoder.encode(`${storagePrefix}:`);
+  const acceptedUserHandlePrefixes = [...new Set([storagePrefix, ...allowedUserHandlePrefixes])];
 
-  function belongsToOtherApp(userHandle) {
-    if (!userHandle || userHandle.byteLength === 0) return false;
-    const id = new Uint8Array(userHandle);
-    const colon = id.indexOf(0x3a);
-    if (colon < 1 || colon > 40) return false;
-    if (id.length < userTag.length) return true;
-    return !userTag.every((byte, index) => id[index] === byte);
-  }
 
   async function prfSalt() {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(prfLabel)));
@@ -141,7 +153,7 @@ export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten',
         extensions: { prf: { eval: { first: salt } } },
       },
     });
-    if (belongsToOtherApp(assertion.response?.userHandle)) {
+    if (isForeignUserHandle(assertion.response?.userHandle, acceptedUserHandlePrefixes)) {
       throw new Error(`Deze passkey hoort bij een andere app. Kies een passkey voor ${appName}.`);
     }
     const secret = readSecret(assertion.getClientExtensionResults().prf?.results?.first);
