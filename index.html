@@ -2315,19 +2315,20 @@ async function replaceCoreToken(){
 }
 async function ensureLegacyKeysForMigration(passwords){
   if(!cfg) throw new SyncError('Er is geen bestaande GitHub-koppeling.');
+  const {requireLegacyEnvelope}=await import('./js/multi-vault-adapter.js');
   const next={...keys}, salt={...(cfg.salt||{})}, iter={samen:cfgIter(cfg,'samen'),eigen:cfgIter(cfg,'eigen')};
   for(const st of STORES){
     const password=passwords[st];
     if(!password) throw new SyncError(st==='samen'?'Vul het gezamenlijke wachtwoord in.':'Vul je eigen wachtwoord in.');
-    const {env}=await readRemote(cfg,fileOf(st));
-    const useSalt=env&&env.kdf&&env.kdf.salt||salt[st];
+    const file=fileOf(st);
+    const {env}=await readRemote(cfg,file);
+    requireLegacyEnvelope({env,file,owner:cfg.owner,repo:cfg.repo});
+    const useSalt=env.kdf.salt||salt[st];
     if(!useSalt) throw new SyncError('De bestaande sleutelgegevens ontbreken voor '+(st==='samen'?'het gezamenlijke bestand.':'je eigen bestand.'));
-    const useIter=env?iterOf(env):iter[st];
+    const useIter=iterOf(env);
     const key=await deriveKey(password,useSalt,useIter);
-    if(env){
-      try{await openEnv(env,key);}
-      catch(e){throw new SyncError(st==='samen'?'Het gezamenlijke wachtwoord klopt niet.':'Je eigen wachtwoord klopt niet.');}
-    }
+    try{await openEnv(env,key);}
+    catch(e){throw new SyncError(st==='samen'?'Het gezamenlijke wachtwoord klopt niet.':'Je eigen wachtwoord klopt niet.');}
     next[st]=key; salt[st]=useSalt; iter[st]=useIter;
   }
   keys=next; cfg.salt=salt; cfg.iter=iter; delete cfg.pwNew; saveCfg();
