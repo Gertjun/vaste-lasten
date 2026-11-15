@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde code-/test-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: CI **#263**, 43 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. Daarna zijn alleen documentatie-updates toegevoegd; de geteste applicatiecode is ongewijzigd gebleven. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
+Laatste geverifieerde code-/test-head `68fe44f17b6da48d1092b8861bfba044033bffca`: CI **#282 en #283**, 45 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De passkey-herkoppeling accepteert nu de eigen gedeelde en persoonlijke Core-passkeys en weigert de persoonlijke passkey van de andere gebruiker. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
 
 ## 3. Open punten
 
@@ -55,3 +55,5 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
   - Echte Web Crypto-wrap/unwrap en gesimuleerde WebAuthn PRF-enrollment/ontgrendeling toegevoegd als regressietests.
   - `backup/` uitgesloten van Pages en app-bundelmodule toegevoegd aan service-worker-precache.
   - CI #263 op PR-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: 43/43 tests geslaagd; release-pin en precache groen.
+  - Beveiligingsreview vond dat de nieuwe device-bundel bestaande passkeys uit de Core-domeinen ten onrechte als andere app afwees. De toegestane userHandle-prefixen zijn beperkt uitgebreid tot gedeeld + de actieve persoonlijke kluis; een andere persoonlijke kluis blijft geweigerd.
+  - CI #282/#283 op PR-head `68fe44f17b6da48d1092b8861bfba044033bffca`: 45/45 tests geslaagd, inclusief directe WebAuthn-herkoppelingstest; Core-pin en precache opnieuw groen.
