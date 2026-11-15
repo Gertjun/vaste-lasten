@@ -3,7 +3,7 @@
 ## 3.0.0 — 14 november 2026
 - Nieuw: Vaste Lasten gebruikt PWA-Core v1.1.0 met drie onafhankelijke, versleutelde kluizen: gezamenlijk, persoonlijk voor persoon 1 en persoonlijk voor persoon 2.
 - Nieuw: gegevens worden op het apparaat versleuteld opgeslagen en per actieve kluis gesynchroniseerd. Offline ontgrendelen en werken blijft mogelijk.
-- Nieuw: ontgrendelen met een passkey/biometrie per kluis, inclusief het opnieuw koppelen van een bestaande passkey na herinstallatie.
+- Nieuw: één biometrische actie met een apparaatgebonden passkeybundel ontgrendelt de twee actieve kluizen (gedeeld en persoonlijk). De kluizen behouden elk hun eigen datasleutel; de persoonlijke kluis van de andere gebruiker wordt niet geopend. Na herinstallatie kan de bestaande passkey opnieuw worden gekoppeld.
 - Verbeterd: de migratie synchroniseert eerst de bestaande gegevens, plaatst daarna een updatebarrière voor oudere appversies en behoudt de legacybestanden als terugvaloptie.
 - Let op: migreer ieder apparaat afzonderlijk met de bestaande gezamenlijke en eigen wachtwoorden. Gebruik op alle apparaten dezelfde Core-wachtwoorden. Oudere appversies worden na de eerste migratie geblokkeerd totdat ze zijn bijgewerkt.
 
