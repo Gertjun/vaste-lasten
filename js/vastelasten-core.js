@@ -3,6 +3,7 @@ import { createVault } from './core/vault-factory.js';
 import { createSync } from './core/sync-factory.js';
 import { createSessionLock } from './core/session-lock-factory.js';
 import { createBiometric } from './core/biometric-factory.js';
+import { generateDataKey, wrapDataKey, unwrapDataKey } from './core/crypto.js';
 import { createClient } from './core/github.js';
 import {
   VAULT_DOMAINS,
@@ -41,10 +42,48 @@ export function createVasteLastenCore({
     appName,
   });
 
+  const makeBundleKey = factories.generateDataKey || generateDataKey;
+  const wrapBundleKey = factories.wrapDataKey || wrapDataKey;
+  const unwrapBundleKey = factories.unwrapDataKey || unwrapDataKey;
+  const bundleStorageKey = (person) => `vaste-lasten:biometric-bundle:${person}:v1`;
+  const deviceBiometricFor = (person) => {
+    if (!['p1', 'p2'].includes(person)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+    if (!deviceBiometrics.has(person)) {
+      const factory = factories.createDeviceBiometric || factories.createBiometric || createBiometric;
+      deviceBiometrics.set(person, factory({
+        storagePrefix: `vaste-lasten-device-${person}`, appName, storage,
+      }));
+    }
+    return deviceBiometrics.get(person);
+  };
+  const activeIdsFor = (person) => ['shared', `personal-${person}`];
+  async function createBiometricBundle(person, bundleKey) {
+    const keys = {};
+    for (const id of activeIdsFor(person)) {
+      keys[id] = await wrapBundleKey(registry[id].vault.getDataKey(), bundleKey);
+    }
+    return { schema: 1, me: person, keys, createdAt: Date.now() };
+  }
+  function readBiometricBundle(person) {
+    const raw = storage.getItem(bundleStorageKey(person));
+    if (!raw) throw new Error('De lokale sleutelbundel ontbreekt. Ontgrendel beide kluizen met hun wachtwoorden en koppel daarna je bestaande passkey opnieuw.');
+    let record;
+    try { record = JSON.parse(raw); } catch {
+      throw new Error('De lokale passkey-sleutelbundel is beschadigd. Ontgrendel met je wachtwoorden en koppel de passkey opnieuw.');
+    }
+    const ids = activeIdsFor(person);
+    if (!record || record.schema !== 1 || record.me !== person || !record.keys
+      || ids.some((id) => !record.keys[id])
+      || Object.keys(record.keys).some((id) => !ids.includes(id))) {
+      throw new Error('De lokale passkey-sleutelbundel hoort niet bij deze gebruiker of mist een actieve kluis. Koppel de passkey opnieuw.');
+    }
+    return record;
+  }
+
   let me = null;
   let settings = null;
   let session = null;
-  let pendingBiometricKeys = {};
+  const deviceBiometrics = new Map();
   let persistQueue = Promise.resolve();
 
   const activeIds = () => {
@@ -88,7 +127,7 @@ export function createVasteLastenCore({
   }
 
   async function release() {
-    clearBiometricPending();
+
     if (!session) return;
     // acquireActiveLocks flushes, locks and then releases both Web Locks.
     await session.release();
@@ -171,7 +210,7 @@ export function createVasteLastenCore({
   }
 
   async function unlock({ me: meValue, passwords, settings: inputSettings } = {}) {
-    clearBiometricPending();
+
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
     settings = resolved;
@@ -198,7 +237,7 @@ export function createVasteLastenCore({
   }
 
   async function unlockLocal({ me: meValue, passwords } = {}) {
-    clearBiometricPending();
+
     await acquire(meValue);
     settings = null;
     try {
@@ -217,37 +256,30 @@ export function createVasteLastenCore({
     }
   }
 
-  async function prepareBiometricUnlock(id, meValue) {
+  async function unlockWithBiometric({ me: meValue, settings: inputSettings } = {}) {
     if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
-    if (!['shared', `personal-${meValue}`].includes(id)) throw new Error('Deze kluis is niet actief op dit apparaat.');
-    if (!registry[id].biometric.isEnrolled()) throw new Error(`Voor de kluis ${id} is nog geen passkey ingesteld.`);
-    pendingBiometricKeys[id] = await registry[id].biometric.unlock();
-    return true;
-  }
-
-  function isBiometricPending(id) {
-    return Object.hasOwn(pendingBiometricKeys, id);
-  }
-
-  function clearBiometricPending() {
-    pendingBiometricKeys = {};
-  }
-
-  async function finishBiometricUnlock({ me: meValue, settings: inputSettings } = {}) {
-    if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
-    const ids = ['shared', `personal-${meValue}`];
-    if (ids.some((id) => !Object.hasOwn(pendingBiometricKeys, id))) {
-      throw new Error('Ontgrendel eerst beide kluizen afzonderlijk met hun passkey.');
+    const ids = activeIdsFor(meValue);
+    for (const id of ids) {
+      if (!registry[id].vault.hasVault()) {
+        throw new Error(`De lokale kluis ${id} ontbreekt. Ontgrendel eerst online met beide wachtwoorden en koppel daarna je bestaande passkey opnieuw.`);
+      }
     }
+    await acquire(meValue);
     try {
-      await acquire(meValue);
-      for (const id of ids) await registry[id].vault.unlockWithKey(pendingBiometricKeys[id]);
-      clearBiometricPending();
+      const biometric = deviceBiometricFor(meValue);
+      if (!isBiometricEnrolled(meValue)) {
+        throw new Error('Voor beide actieve kluizen is nog geen gezamenlijke passkey ingesteld.');
+      }
+      const bundle = readBiometricBundle(meValue);
+      const bundleKey = await biometric.unlock();
+      for (const id of ids) {
+        const dataKey = await unwrapBundleKey(bundle.keys[id], bundleKey);
+        await registry[id].vault.unlockWithKey(dataKey);
+      }
       settings = inputSettings ? await resolveSettings(inputSettings) : null;
       if (settings) for (const id of ids) await syncDomain(id);
       return getState();
     } catch (error) {
-      clearBiometricPending();
       if (session) {
         try { await release(); } catch (releaseError) {
           throw new AggregateError([error, releaseError], 'Biometrisch ontgrendelen mislukte en de sessie kon niet veilig worden vrijgegeven.');
@@ -257,21 +289,8 @@ export function createVasteLastenCore({
     }
   }
 
-  async function unlockWithBiometric({ me: meValue, settings: inputSettings } = {}) {
-    const ids = ['shared', `personal-${meValue}`];
-    for (const id of ids) await prepareBiometricUnlock(id, meValue);
-    return finishBiometricUnlock({ me: meValue, settings: inputSettings });
-  }
-
   async function unlockWithBiometricLocal({ me: meValue } = {}) {
-    const ids = ['shared', `personal-${meValue}`];
-    for (const id of ids) {
-      if (!registry[id].vault.hasVault()) {
-        throw new Error(`De lokale kluis ${id} ontbreekt. Gebruik online ontgrendelen om de remote kluis te importeren.`);
-      }
-      await prepareBiometricUnlock(id, meValue);
-    }
-    return finishBiometricUnlock({ me: meValue });
+    return unlockWithBiometric({ me: meValue });
   }
 
   async function migrate({
@@ -321,21 +340,45 @@ export function createVasteLastenCore({
     return syncDomain(id);
   }
 
-  async function enrollBiometric(id) {
+  async function enrollBiometric() {
     requireSession();
-    if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
-    await registry[id].biometric.enroll(registry[id].vault.getDataKey());
-    return registry[id].biometric.isEnrolled();
+    if (!settings) throw new Error('Passkey instellen vereist een actieve GitHub-verbinding.');
+    const person = me;
+    const biometric = deviceBiometricFor(person);
+    if (biometric.isEnrolled()) throw new Error('Er is al een passkey voor beide actieve kluizen ingesteld. Kies Bestaande passkey koppelen als je deze opnieuw wilt verbinden.');
+    const bundleKey = await makeBundleKey();
+    const record = await createBiometricBundle(person, bundleKey);
+    const key = bundleStorageKey(person);
+    storage.setItem(key, JSON.stringify(record));
+    try {
+      await biometric.enroll(bundleKey);
+    } catch (error) {
+      storage.removeItem(key);
+      throw error;
+    }
+    return isBiometricEnrolled(person);
   }
 
-  async function enrollExistingBiometric(id) {
+  async function enrollExistingBiometric() {
     requireSession();
-    if (!activeIds().includes(id)) throw new Error('Deze persoonlijke kluis is niet actief op dit apparaat.');
-    if (typeof registry[id].biometric.enrollExisting !== 'function') {
+    const person = me;
+    const biometric = deviceBiometricFor(person);
+    if (typeof biometric.enrollExisting !== 'function') {
       throw new Error('Deze Core-release ondersteunt het opnieuw koppelen van een bestaande passkey niet.');
     }
-    await registry[id].biometric.enrollExisting(registry[id].vault.getDataKey());
-    return registry[id].biometric.isEnrolled();
+    const bundleKey = await makeBundleKey();
+    const record = await createBiometricBundle(person, bundleKey);
+    const key = bundleStorageKey(person);
+    const previous = storage.getItem(key);
+    storage.setItem(key, JSON.stringify(record));
+    try {
+      await biometric.enrollExisting(bundleKey);
+    } catch (error) {
+      if (previous === null) storage.removeItem(key);
+      else storage.setItem(key, previous);
+      throw error;
+    }
+    return isBiometricEnrolled(person);
   }
 
   async function restoreDomain(id, envelope, asNewest) {
@@ -358,9 +401,9 @@ export function createVasteLastenCore({
     return registry[id].vault.hasVault();
   }
 
-  function isBiometricEnrolled(id) {
-    if (!Object.hasOwn(VAULT_DOMAINS, id)) throw new TypeError('Onbekend gegevensdomein.');
-    return registry[id].biometric.isEnrolled();
+  function isBiometricEnrolled(person = me) {
+    if (!['p1', 'p2'].includes(person)) return false;
+    return deviceBiometricFor(person).isEnrolled() && !!storage.getItem(bundleStorageKey(person));
   }
 
   function getSyncDevices(id) {
@@ -381,10 +424,10 @@ export function createVasteLastenCore({
     unlockLocal,
     unlockWithBiometric,
     unlockWithBiometricLocal,
-    prepareBiometricUnlock,
-    isBiometricPending,
-    clearBiometricPending,
-    finishBiometricUnlock,
+
+
+
+
     connect,
     migrate,
     getState,
@@ -400,7 +443,7 @@ export function createVasteLastenCore({
     isBiometricEnrolled,
     getSyncDevices,
     deactivateSyncDevice,
-    lock: async () => { clearBiometricPending(); return release(); },
+    lock: async () => release(),
     getRegistry: () => registry,
   };
 }
