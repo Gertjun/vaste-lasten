@@ -31,6 +31,11 @@ export function generateDataKey() {
   return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
 }
 
+/** Een tijdelijke sleutel die uitsluitend andere sleutels mag in- en uitpakken. */
+export function generateWrappingKey() {
+  return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['wrapKey', 'unwrapKey']);
+}
+
 /** Sleutel-inpaksleutel afgeleid van een wachtwoord. */
 export async function passwordKey(password, salt, iterations) {
   const base = await crypto.subtle.importKey(
@@ -73,6 +78,19 @@ export function unwrapDataKey(wrapped, wrappingKey) {
     { name: 'AES-GCM', length: 256 },
     true, // exporteerbaar: nodig om opnieuw in te pakken (wachtwoord/passkey wijzigen)
     ['encrypt', 'decrypt'],
+  );
+}
+
+/** Ontpakt een sleutel die zelf als wrapping key wordt gebruikt (zoals de passkeybundel). */
+export function unwrapWrappingKey(wrapped, wrappingKey) {
+  return crypto.subtle.unwrapKey(
+    'raw',
+    b64ToBytes(wrapped.data),
+    wrappingKey,
+    { name: 'AES-GCM', iv: b64ToBytes(wrapped.iv) },
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['wrapKey', 'unwrapKey'],
   );
 }
 
