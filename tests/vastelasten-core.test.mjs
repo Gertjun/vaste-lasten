@@ -14,11 +14,21 @@ const mergeStore = (a, b) => {
   return out;
 };
 
-function setup({ biometricKey = 'synthetic-key' } = {}) {
+function setup() {
   const events = [];
   const vaults = {};
   const syncCalls = [];
   const settingsSeen = [];
+  const stored = new Map();
+  const storage = {
+    getItem(key) { return stored.has(key) ? stored.get(key) : null; },
+    setItem(key, value) { stored.set(key, String(value)); },
+    removeItem(key) { stored.delete(key); },
+    key(index) { return [...stored.keys()][index] ?? null; },
+    get length() { return stored.size; },
+  };
+  let bundleCounter = 0;
+  const deviceStates = new Map();
   const factories = {
     createVault: ({ storagePrefix }) => {
       const id = domainForPrefix(storagePrefix);
@@ -28,7 +38,7 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
         hasVault: () => true,
         isUnlocked: () => unlocked,
         async unlockWithPassword(password) { assert.ok(password); unlocked = true; events.push(id + ':password'); },
-        async unlockWithKey(key) { assert.equal(key, biometricKey); unlocked = true; events.push(id + ':biometric'); },
+        async unlockWithKey(key) { assert.equal(key, 'synthetic-data-key-' + id); unlocked = true; events.push(id + ':biometric'); },
         getData: () => clone(data),
         async setData(next) { data = clone(next); events.push(id + ':setData'); },
         async flush() { events.push(id + ':flush'); },
@@ -59,11 +69,40 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
       },
     }),
     createBiometric: ({ storagePrefix }) => ({
-      async unlock() { events.push(domainForPrefix(storagePrefix) + ':biometric-prompt'); return biometricKey; },
-      async enroll(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':enroll'); },
-      async enrollExisting(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':enroll-existing'); },
-      isEnrolled: () => true,
+      async unlock() { events.push(domainForPrefix(storagePrefix) + ':unused-vault-biometric-prompt'); return 'unused'; },
+      async enroll(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':unused-vault-enroll'); },
+      async enrollExisting(key) { assert.ok(key); events.push(domainForPrefix(storagePrefix) + ':unused-vault-enroll-existing'); },
+      isEnrolled: () => false,
     }),
+    createDeviceBiometric: ({ storagePrefix }) => {
+      const person = storagePrefix.endsWith('-p1') ? 'p1' : 'p2';
+      const state = { key: null, enrolled: false };
+      deviceStates.set(person, state);
+      return {
+        async unlock() {
+          events.push('device-' + person + ':biometric-prompt');
+          if (!state.enrolled) throw new Error('No device passkey');
+          return state.key;
+        },
+        async enroll(key) {
+          state.key = key;
+          state.enrolled = true;
+          events.push('device-' + person + ':enroll');
+        },
+        async enrollExisting(key) {
+          state.key = key;
+          state.enrolled = true;
+          events.push('device-' + person + ':enroll-existing');
+        },
+        isEnrolled: () => state.enrolled,
+      };
+    },
+    generateDataKey: async () => 'synthetic-bundle-key-' + (++bundleCounter),
+    wrapDataKey: async (dataKey, bundleKey) => ({ dataKey, bundleKey }),
+    unwrapDataKey: async (wrapped, bundleKey) => {
+      if (!wrapped || wrapped.bundleKey !== bundleKey) throw new Error('Bundle key mismatch');
+      return wrapped.dataKey;
+    },
   };
   const clientFactory = (settings) => ({
     async checkRepo() { events.push('repo-check'); return { private: true, defaultBranch: 'main' }; },
@@ -77,12 +116,12 @@ function setup({ biometricKey = 'synthetic-key' } = {}) {
     },
   });
   const core = createVasteLastenCore({
-    storage: { getItem() { return null; }, setItem() {}, removeItem() {}, key() { return null; }, length: 0 },
+    storage,
     mergeStore,
     clientFactory,
     factories,
   });
-  return { core, vaults, events, syncCalls, settingsSeen };
+  return { core, vaults, events, syncCalls, settingsSeen, storage, deviceStates };
 }
 
 const connection = { owner: 'synthetic-owner', repo: 'synthetic-private-repo', token: 'synthetic-token' };
@@ -106,38 +145,45 @@ test('password unlock opens and syncs only shared plus the active personal vault
   await core.lock();
 });
 
-test('biometric unlock can open and sync the two vaults sequentially', async () => {
+test('one biometric prompt unlocks the shared and active personal vaults, then syncs both', async () => {
   const { core, vaults, syncCalls, events } = setup();
+  await core.unlock({
+    me: 'p2',
+    passwords: { shared: 'shared-password', 'personal-p2': 'personal-password' },
+    settings: connection,
+  });
+  await core.enrollBiometric();
+  await core.lock();
+  const before = events.length;
   const state = await core.unlockWithBiometric({ me: 'p2', settings: connection });
+  const during = events.slice(before);
   assert.equal(state.samen.domain, 'shared');
   assert.equal(state.eigen.domain, 'personal-p2');
   assert.equal(vaults.shared.isUnlocked(), true);
   assert.equal(vaults['personal-p2'].isUnlocked(), true);
   assert.equal(vaults['personal-p1'].isUnlocked(), false);
-  assert.equal(syncCalls.length, 2);
+  assert.equal(syncCalls.length, 4);
+  assert.equal(during.filter((event) => event === 'device-p2:biometric-prompt').length, 1);
+  assert.ok(during.indexOf('device-p2:biometric-prompt') < during.indexOf('repo-check'));
   assert.ok(events.includes('shared:biometric'));
   assert.ok(events.includes('personal-p2:biometric'));
-  assert.ok(events.indexOf('shared:biometric-prompt') < events.indexOf('repo-check'));
-  assert.ok(events.indexOf('personal-p2:biometric-prompt') < events.indexOf('repo-check'));
   await core.lock();
 });
 
-test('passkey unlock prompts each vault separately before any network call', async () => {
-  const { core, vaults, events, syncCalls } = setup();
-  await core.prepareBiometricUnlock('shared', 'p1');
-  assert.equal(vaults.shared.isUnlocked(), false);
-  assert.equal(events.includes('repo-check'), false);
-  await core.prepareBiometricUnlock('personal-p1', 'p1');
-  assert.equal(events.includes('repo-check'), false);
-  assert.equal(events.includes('shared:acquire'), false);
-  const state = await core.finishBiometricUnlock({ me: 'p1', settings: connection });
-  assert.equal(state.eigen.domain, 'personal-p1');
-  assert.equal(vaults.shared.isUnlocked(), true);
-  assert.equal(vaults['personal-p1'].isUnlocked(), true);
-  assert.equal(vaults['personal-p2'].isUnlocked(), false);
-  assert.ok(events.indexOf('shared:biometric-prompt') < events.indexOf('repo-check'));
-  assert.ok(events.indexOf('personal-p1:biometric-prompt') < events.indexOf('repo-check'));
-  assert.equal(syncCalls.length, 2);
+test('the device passkey bundle contains exactly the shared and active personal key', async () => {
+  const { core, storage, events } = setup();
+  await core.unlock({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+    settings: connection,
+  });
+  await core.enrollBiometric();
+  const record = JSON.parse(storage.getItem('vaste-lasten:biometric-bundle:p1:v1'));
+  assert.equal(record.schema, 1);
+  assert.equal(record.me, 'p1');
+  assert.deepEqual(Object.keys(record.keys).sort(), ['personal-p1', 'shared']);
+  assert.equal(events.filter((event) => event === 'device-p1:enroll').length, 1);
+  assert.equal(events.some((event) => event.endsWith(':unused-vault-enroll')), false);
   await core.lock();
 });
 
@@ -173,14 +219,25 @@ test('offline edits can be durably flushed without a GitHub connection', async (
   await core.lock();
 });
 
-test('offline biometric unlock opens local encrypted vaults without contacting GitHub', async () => {
-  const { core, vaults, syncCalls } = setup();
+test('offline biometric unlock uses one prompt and does not contact GitHub', async () => {
+  const { core, vaults, syncCalls, events } = setup();
+  await core.unlock({
+    me: 'p2',
+    passwords: { shared: 'shared-password', 'personal-p2': 'personal-password' },
+    settings: connection,
+  });
+  await core.enrollBiometric();
+  const beforeSync = syncCalls.length;
+  await core.lock();
+  const before = events.length;
   const state = await core.unlockWithBiometricLocal({ me: 'p2' });
   assert.equal(state.eigen.domain, 'personal-p2');
   assert.equal(vaults.shared.isUnlocked(), true);
   assert.equal(vaults['personal-p2'].isUnlocked(), true);
   assert.equal(vaults['personal-p1'].isUnlocked(), false);
-  assert.equal(syncCalls.length, 0);
+  assert.equal(syncCalls.length, beforeSync);
+  assert.equal(events.slice(before).filter((event) => event === 'device-p2:biometric-prompt').length, 1);
+  assert.equal(events.slice(before).includes('repo-check'), false);
   await core.lock();
 });
 
@@ -246,16 +303,17 @@ test('Core password changes update only the selected active vault and sync it', 
   await core.lock();
 });
 
-test('existing passkeys can be relinked to the imported Core data keys', async () => {
-  const { core, events } = setup();
+test('one existing passkey can be relinked to both imported Core data keys', async () => {
+  const { core, events, storage } = setup();
   await core.unlockLocal({
     me: 'p1',
     passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
   });
-  await core.enrollExistingBiometric('shared');
-  await core.enrollExistingBiometric('personal-p1');
-  assert.ok(events.includes('shared:enroll-existing'));
-  assert.ok(events.includes('personal-p1:enroll-existing'));
+  await core.enrollExistingBiometric();
+  const record = JSON.parse(storage.getItem('vaste-lasten:biometric-bundle:p1:v1'));
+  assert.deepEqual(Object.keys(record.keys).sort(), ['personal-p1', 'shared']);
+  assert.equal(events.filter((event) => event === 'device-p1:enroll-existing').length, 1);
+  assert.equal(events.some((event) => event.endsWith(':unused-vault-enroll-existing')), false);
   await core.lock();
 });
 
