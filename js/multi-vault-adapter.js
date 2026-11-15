@@ -22,6 +22,13 @@ export const VAULT_DOMAINS = Object.freeze({
 const clone = (value) => structuredClone(value ?? {});
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
+/** Fail closed when an expected legacy JSON is absent from the configured private repository. */
+export function requireLegacyEnvelope({ env, file, owner, repo } = {}) {
+  if (env) return env;
+  const target = owner && repo ? `${owner}/${repo}` : 'de ingestelde privérepository';
+  throw new Error(`Het bestaande legacybestand ${file || '(onbekend bestand)'} ontbreekt in ${target}. Controleer de repository; de migratie is gestopt voordat er iets is geschreven.`);
+}
+
 function assertDomainId(id) {
   if (!Object.hasOwn(VAULT_DOMAINS, id)) throw new TypeError(`Onbekend gegevensdomein: ${id}`);
 }
