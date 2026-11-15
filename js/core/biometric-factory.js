@@ -167,7 +167,7 @@ async function unlock() {
   const secret = await evaluatePrf(c.b64ToBytes(rec.credentialId), c.b64ToBytes(rec.prfSalt));
   const kek = await c.secretKey(secret, c.b64ToBytes(rec.hkdfSalt), HKDF_INFO);
   try {
-    return await c.unwrapDataKey(rec.wrapped, kek);
+    return await c.unwrapWrappingKey(rec.wrapped, kek);
   } catch {
     throw new Error('Ontgrendelen met passkey werkt niet meer. Gebruik je wachtwoord en stel het opnieuw in.');
   }
