@@ -51,7 +51,15 @@ export function createVasteLastenCore({
     if (!deviceBiometrics.has(person)) {
       const factory = factories.createDeviceBiometric || createBundleBiometric;
       deviceBiometrics.set(person, factory({
-        storagePrefix: `vaste-lasten-device-${person}`, appName, storage,
+        storagePrefix: `vaste-lasten-device-${person}`,
+        // Herkoppelen accepteert uitsluitend de eigen actieve Core-domeinen
+        // (plus de nieuwe device-bundel), niet de persoonlijke kluis van de ander.
+        allowedUserHandlePrefixes: [
+          VAULT_DOMAINS.shared.storagePrefix,
+          VAULT_DOMAINS[`personal-${person}`].storagePrefix,
+        ],
+        appName,
+        storage,
       }));
     }
     return deviceBiometrics.get(person);
