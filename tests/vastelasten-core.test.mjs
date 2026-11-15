@@ -82,6 +82,7 @@ function setup() {
         async unlock() {
           events.push('device-' + person + ':biometric-prompt');
           if (!state.enrolled) throw new Error('No device passkey');
+          if (state.unlockError) throw state.unlockError;
           return state.key;
         },
         async enroll(key) {
@@ -168,6 +169,23 @@ test('one biometric prompt unlocks the shared and active personal vaults, then s
   assert.ok(events.includes('shared:biometric'));
   assert.ok(events.includes('personal-p2:biometric'));
   await core.lock();
+});
+
+test('cancelling the single biometric prompt does not leave session locks held', async () => {
+  const { core, events, deviceStates } = setup();
+  await core.unlock({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+    settings: connection,
+  });
+  await core.enrollBiometric();
+  await core.lock();
+  deviceStates.get('p1').unlockError = new Error('biometric cancelled');
+  const before = events.length;
+  await assert.rejects(core.unlockWithBiometric({ me: 'p1' }), /biometric cancelled/);
+  const during = events.slice(before);
+  assert.equal(during.filter((event) => event === 'device-p1:biometric-prompt').length, 1);
+  assert.equal(during.some((event) => event.endsWith(':acquire')), false);
 });
 
 test('the device passkey bundle contains exactly the shared and active personal key', async () => {
