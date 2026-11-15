@@ -135,8 +135,10 @@ export function createVasteLastenCore({
   }
 
   async function release() {
-
     if (!session) return;
+    // Wacht eerst alle al gestarte app-saves af; pas daarna flushen en vergrendelen.
+    // Zo kan een persistState-bewerking niet na de lock nog data proberen te schrijven.
+    await persistQueue;
     // acquireActiveLocks flushes, locks and then releases both Web Locks.
     await session.release();
     session = null;
