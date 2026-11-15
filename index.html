@@ -2785,6 +2785,8 @@ document.addEventListener('click',e=>{
   if(id==='core-biometric') busy(id,'Face ID…',unlockCoreBiometric,'core-gate-err');
   if(id==='core-token-save') busy(id,'Token controleren…',replaceCoreToken,'core-token-err');
   if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
+  if(id==='core-passkey') busy(id,'Passkey instellen…',enrollCorePasskey,'s-err');
+  if(id==='core-passkey-existing') busy(id,'Passkey koppelen…',relinkCorePasskey,'s-err');
   if(id==='core-lock') busy(id,'Vergrendelen…',lockCore,'s-err');
   if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now'){clearTimeout(timer); timer=null; sync();}
