@@ -3,7 +3,7 @@ import { createVault } from './core/vault-factory.js';
 import { createSync } from './core/sync-factory.js';
 import { createSessionLock } from './core/session-lock-factory.js';
 import { createBiometric } from './core/biometric-factory.js';
-import { generateWrappingKey, wrapDataKey, unwrapWrappingKey } from './core/crypto.js';
+import { createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey } from './bundle-biometric.js';
 import { createClient } from './core/github.js';
 import {
   VAULT_DOMAINS,
@@ -42,9 +42,9 @@ export function createVasteLastenCore({
     appName,
   });
 
-  const makeBundleKey = factories.generateWrappingKey || generateWrappingKey;
+  const makeBundleKey = factories.generateBundleKey || generateBundleKey;
   const wrapBundleKey = factories.wrapVaultKey || wrapVaultKey;
-  const unwrapBundleKey = factories.unwrapWrappingKey || unwrapWrappingKey;
+  const unwrapBundleKey = factories.unwrapVaultKey || unwrapVaultKey;
   const bundleStorageKey = (person) => `vaste-lasten:biometric-bundle:${person}:v1`;
   const deviceBiometricFor = (person) => {
     if (!['p1', 'p2'].includes(person)) throw new TypeError('Persoon moet p1 of p2 zijn.');
