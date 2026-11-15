@@ -54,6 +54,15 @@ export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten',
   const hkdfInfo = `${storagePrefix}:biometric-bundle-kek:v1`;
   const userTag = encoder.encode(`${storagePrefix}:`);
 
+  function belongsToOtherApp(userHandle) {
+    if (!userHandle || userHandle.byteLength === 0) return false;
+    const id = new Uint8Array(userHandle);
+    const colon = id.indexOf(0x3a);
+    if (colon < 1 || colon > 40) return false;
+    if (id.length < userTag.length) return true;
+    return !userTag.every((byte, index) => id[index] === byte);
+  }
+
   async function prfSalt() {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(prfLabel)));
   }
@@ -132,6 +141,9 @@ export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten',
         extensions: { prf: { eval: { first: salt } } },
       },
     });
+    if (belongsToOtherApp(assertion.response?.userHandle)) {
+      throw new Error(`Deze passkey hoort bij een andere app. Kies een passkey voor ${appName}.`);
+    }
     const secret = readSecret(assertion.getClientExtensionResults().prf?.results?.first);
     await store(bundleKey, new Uint8Array(assertion.rawId), salt, secret);
   }
