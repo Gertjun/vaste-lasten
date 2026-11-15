@@ -25,8 +25,8 @@ test('real Web Crypto passkey bundle wraps and restores both independent vault k
   ]);
   const sharedBox = await encryptJSON({ domain: 'shared' }, restoredShared);
   const personalBox = await encryptJSON({ domain: 'personal-p1' }, restoredPersonal);
-  assert.deepEqual(await decryptJSON(sharedBox, sharedDataKey), { domain: 'shared' });
-  assert.deepEqual(await decryptJSON(personalBox, personalDataKey), { domain: 'personal-p1' });
+  assert.deepEqual(await decryptJSON(sharedBox, restoredShared), { domain: 'shared' });
+  assert.deepEqual(await decryptJSON(personalBox, restoredPersonal), { domain: 'personal-p1' });
 });
 
 const clone = (value) => structuredClone(value);
