@@ -6,7 +6,7 @@ Core-basis: PWA-Core `v1.1.0`, releasecommit `9763502c2233ca3824b6525fd5a5785fb3
 
 ## 1. Bestaande contracten
 
-- Baseline op `main`: appversie 2.29.3; deze branch bereidt versie 3.0.0 voor. De app gebruikt een monolithisch klassiek `index.html`-script.
+- Historische baseline vóór migratie: appversie 2.29.3; de migratie wijzigde dit naar versie 3.0.0. De app gebruikt een monolithisch klassiek `index.html`-script.
 - Lokale gecombineerde state: `localStorage["vastelasten.v2"]`, met `{ samen, eigen }`. Dit bevat momenteel leesbare JSON.
 - Lokale UI: `vastelasten.ui`; synchronisatieconfig: `vastelasten.v2.sync`. De GitHub-token staat sinds 2.29.2 versleuteld in IndexedDB.
 - Remote bestanden in de ingestelde privé-repository:
