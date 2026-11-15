@@ -29,6 +29,18 @@ export function unwrapVaultKey(wrapped, bundleKey) {
   );
 }
 
+export function unwrapBundleKey(wrapped, passkeyKek) {
+  return crypto.subtle.unwrapKey(
+    'raw',
+    b64ToBytes(wrapped.data),
+    passkeyKek,
+    { name: 'AES-GCM', iv: b64ToBytes(wrapped.iv) },
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['wrapKey', 'unwrapKey'],
+  );
+}
+
 export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten', storage = globalThis.localStorage } = {}) {
   if (typeof storagePrefix !== 'string' || !/^[a-z0-9][a-z0-9._-]*$/i.test(storagePrefix)) {
     throw new TypeError('storagePrefix is ongeldig.');
@@ -133,15 +145,7 @@ export function createBundleBiometric({ storagePrefix, appName = 'Vaste Lasten',
     const secret = await evaluate(b64ToBytes(record.credentialId), b64ToBytes(record.prfSalt));
     const kek = await secretKey(secret, b64ToBytes(record.hkdfSalt), hkdfInfo);
     try {
-      return await crypto.subtle.unwrapKey(
-        'raw',
-        b64ToBytes(record.wrapped.data),
-        kek,
-        { name: 'AES-GCM', iv: b64ToBytes(record.wrapped.iv) },
-        { name: 'AES-GCM', length: 256 },
-        true,
-        ['wrapKey', 'unwrapKey'],
-      );
+      return await unwrapBundleKey(record.wrapped, kek);
     } catch {
       throw new Error('De passkeybundel kon niet worden geopend. Ontgrendel met beide wachtwoorden en koppel de passkey opnieuw.');
     }
