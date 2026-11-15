@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, "fix/**"]
+    branches: [main, "fix/**", "feat/**"]
   pull_request:
     branches: [main]
 
@@ -17,5 +17,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: PWA-Core-modules controleren
+        run: |
+          for file in js/core/*.js js/vastelasten-core.js js/bundle-biometric.js; do node --experimental-default-type=module --check "$file"; done
+      - name: Inline app-JavaScript controleren
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const start = html.indexOf('<script>');
+          const end = html.indexOf('</script>', start + 8);
+          if (start < 0 || end < 0 || html.indexOf('<script>', start + 8) !== -1) throw new Error('Verwacht precies één inline app-script.');
+          fs.writeFileSync('/tmp/vaste-lasten-app.js', html.slice(start + 8, end));
+          NODE
+          node --check /tmp/vaste-lasten-app.js
+      - name: Release-pin controleren
+        run: node tools/pin.mjs verify
+      - name: Service-worker-precache controleren
+        run: node tools/precache.mjs --manifest core-manifest.json --service-worker sw.js
       - name: Tests uitvoeren
         run: node --test tests/*.test.mjs

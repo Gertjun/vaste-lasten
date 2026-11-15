@@ -754,6 +754,12 @@ const BASE='vastelasten';
 const DKEY=BASE+'.v2';
 const CFGKEY=BASE+'.v2.sync';
 const UIKEY=BASE+'.ui';
+const CORE_MODE_KEY=BASE+'.v3.core';
+const CORE_STAGING_KEY=BASE+'.v3.legacy-staging';
+let coreStagingMerged=false;
+let coreProfile=null, coreMode=false;
+try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
+let coreRuntime=null, coreReady=false, coreConnected=false, corePersistError='';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 /* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
 const BASE_CATS=[
@@ -773,10 +779,10 @@ const PRUNE_DAYS=180;
 /* oudste appversie die de huidige gegevens goed begrijpt en veilig terugschrijft (2.20.0).
    Verhoog dit bij een wijziging in het datamodel die een oudere versie verkeerd zou opslaan;
    apparaten met een oudere versie vragen dan eerst om bij te werken en wijzigen niets. */
-const DATA_NEEDS='2.20.0';              // verwijdermarkeringen blijven zo lang bewaard   // aantal maanden tussen twee afschrijvingen
-const APP_VERSION='2.29.3';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
+const DATA_NEEDS='3.0.0';              // Core-migratie vereist appversie 3.0.0 of nieuwer
+const APP_VERSION='3.0.0';         // wordt bij het bouwen ingevuld uit CHANGELOG.md
 const WISHLIST=/*WISHLIST*/[{"nr": "1", "title": "Bankafschrift importeren", "size": "groot", "text": "Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt."}, {"nr": "3", "title": "Buffer voor de gezamenlijke rekening", "size": "middel", "text": "Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden."}, {"nr": "5", "title": "Herinneringen via je agenda", "size": "klein", "text": "Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt."}, {"nr": "6", "title": "Vergrendelen met Face ID", "size": "middel", "text": "Ontgrendelen met Face ID of Touch ID, met versleuteling van de gegevens op het apparaat zelf. Eis: na het verwijderen en opnieuw installeren van de app (bijvoorbeeld voor een nieuw icoon) werkt je bestaande passkey meteen weer en vraagt de app niet om een nieuwe. Daarvoor vraagt de app om een passkey voor deze website zonder te weten welke, geeft dezelfde passkey altijd dezelfde sleutel (PRF), en staat de daarmee vergrendelde sleutel versleuteld in je privé-repository. Alleen het GitHub-token vul je na opnieuw installeren nog één keer in."}, {"nr": "11", "title": "Zien wat je partner heeft gewijzigd", "size": "klein", "text": "Bij het openen een melding zoals \"Anne heeft Energie aangepast en Hypotheek afgevinkt\", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé."}]/*END*/;      // wordt bij het bouwen ingevuld uit WISHLIST.md
-const CHANGELOG=/*CHANGELOG*/[{"version":"2.29.3","date":"12 november 2026","items":["Opgelost: een ontbrekende komma in de ingebouwde changelog is hersteld. Hierdoor kan de app-JavaScript weer correct worden ingelezen.","Nieuw: CI controleert voortaan of de ingebouwde changelog geldige JSON is."]},{"version":"2.29.2","date":"12 november 2026","items":["Verbeterd: de GitHub-token staat niet meer leesbaar in de lokale configuratie. De app bewaart hem versleuteld in IndexedDB met AES-GCM en een niet-exporteerbare sleutel.","Verbeterd: bestaande koppelingen worden bij het openen automatisch naar de nieuwe tokenopslag overgezet. Ontkoppelen wist ook de token en de lokale sleutel."]},{"version":"2.29.1","date":"12 november 2026","items":["Opgelost: synchroniseren meldt nu een fout als GitHub een wijziging na vier pogingen nog niet heeft bevestigd. De app toont dan niet langer ten onrechte 'Gesynchroniseerd'.","Nieuw: automatische tests controleren de uitkomsten van synchroniseren bij conflicten en herhaalde pogingen."]},{"version":"2.29.0","date":"10 november 2026","items":["Verbeterd: sterkere versleuteling, net als in je andere apps. Een nieuw wachtwoord (bij Wachtwoord wijzigen of een nieuwe koppeling) wordt voortaan met 600.000 rondes omgezet in een sleutel, in plaats van 310.000. Dat maakt raden ruim twee keer zo traag.","Verbeterd: je huidige bestanden en wachtwoorden blijven gewoon werken. Elk bestand onthoudt zelf met hoeveel rondes het versleuteld is.","Let op: werk eerst ook het apparaat van Wies bij voordat een van jullie het gezamenlijke wachtwoord wijzigt. Een oudere versie kan een bestand met het nieuwe aantal rondes niet openen en zegt dan dat het wachtwoord niet klopt. Na bijwerken werkt het weer; er gaat niets verloren."]},{"version":"2.28.1","date":"10 november 2026","items":["Verbeterd: de wishlist heeft bij #6 Vergrendelen met Face ID een extra eis: verwijder je de app en installeer je hem opnieuw, bijvoorbeeld voor een nieuw icoon, dan werkt je bestaande passkey meteen weer en hoef je geen nieuwe aan te maken."]},{"version":"2.28.0","date":"10 november 2026","items":["Nieuw: maken jullie ieder een vast percentage over naar de gezamenlijke rekening, dan rekent de app jullie aandeel in de gezamenlijke lasten zelf uit op basis van wat ieder overmaakt. Maak jij € 3.123,56 over en Wies € 1.678,00, dan is jouw aandeel 65%. Dat werkt ook met een ingevuld bedrag voor je partner.","Verbeterd: het berekende aandeel geldt overal waar het vaste percentage gold: de labels Samen · jij, Inzicht, Wat als en verrekenen. Een eigen verdeling bij een last blijft voorgaan.","Verbeterd: jullie inkomens zijn voortaan zichtbaar voor elkaar. Het vinkje Deel mijn inkomen is weg; een ingevuld inkomen staat versleuteld in jullie gezamenlijke bestand, zodat beide apparaten met dezelfde bedragen rekenen. Je eigen lasten blijven alleen voor jou.","Let op: werk ook het apparaat van je partner bij. Een oudere versie rekent nog met het vaste percentage."]},{"version":"2.27.0","date":"10 november 2026","items":["Nieuw: deelt je partner het inkomen niet, vul dan zelf in hoeveel je partner per maand naar de gezamenlijke rekening overmaakt. Dat doe je onder Instellingen → Huishouden → Verdeling. Het blok Gezamenlijke rekening rekent daar dan mee, met het label Ingevuld.","Verbeterd: het ingevulde bedrag is gedeeld, dus je partner ziet het ook en kan het aanpassen. Deelt je partner later het inkomen, dan rekent de app weer met het afgesproken percentage daarvan.","Opgelost: een bedrag met een punt als duizendtal, zoals 1.800, werd gelezen als € 1,80. Nu is het € 1.800,00, in alle bedragvelden. Een bedrag als 152.35 blijft € 152,35."]},{"version":"2.26.1","date":"10 november 2026","items":["Verbeterd: de handleiding (README.md) zegt nu dat je het percentage voor de gezamenlijke rekening bij Verdeling invult, en dat dat percentage gedeeld is en je inkomen niet."]},{"version":"2.26.0","date":"10 november 2026","items":["Nieuw: het percentage van jullie netto inkomen dat ieder naar de gezamenlijke rekening overmaakt, stel je nu samen in onder Instellingen → Huishouden → Verdeling. Het geldt voor jullie allebei; je hoeft het maar één keer in te vullen.","Nieuw: het blok Gezamenlijke rekening in het Overzicht toont dan wat ieder overmaakt, en of dat samen genoeg is voor de gezamenlijke lasten: wat er per maand overblijft of hoeveel er tekortkomt.","Verbeterd: het bedrag van je partner zie je zodra je partner het inkomen deelt onder Inkomen. Je eigen inkomen blijft privé tot je zelf kiest voor delen.","Let op: had je in 2.25.0 een percentage ingevuld bij Inkomen, dan staat dat nu bij Verdeling. Tik daar op Verdeling opslaan, dan geldt het ook voor je partner."]},{"version":"2.25.0","date":"10 november 2026","items":["Nieuw: maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening, vul dat percentage dan in bij Instellingen → Huishouden → Inkomen, bijvoorbeeld 75. Inzicht rekent je vaste lasten dan als die bijdrage plus je eigen lasten, in plaats van je deel van de gezamenlijke lasten.","Verbeterd: onder Inkomen en wat overblijft zie je hoe je vaste lasten zijn opgebouwd: je bijdrage aan de gezamenlijke rekening en je eigen lasten. Wat als rekent vrij te besteden op dezelfde manier.","Verbeterd: de bijdrage staat net als je inkomen alleen in je eigen versleutelde bestand. Laat je het veld leeg, dan blijft alles zoals het was."]},{"version":"2.24.4","date":"9 november 2026","items":["Verbeterd: op de laptop en de iPad liggend staat de knop Nieuwe last in de zijbalk, onder de naam van de app en boven Overzicht. Ingeklapt is het een plusknop.","Verbeterd: de synchronisatiestatus staat in de zijbalk direct onder het versienummer. Ingeklapt zie je hem als gekleurde stip; wijs hem aan voor de status. Boven het werkvlak staat nu alleen de naam van het onderdeel.","Opgelost: op de iPad liggend stond het pictogram van de app in de ingeklapte zijbalk niet precies in het midden."]},{"version":"2.24.3","date":"9 november 2026","items":["Verbeterd: de code voor de overstap van versie 1 naar 2 uit oktober is opgeruimd, want alle apparaten zijn al over. Een back-up van vóór die tijd kun je nog steeds terugzetten."]},{"version":"2.24.2","date":"9 november 2026","items":["Verbeterd: overbodige regels uit het sjabloon waarmee de app ooit begon, zijn opgeruimd. Je ziet geen verschil."]},{"version":"2.24.1","date":"9 november 2026","items":["Verbeterd: opmaak die nergens meer gebruikt werd, is uit de app gehaald. Je ziet geen verschil."]},{"version":"2.24.0","date":"5 november 2026","items":["Nieuw: Wachtwoord wijzigen onder Instellingen → Synchronisatie. Kies het gezamenlijke of je eigen wachtwoord, vul het huidige in en twee keer het nieuwe. De app versleutelt je gegevens in GitHub opnieuw met het nieuwe wachtwoord.","Nieuw: is een wachtwoord op een ander apparaat gewijzigd, dan vraagt de app één keer om het nieuwe wachtwoord, alleen dat ene. Wat je op dat apparaat had gewijzigd blijft bewaard.","Verbeterd: een vorige versie van vóór een wachtwoordwijziging kun je nog terugzetten op apparaten die toen al gekoppeld waren.","Let op: werk eerst alle apparaten bij, ook die van je partner, voordat je het gezamenlijke wachtwoord wijzigt. Een oudere versie vraagt je anders om te ontkoppelen en opnieuw te koppelen."]},{"version":"2.23.3","date":"5 november 2026","items":["Verbeterd: op de laptop staan de blokken in Instellingen netjes in een raster. Blokken naast elkaar zijn even hoog en hun knoppen, zoals Inkomen opslaan en Loondag opslaan, staan onderaan op één lijn.","Opgelost: bij Over de app stond het blok Op je startscherm iets lager dan het blok met de versie."]},{"version":"2.23.2","date":"5 november 2026","items":["Verbeterd: op de laptop staat Instellingen nu als een lijst. Links de koppen Synchronisatie, Huishouden, Weergave, Gegevens en Over de app, met een korte omschrijving en de status; rechts, over twee kolommen, de blokken van de kop die je kiest. Op een breed scherm staan die blokken naast elkaar. De app onthoudt je keuze per apparaat.","Verbeterd: op de iPhone en de iPad staand blijft Instellingen zoals het was, met groepen die je in- en uitklapt."]},{"version":"2.23.1","date":"5 november 2026","items":["Verbeterd: de labels Samen en Eigen zijn beter van elkaar te onderscheiden. Samen is nu gevuld in je accentkleur, Eigen blijft omlijnd. Dat werkt in elke accentkleur, ook Leisteen, en in licht en donker."]},{"version":"2.23.0","date":"4 november 2026","items":["Verbeterd: op de laptop en de iPad liggend is de zijbalk een eigen vlak over de volle hoogte van het scherm, smaller en rustiger, met de versie onder de naam. Op de iPhone en de iPad staand blijft alles zoals het was.","Nieuw: boven het werkvlak staat nu de naam van het onderdeel, met rechts de synchronisatiestatus en de knop Nieuwe last.","Nieuw: klap de zijbalk in met het pijltje bovenin of de toets [. Je ziet dan alleen de pictogrammen en het werkvlak wordt breder; wijs een pictogram aan om de naam te zien. De app onthoudt je keuze per apparaat."]},{"version":"2.22.2","date":"4 november 2026","items":["Opgelost: op de laptop sprongen de groepen in Instellingen naar een andere kolom als je er een in- of uitklapte. Elke groep heeft nu een vaste plek: Synchronisatie en Huishouden links, Weergave, Gegevens en Over de app rechts, en op een breed scherm Huishouden in een eigen kolom ertussen. Uitklappen maakt alleen die kolom langer."]},{"version":"2.22.1","date":"30 oktober 2026","items":["Verbeterd: in Maand en het Overzicht zijn alle afschrijvingen even hoog, ook als er geen jouw deel onder het bedrag staat. Een heel lange naam wordt na twee regels afgekort; tik erop om hem helemaal te zien."]},{"version":"2.22.0","date":"30 oktober 2026","items":["Nieuw: tik in Lasten op het gekleurde bolletje voor een categorie om meteen een andere kleur te kiezen. De blokken en het bolletje krijgen direct de nieuwe kleur, en je partner ziet hem ook.","Verbeterd: de kleurvakjes bij Instellingen → Huishouden → Categorieën zijn groter, zodat je ze op de iPhone makkelijker raakt."]},{"version":"2.21.1","date":"30 oktober 2026","items":["Verbeterd: in Lasten krijgt elk blok een lichte tint van de kleur van zijn categorie, net als het bolletje bij de categorie. Zo zie je in één oogopslag waar een last bij hoort, ook als je op bedrag of naam sorteert."]},{"version":"2.21.0","date":"30 oktober 2026","items":["Nieuw: Vorige versie herstellen onder Instellingen → Synchronisatie. Elke synchronisatie bewaart een versie in GitHub; kies een moment en zet je gezamenlijke of eigen lasten, afvinkjes, categorieën, verrekeningen en scenario's terug zoals ze toen waren. Ook op het apparaat van je partner.","Verbeterd: terugzetten is zelf ook een nieuwe versie, dus je kunt het weer ongedaan maken. Namen, verdeling, inkomen en loondag blijven zoals ze nu zijn."]},{"version":"2.20.0","date":"30 oktober 2026","items":["Nieuw: je gegevens onthouden welke versie van de app ze minstens nodig hebben. Heeft een ander apparaat ze opgeslagen met een nieuwere versie, dan vraagt de app eerst om bij te werken, met een knop Nu bijwerken. Tot die tijd synchroniseert hij niet en kun je niets wijzigen, zodat een oudere versie niets verkeerd kan opslaan.","Let op: werk alle apparaten bij, ook dat van je partner. Deze bescherming werkt pas op apparaten met versie 2.20.0 of nieuwer."]},{"version":"2.19.0","date":"30 oktober 2026","items":["Nieuw: bij het koppelen kies je een wachtwoord van minstens 12 tekens dat niet makkelijk te raden is. Een meter laat zien of het Zwak, Redelijk of Sterk is. Een wachtzin van vier losse woorden, zoals fiets regen koffie lantaarn, is sterk en makkelijk te onthouden.","Nieuw: tik op het oogje naast een wachtwoordveld om te zien wat je typt.","Verbeterd: je huidige wachtwoorden blijven gewoon werken, ook op een nieuw apparaat. De strengere eis geldt alleen voor een nieuw wachtwoord."]},{"version":"2.18.5","date":"30 oktober 2026","items":["Verbeterd: op de iPhone en iPad opent een back-up, Excel-bestand of CSV nu het deelmenu. Kies Bewaar in Bestanden of AirDrop naar je laptop; je loopt niet meer vast in een voorbeeldscherm. Op de laptop blijft het een gewone download."]},{"version":"2.18.4","date":"30 oktober 2026","items":["Verbeterd: de app onthoudt welke lasten, categorieën, verrekeningen en scenario's je hebt verwijderd, zodat ze niet terugkomen via een ander apparaat. Die aantekeningen worden nu na 180 dagen opgeruimd, zodat je gegevens niet blijven groeien.","Let op: heeft een apparaat langer dan een half jaar niet gesynchroniseerd, open het dan eerst en laat het bijwerken. Anders kan een last die je in die tijd hebt verwijderd terugkomen."]},{"version":"2.18.3","date":"30 oktober 2026","items":["Verbeterd: de app wacht na een wijziging tien seconden voordat hij synchroniseert. Vink je vijf lasten achter elkaar af, dan gaat dat in één keer naar GitHub in plaats van in vijf aparte opslagmomenten, zodat je data-repository niet onnodig groeit.","Verbeterd: verlaat je de app of ga je naar een ander tabblad, dan synchroniseert hij meteen. Zolang een wijziging wacht, staat er Wacht op synchroniseren."]},{"version":"2.18.2","date":"30 oktober 2026","items":["Opgelost: had je de app in twee tabbladen of vensters open, bijvoorbeeld op je laptop, dan kon het ene tabblad de wijzigingen van het andere overschrijven. Tabbladen nemen elkaars wijzigingen nu direct over.","Verbeterd: de app vraagt de browser je gegevens blijvend te bewaren, zodat iOS ze niet opruimt als er weinig ruimte is. Onder Instellingen → Gegevens zie je of dat gelukt is."]},{"version":"2.18.1","date":"30 oktober 2026","items":["Verbeterd: op een breed scherm, zoals een laptop of externe monitor, gebruikt de app nu de volle breedte. De zijbalk is wat smaller.","Verbeterd: op een heel breed scherm staat het Overzicht in drie kolommen, zodat je alles in één keer ziet."]},{"version":"2.18.0","date":"29 oktober 2026","items":["Nieuw: stel onder Instellingen → Huishouden je loondag in. Valt die in het weekend of op een feestdag, dan rekent de app met de werkdag ervoor, zoals vrijdag 23 oktober in plaats van zondag 25 oktober.","Nieuw: Tot je loon in het Overzicht. Je ziet hoeveel er tot je volgende loon nog van je eigen rekening afgaat: je eigen lasten en gezamenlijke lasten die je zelf betaalt. Gezamenlijke lasten van de gezamenlijke rekening tellen niet mee.","Verbeterd: met een loondag loopt Eerstvolgende in het Overzicht door tot je volgende loon, in plaats van twee weken vooruit.","Verbeterd: je loondag staat net als je inkomen alleen in je eigen versleutelde bestand."]},{"version":"2.17.0","date":"29 oktober 2026","items":["Nieuw: thema's. Kies onder Instellingen → Weergave tussen Automatisch, Licht en Donker. Automatisch volgt je iPhone, iPad of laptop.","Nieuw: een accentkleur: Petrol, Blauw, Paars, Terracotta of Leisteen. Knoppen, tabbladen en het label Samen kleuren mee; de kleuren van categorieën, grafieken en meldingen blijven gelijk.","Verbeterd: je thema geldt alleen voor het apparaat waarop je het kiest, zodat je partner haar eigen keuze houdt."]},{"version":"2.16.1","date":"29 oktober 2026","items":["Verbeterd: eigen lasten hebben nu ook een label, Eigen, net zoals gezamenlijke lasten het label Samen hebben. In Maand, het Overzicht en Lasten zie je zo meteen wat van jou alleen is."]},{"version":"2.16.0","date":"29 oktober 2026","items":["Nieuw: het tabblad Inzicht, tussen Lasten en Instellingen. Daar staan de jaargrafiek, de vergelijking met vorig jaar, per categorie, inkomen en wat overblijft, en Wat als. Het filter Alles, Gezamenlijk, Eigen werkt er ook.","Verbeterd: het Overzicht is korter en laat zien wat er nu moet gebeuren: contracten die aandacht vragen, deze maand, de afschrijvingen om af te vinken, de gezamenlijke rekening en verrekenen.","Verbeterd: het Overzicht heeft een huisje als pictogram; Inzicht krijgt de grafiek. Op de laptop openen de toetsen 1 tot en met 5 de onderdelen."]},{"version":"2.15.1","date":"29 oktober 2026","items":["Verbeterd: Instellingen is ingedeeld in vier groepen die je in- en uitklapt: Synchronisatie, Huishouden, Gegevens en Over de app. De app onthoudt welke je open hebt.","Verbeterd: Synchronisatie staat bovenaan, met in de kop of je gekoppeld bent. Is er een wachtwoord nodig, dan klapt de groep vanzelf open.","Verbeterd: exporteren en back-up staan samen onder Gegevens."]},{"version":"2.15.0","date":"29 oktober 2026","items":["Nieuw: Datum voorbij. Lasten waarvan de datum geweest is en die je nog niet hebt afgevinkt, staan in Maand en het Overzicht apart bovenaan. Zo zie je meteen wat je nog moet controleren.","Nieuw: aan het eind van de maand toont het Overzicht bij Eerstvolgende ook de afschrijvingen van de komende twee weken in de volgende maand. Die kun je daar meteen afvinken.","Nieuw: in de eerste twee weken van een maand zie je ook wat er van eind vorige maand nog niet is afgevinkt."]},{"version":"2.14.4","date":"29 oktober 2026","items":["Verbeterd: afschrijvingen in Maand en het Overzicht nemen minder ruimte in. Naam en bedrag staan bovenaan, met jouw deel onder het bedrag, en de labels over de volle breedte eronder. Op de iPhone zie je zo veel meer lasten tegelijk.","Verbeterd: het label Nog afvinken is weg; het lege vinkje zegt hetzelfde."]},{"version":"2.14.3","date":"29 oktober 2026","items":["Verbeterd: op de iPhone en iPad staat de knop Nieuwe last bij Lasten, naast het zoekveld. Hij zweeft niet meer over de afschrijvingen, zodat je elk vinkje kunt raken. Op de laptop staat hij zoals altijd in de zijbalk."]},{"version":"2.14.2","date":"29 oktober 2026","items":["Verbeterd: de knoppen Alles, Gezamenlijk en Eigen staan nu bij de inhoud waar ze op werken: bij Maand naast de maandkiezer, bij Overzicht en Lasten bovenaan. Bij Instellingen verdwijnen ze, omdat ze daar niets doen."]},{"version":"2.14.1","date":"27 oktober 2026","items":["Verbeterd: de handleiding in de download heet nu README.md in plaats van LEESMIJ.md, zodat GitHub hem op de pagina van je repository toont. Het oude bestand LEESMIJ.md kun je uit de repository verwijderen."]},{"version":"2.14.0","date":"27 oktober 2026","items":["Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.","Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.","Verbeterd: bij Wat als staat de knop Weg op de telefoon naast het bedrag."]},{"version":"2.13.0","date":"27 oktober 2026","items":["Nieuw: Wat als in het Overzicht. Reken een verandering door zonder je lasten aan te passen: een ander bedrag voor bestaande lasten, lasten die vervallen of nieuwe lasten erbij.","Nieuw: je ziet direct het verschil in totale vaste lasten, jouw deel, de inleg per persoon en, als je je inkomen hebt ingevuld, wat je vrij te besteden hebt. Scenario's bewaar je met een naam; ze staan in je eigen bestand en zijn alleen voor jou zichtbaar.","Opgelost: op de iPhone was de pagina bij Overzicht en Instellingen iets breder dan het scherm, waardoor Safari een beetje uitzoomde. Dat kwam door verborgen tooltips in de grafiek en de keuzerondjes bij de standaardverdeling."]},{"version":"2.12.0","date":"27 oktober 2026","items":["Nieuw: het Overzicht vergelijkt je kosten met vorig jaar: hoeveel procent duurder of goedkoper, de grootste stijgers en dalers per last en de verschillen per categorie.","Nieuw: de jaargrafiek toont vorig jaar als gestippelde omtrek achter elke balk, zodra er verschil is."]},{"version":"2.11.0","date":"27 oktober 2026","items":["Nieuw: tik in Maand of Overzicht op het bedrag van een afschrijving om het werkelijk afgeschreven bedrag in te vullen, bijvoorbeeld bij een variabele rekening. De last wordt dan meteen afgevinkt en het geplande bedrag staat doorgestreept ernaast.","Nieuw: Eenmalig bij Hoe vaak, voor een afrekening, naheffing of andere afschrijving die één keer voorkomt. Die telt mee in de maand zelf en in het jaar, maar niet als vaste last per maand. Bij Lasten staan ze onder Eenmalig.","Nieuw: Maand en het Overzicht tonen gepland tegenover werkelijk als die verschillen. De jaargrafiek en het verrekenen rekenen met het werkelijke bedrag.","Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.11.0 toont een eenmalige post als maandelijkse last."]},{"version":"2.10.0","date":"27 oktober 2026","items":["Nieuw: kies bij een gezamenlijke last wie hem betaalt: de gezamenlijke rekening, of één van jullie van een eigen rekening.","Nieuw: het Overzicht houdt bij wat de ander moet bijdragen, bijvoorbeeld Anne betaalt jou € 572,50, met de laatste betalingen. Met Markeer als verrekend zet je het saldo op nul; dat kun je ongedaan maken.","Nieuw: bij het afvinken legt de app vast wie betaalde, het bedrag en de verdeling op dat moment. Latere wijzigingen aan de last veranderen het saldo dus niet.","Verbeterd: de inleg op de gezamenlijke rekening telt alleen lasten die van die rekening gaan."]},{"version":"2.9.0","date":"27 oktober 2026","items":["Nieuw: vul onder Instellingen → Huishouden je netto inkomen in. Het staat versleuteld in je eigen bestand en is alleen voor jou zichtbaar.","Nieuw: het Overzicht toont welk deel van je inkomen naar vaste lasten gaat en wat er per maand vrij te besteden is.","Nieuw: gezamenlijke lasten naar inkomen verdelen. Delen jullie allebei je inkomen, dan berekent de app de standaardverdeling automatisch. Tot die tijd geldt het vaste percentage.","Verbeterd: de namen van categorieën in Instellingen staan in gewone tekstkleur."]},{"version":"2.8.0","date":"27 oktober 2026","items":["Nieuw: eigen categorieën. Onder Instellingen → Huishouden voeg je categorieën toe, zoals Kinderopvang of Huisdieren, en wijzig je de naam en kleur van elke categorie. Ze worden gedeeld met je partner.","Nieuw: een categorie verwijderen kan ook; de lasten erin gaan dan naar Overig.","Verbeterd: nieuwe kleuren voor de categorieën, die ook voor kleurenblinden goed van elkaar te onderscheiden zijn.","Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.6.2 toont de eigen categorieën als Overig."]},{"version":"2.7.0","date":"27 oktober 2026","items":["Nieuw: zoeken in Lasten op naam, notitie of contract- en polisnummer. Hoofdletters en accenten maken niet uit, en de zoekterm wordt gemarkeerd.","Nieuw: sorteren in Lasten per categorie, op bedrag, naam, dag van afschrijving of einddatum van het contract. Je keuze wordt onthouden.","Nieuw: sneltoets / om op de laptop direct te zoeken; Esc maakt het zoekveld leeg."]},{"version":"2.6.2","date":"27 oktober 2026","items":["Verbeterd: het blok Per categorie in het Overzicht volgt het filter, net als het kostenblok. Bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee, bij Eigen zie je je eigen kosten. De percentages tellen op tot 100%.","Verbeterd: de app bewaart voortaan gegevens die een nieuwere versie toevoegt, ook op een apparaat dat nog niet is bijgewerkt. Zo raak je bij volgende uitbreidingen niets kwijt.","Verbeterd: wishlistpunten houden een vast nummer, ook in de app."]},{"version":"2.6.1","date":"27 oktober 2026","items":["Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.","Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14)."]},{"version":"2.6.0","date":"26 oktober 2026","items":["Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.","Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.","Nieuw: bij Lasten zie je een komende prijswijziging en hoeveel een last ten opzichte van vorig jaar is gestegen of gedaald. De jaargrafiek en de maandlijsten rekenen per maand met het juiste bedrag.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont alleen het huidige bedrag en kan de prijsgeschiedenis wissen als je daar een last bewerkt."]},{"version":"2.5.0","date":"26 oktober 2026","items":["Nieuw: per last een einddatum, opzegtermijn, contract- of polisnummer en de website van de aanbieder, onder Contract en looptijd in het formulier.","Nieuw: het Overzicht waarschuwt bij contracten die binnen twee maanden opgezegd moeten worden of aflopen, en bij een contract dat net is verlopen.","Nieuw: kies Stopt na de einddatum voor een last die daarna vervalt, zoals een afgeloste lening. Na die maand telt hij niet meer mee en staat hij bij Lasten onder Beëindigd.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie kan de contractgegevens wissen als je daar een last bewerkt."]},{"version":"2.4.1","date":"26 oktober 2026","items":["Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is."]},{"version":"2.4.0","date":"26 oktober 2026","items":["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.","Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.","Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.","Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.","Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.","Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]},{"version":"2.3.0","date":"26 oktober 2026","items":["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.","Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.","Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]},{"version":"2.2.0","date":"26 oktober 2026","items":["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.","Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]},{"version":"2.1.0","date":"26 oktober 2026","items":["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.","Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.","Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.","Verbeterd: invoervelden zoomen op de iPhone niet meer in."]},{"version":"2.0.0","date":"21 oktober 2026","items":["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.","Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.","Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.","Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.","Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]},{"version":"1.1.0","date":"15 oktober 2026","items":["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]},{"version":"1.0.0","date":"15 oktober 2026","items":["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
+const CHANGELOG=/*CHANGELOG*/[{"version":"3.0.0","date":"14 november 2026","items":["Nieuw: Vaste Lasten gebruikt PWA-Core v1.1.0 met drie onafhankelijke, versleutelde kluizen: gezamenlijk, persoonlijk voor persoon 1 en persoonlijk voor persoon 2.","Nieuw: gegevens worden op het apparaat versleuteld opgeslagen en per actieve kluis gesynchroniseerd. Offline ontgrendelen en werken blijft mogelijk.","Nieuw: ontgrendelen met een passkey of biometrie per kluis, inclusief het opnieuw koppelen van een bestaande passkey na herinstallatie.","Verbeterd: de migratie synchroniseert eerst de bestaande gegevens, plaatst daarna een updatebarrière voor oudere appversies en behoudt de legacybestanden als terugvaloptie.","Let op: migreer ieder apparaat afzonderlijk met de bestaande gezamenlijke en eigen wachtwoorden. Gebruik op alle apparaten dezelfde Core-wachtwoorden. Oudere appversies worden na de eerste migratie geblokkeerd totdat ze zijn bijgewerkt."]},{"version":"2.29.3","date":"12 november 2026","items":["Opgelost: een ontbrekende komma in de ingebouwde changelog is hersteld. Hierdoor kan de app-JavaScript weer correct worden ingelezen.","Nieuw: CI controleert voortaan of de ingebouwde changelog geldige JSON is."]},{"version":"2.29.2","date":"12 november 2026","items":["Verbeterd: de GitHub-token staat niet meer leesbaar in de lokale configuratie. De app bewaart hem versleuteld in IndexedDB met AES-GCM en een niet-exporteerbare sleutel.","Verbeterd: bestaande koppelingen worden bij het openen automatisch naar de nieuwe tokenopslag overgezet. Ontkoppelen wist ook de token en de lokale sleutel."]},{"version":"2.29.1","date":"12 november 2026","items":["Opgelost: synchroniseren meldt nu een fout als GitHub een wijziging na vier pogingen nog niet heeft bevestigd. De app toont dan niet langer ten onrechte 'Gesynchroniseerd'.","Nieuw: automatische tests controleren de uitkomsten van synchroniseren bij conflicten en herhaalde pogingen."]},{"version":"2.29.0","date":"10 november 2026","items":["Verbeterd: sterkere versleuteling, net als in je andere apps. Een nieuw wachtwoord (bij Wachtwoord wijzigen of een nieuwe koppeling) wordt voortaan met 600.000 rondes omgezet in een sleutel, in plaats van 310.000. Dat maakt raden ruim twee keer zo traag.","Verbeterd: je huidige bestanden en wachtwoorden blijven gewoon werken. Elk bestand onthoudt zelf met hoeveel rondes het versleuteld is.","Let op: werk eerst ook het apparaat van Wies bij voordat een van jullie het gezamenlijke wachtwoord wijzigt. Een oudere versie kan een bestand met het nieuwe aantal rondes niet openen en zegt dan dat het wachtwoord niet klopt. Na bijwerken werkt het weer; er gaat niets verloren."]},{"version":"2.28.1","date":"10 november 2026","items":["Verbeterd: de wishlist heeft bij #6 Vergrendelen met Face ID een extra eis: verwijder je de app en installeer je hem opnieuw, bijvoorbeeld voor een nieuw icoon, dan werkt je bestaande passkey meteen weer en hoef je geen nieuwe aan te maken."]},{"version":"2.28.0","date":"10 november 2026","items":["Nieuw: maken jullie ieder een vast percentage over naar de gezamenlijke rekening, dan rekent de app jullie aandeel in de gezamenlijke lasten zelf uit op basis van wat ieder overmaakt. Maak jij € 3.123,56 over en Wies € 1.678,00, dan is jouw aandeel 65%. Dat werkt ook met een ingevuld bedrag voor je partner.","Verbeterd: het berekende aandeel geldt overal waar het vaste percentage gold: de labels Samen · jij, Inzicht, Wat als en verrekenen. Een eigen verdeling bij een last blijft voorgaan.","Verbeterd: jullie inkomens zijn voortaan zichtbaar voor elkaar. Het vinkje Deel mijn inkomen is weg; een ingevuld inkomen staat versleuteld in jullie gezamenlijke bestand, zodat beide apparaten met dezelfde bedragen rekenen. Je eigen lasten blijven alleen voor jou.","Let op: werk ook het apparaat van je partner bij. Een oudere versie rekent nog met het vaste percentage."]},{"version":"2.27.0","date":"10 november 2026","items":["Nieuw: deelt je partner het inkomen niet, vul dan zelf in hoeveel je partner per maand naar de gezamenlijke rekening overmaakt. Dat doe je onder Instellingen → Huishouden → Verdeling. Het blok Gezamenlijke rekening rekent daar dan mee, met het label Ingevuld.","Verbeterd: het ingevulde bedrag is gedeeld, dus je partner ziet het ook en kan het aanpassen. Deelt je partner later het inkomen, dan rekent de app weer met het afgesproken percentage daarvan.","Opgelost: een bedrag met een punt als duizendtal, zoals 1.800, werd gelezen als € 1,80. Nu is het € 1.800,00, in alle bedragvelden. Een bedrag als 152.35 blijft € 152,35."]},{"version":"2.26.1","date":"10 november 2026","items":["Verbeterd: de handleiding (README.md) zegt nu dat je het percentage voor de gezamenlijke rekening bij Verdeling invult, en dat dat percentage gedeeld is en je inkomen niet."]},{"version":"2.26.0","date":"10 november 2026","items":["Nieuw: het percentage van jullie netto inkomen dat ieder naar de gezamenlijke rekening overmaakt, stel je nu samen in onder Instellingen → Huishouden → Verdeling. Het geldt voor jullie allebei; je hoeft het maar één keer in te vullen.","Nieuw: het blok Gezamenlijke rekening in het Overzicht toont dan wat ieder overmaakt, en of dat samen genoeg is voor de gezamenlijke lasten: wat er per maand overblijft of hoeveel er tekortkomt.","Verbeterd: het bedrag van je partner zie je zodra je partner het inkomen deelt onder Inkomen. Je eigen inkomen blijft privé tot je zelf kiest voor delen.","Let op: had je in 2.25.0 een percentage ingevuld bij Inkomen, dan staat dat nu bij Verdeling. Tik daar op Verdeling opslaan, dan geldt het ook voor je partner."]},{"version":"2.25.0","date":"10 november 2026","items":["Nieuw: maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening, vul dat percentage dan in bij Instellingen → Huishouden → Inkomen, bijvoorbeeld 75. Inzicht rekent je vaste lasten dan als die bijdrage plus je eigen lasten, in plaats van je deel van de gezamenlijke lasten.","Verbeterd: onder Inkomen en wat overblijft zie je hoe je vaste lasten zijn opgebouwd: je bijdrage aan de gezamenlijke rekening en je eigen lasten. Wat als rekent vrij te besteden op dezelfde manier.","Verbeterd: de bijdrage staat net als je inkomen alleen in je eigen versleutelde bestand. Laat je het veld leeg, dan blijft alles zoals het was."]},{"version":"2.24.4","date":"9 november 2026","items":["Verbeterd: op de laptop en de iPad liggend staat de knop Nieuwe last in de zijbalk, onder de naam van de app en boven Overzicht. Ingeklapt is het een plusknop.","Verbeterd: de synchronisatiestatus staat in de zijbalk direct onder het versienummer. Ingeklapt zie je hem als gekleurde stip; wijs hem aan voor de status. Boven het werkvlak staat nu alleen de naam van het onderdeel.","Opgelost: op de iPad liggend stond het pictogram van de app in de ingeklapte zijbalk niet precies in het midden."]},{"version":"2.24.3","date":"9 november 2026","items":["Verbeterd: de code voor de overstap van versie 1 naar 2 uit oktober is opgeruimd, want alle apparaten zijn al over. Een back-up van vóór die tijd kun je nog steeds terugzetten."]},{"version":"2.24.2","date":"9 november 2026","items":["Verbeterd: overbodige regels uit het sjabloon waarmee de app ooit begon, zijn opgeruimd. Je ziet geen verschil."]},{"version":"2.24.1","date":"9 november 2026","items":["Verbeterd: opmaak die nergens meer gebruikt werd, is uit de app gehaald. Je ziet geen verschil."]},{"version":"2.24.0","date":"5 november 2026","items":["Nieuw: Wachtwoord wijzigen onder Instellingen → Synchronisatie. Kies het gezamenlijke of je eigen wachtwoord, vul het huidige in en twee keer het nieuwe. De app versleutelt je gegevens in GitHub opnieuw met het nieuwe wachtwoord.","Nieuw: is een wachtwoord op een ander apparaat gewijzigd, dan vraagt de app één keer om het nieuwe wachtwoord, alleen dat ene. Wat je op dat apparaat had gewijzigd blijft bewaard.","Verbeterd: een vorige versie van vóór een wachtwoordwijziging kun je nog terugzetten op apparaten die toen al gekoppeld waren.","Let op: werk eerst alle apparaten bij, ook die van je partner, voordat je het gezamenlijke wachtwoord wijzigt. Een oudere versie vraagt je anders om te ontkoppelen en opnieuw te koppelen."]},{"version":"2.23.3","date":"5 november 2026","items":["Verbeterd: op de laptop staan de blokken in Instellingen netjes in een raster. Blokken naast elkaar zijn even hoog en hun knoppen, zoals Inkomen opslaan en Loondag opslaan, staan onderaan op één lijn.","Opgelost: bij Over de app stond het blok Op je startscherm iets lager dan het blok met de versie."]},{"version":"2.23.2","date":"5 november 2026","items":["Verbeterd: op de laptop staat Instellingen nu als een lijst. Links de koppen Synchronisatie, Huishouden, Weergave, Gegevens en Over de app, met een korte omschrijving en de status; rechts, over twee kolommen, de blokken van de kop die je kiest. Op een breed scherm staan die blokken naast elkaar. De app onthoudt je keuze per apparaat.","Verbeterd: op de iPhone en de iPad staand blijft Instellingen zoals het was, met groepen die je in- en uitklapt."]},{"version":"2.23.1","date":"5 november 2026","items":["Verbeterd: de labels Samen en Eigen zijn beter van elkaar te onderscheiden. Samen is nu gevuld in je accentkleur, Eigen blijft omlijnd. Dat werkt in elke accentkleur, ook Leisteen, en in licht en donker."]},{"version":"2.23.0","date":"4 november 2026","items":["Verbeterd: op de laptop en de iPad liggend is de zijbalk een eigen vlak over de volle hoogte van het scherm, smaller en rustiger, met de versie onder de naam. Op de iPhone en de iPad staand blijft alles zoals het was.","Nieuw: boven het werkvlak staat nu de naam van het onderdeel, met rechts de synchronisatiestatus en de knop Nieuwe last.","Nieuw: klap de zijbalk in met het pijltje bovenin of de toets [. Je ziet dan alleen de pictogrammen en het werkvlak wordt breder; wijs een pictogram aan om de naam te zien. De app onthoudt je keuze per apparaat."]},{"version":"2.22.2","date":"4 november 2026","items":["Opgelost: op de laptop sprongen de groepen in Instellingen naar een andere kolom als je er een in- of uitklapte. Elke groep heeft nu een vaste plek: Synchronisatie en Huishouden links, Weergave, Gegevens en Over de app rechts, en op een breed scherm Huishouden in een eigen kolom ertussen. Uitklappen maakt alleen die kolom langer."]},{"version":"2.22.1","date":"30 oktober 2026","items":["Verbeterd: in Maand en het Overzicht zijn alle afschrijvingen even hoog, ook als er geen jouw deel onder het bedrag staat. Een heel lange naam wordt na twee regels afgekort; tik erop om hem helemaal te zien."]},{"version":"2.22.0","date":"30 oktober 2026","items":["Nieuw: tik in Lasten op het gekleurde bolletje voor een categorie om meteen een andere kleur te kiezen. De blokken en het bolletje krijgen direct de nieuwe kleur, en je partner ziet hem ook.","Verbeterd: de kleurvakjes bij Instellingen → Huishouden → Categorieën zijn groter, zodat je ze op de iPhone makkelijker raakt."]},{"version":"2.21.1","date":"30 oktober 2026","items":["Verbeterd: in Lasten krijgt elk blok een lichte tint van de kleur van zijn categorie, net als het bolletje bij de categorie. Zo zie je in één oogopslag waar een last bij hoort, ook als je op bedrag of naam sorteert."]},{"version":"2.21.0","date":"30 oktober 2026","items":["Nieuw: Vorige versie herstellen onder Instellingen → Synchronisatie. Elke synchronisatie bewaart een versie in GitHub; kies een moment en zet je gezamenlijke of eigen lasten, afvinkjes, categorieën, verrekeningen en scenario's terug zoals ze toen waren. Ook op het apparaat van je partner.","Verbeterd: terugzetten is zelf ook een nieuwe versie, dus je kunt het weer ongedaan maken. Namen, verdeling, inkomen en loondag blijven zoals ze nu zijn."]},{"version":"2.20.0","date":"30 oktober 2026","items":["Nieuw: je gegevens onthouden welke versie van de app ze minstens nodig hebben. Heeft een ander apparaat ze opgeslagen met een nieuwere versie, dan vraagt de app eerst om bij te werken, met een knop Nu bijwerken. Tot die tijd synchroniseert hij niet en kun je niets wijzigen, zodat een oudere versie niets verkeerd kan opslaan.","Let op: werk alle apparaten bij, ook dat van je partner. Deze bescherming werkt pas op apparaten met versie 2.20.0 of nieuwer."]},{"version":"2.19.0","date":"30 oktober 2026","items":["Nieuw: bij het koppelen kies je een wachtwoord van minstens 12 tekens dat niet makkelijk te raden is. Een meter laat zien of het Zwak, Redelijk of Sterk is. Een wachtzin van vier losse woorden, zoals fiets regen koffie lantaarn, is sterk en makkelijk te onthouden.","Nieuw: tik op het oogje naast een wachtwoordveld om te zien wat je typt.","Verbeterd: je huidige wachtwoorden blijven gewoon werken, ook op een nieuw apparaat. De strengere eis geldt alleen voor een nieuw wachtwoord."]},{"version":"2.18.5","date":"30 oktober 2026","items":["Verbeterd: op de iPhone en iPad opent een back-up, Excel-bestand of CSV nu het deelmenu. Kies Bewaar in Bestanden of AirDrop naar je laptop; je loopt niet meer vast in een voorbeeldscherm. Op de laptop blijft het een gewone download."]},{"version":"2.18.4","date":"30 oktober 2026","items":["Verbeterd: de app onthoudt welke lasten, categorieën, verrekeningen en scenario's je hebt verwijderd, zodat ze niet terugkomen via een ander apparaat. Die aantekeningen worden nu na 180 dagen opgeruimd, zodat je gegevens niet blijven groeien.","Let op: heeft een apparaat langer dan een half jaar niet gesynchroniseerd, open het dan eerst en laat het bijwerken. Anders kan een last die je in die tijd hebt verwijderd terugkomen."]},{"version":"2.18.3","date":"30 oktober 2026","items":["Verbeterd: de app wacht na een wijziging tien seconden voordat hij synchroniseert. Vink je vijf lasten achter elkaar af, dan gaat dat in één keer naar GitHub in plaats van in vijf aparte opslagmomenten, zodat je data-repository niet onnodig groeit.","Verbeterd: verlaat je de app of ga je naar een ander tabblad, dan synchroniseert hij meteen. Zolang een wijziging wacht, staat er Wacht op synchroniseren."]},{"version":"2.18.2","date":"30 oktober 2026","items":["Opgelost: had je de app in twee tabbladen of vensters open, bijvoorbeeld op je laptop, dan kon het ene tabblad de wijzigingen van het andere overschrijven. Tabbladen nemen elkaars wijzigingen nu direct over.","Verbeterd: de app vraagt de browser je gegevens blijvend te bewaren, zodat iOS ze niet opruimt als er weinig ruimte is. Onder Instellingen → Gegevens zie je of dat gelukt is."]},{"version":"2.18.1","date":"30 oktober 2026","items":["Verbeterd: op een breed scherm, zoals een laptop of externe monitor, gebruikt de app nu de volle breedte. De zijbalk is wat smaller.","Verbeterd: op een heel breed scherm staat het Overzicht in drie kolommen, zodat je alles in één keer ziet."]},{"version":"2.18.0","date":"29 oktober 2026","items":["Nieuw: stel onder Instellingen → Huishouden je loondag in. Valt die in het weekend of op een feestdag, dan rekent de app met de werkdag ervoor, zoals vrijdag 23 oktober in plaats van zondag 25 oktober.","Nieuw: Tot je loon in het Overzicht. Je ziet hoeveel er tot je volgende loon nog van je eigen rekening afgaat: je eigen lasten en gezamenlijke lasten die je zelf betaalt. Gezamenlijke lasten van de gezamenlijke rekening tellen niet mee.","Verbeterd: met een loondag loopt Eerstvolgende in het Overzicht door tot je volgende loon, in plaats van twee weken vooruit.","Verbeterd: je loondag staat net als je inkomen alleen in je eigen versleutelde bestand."]},{"version":"2.17.0","date":"29 oktober 2026","items":["Nieuw: thema's. Kies onder Instellingen → Weergave tussen Automatisch, Licht en Donker. Automatisch volgt je iPhone, iPad of laptop.","Nieuw: een accentkleur: Petrol, Blauw, Paars, Terracotta of Leisteen. Knoppen, tabbladen en het label Samen kleuren mee; de kleuren van categorieën, grafieken en meldingen blijven gelijk.","Verbeterd: je thema geldt alleen voor het apparaat waarop je het kiest, zodat je partner haar eigen keuze houdt."]},{"version":"2.16.1","date":"29 oktober 2026","items":["Verbeterd: eigen lasten hebben nu ook een label, Eigen, net zoals gezamenlijke lasten het label Samen hebben. In Maand, het Overzicht en Lasten zie je zo meteen wat van jou alleen is."]},{"version":"2.16.0","date":"29 oktober 2026","items":["Nieuw: het tabblad Inzicht, tussen Lasten en Instellingen. Daar staan de jaargrafiek, de vergelijking met vorig jaar, per categorie, inkomen en wat overblijft, en Wat als. Het filter Alles, Gezamenlijk, Eigen werkt er ook.","Verbeterd: het Overzicht is korter en laat zien wat er nu moet gebeuren: contracten die aandacht vragen, deze maand, de afschrijvingen om af te vinken, de gezamenlijke rekening en verrekenen.","Verbeterd: het Overzicht heeft een huisje als pictogram; Inzicht krijgt de grafiek. Op de laptop openen de toetsen 1 tot en met 5 de onderdelen."]},{"version":"2.15.1","date":"29 oktober 2026","items":["Verbeterd: Instellingen is ingedeeld in vier groepen die je in- en uitklapt: Synchronisatie, Huishouden, Gegevens en Over de app. De app onthoudt welke je open hebt.","Verbeterd: Synchronisatie staat bovenaan, met in de kop of je gekoppeld bent. Is er een wachtwoord nodig, dan klapt de groep vanzelf open.","Verbeterd: exporteren en back-up staan samen onder Gegevens."]},{"version":"2.15.0","date":"29 oktober 2026","items":["Nieuw: Datum voorbij. Lasten waarvan de datum geweest is en die je nog niet hebt afgevinkt, staan in Maand en het Overzicht apart bovenaan. Zo zie je meteen wat je nog moet controleren.","Nieuw: aan het eind van de maand toont het Overzicht bij Eerstvolgende ook de afschrijvingen van de komende twee weken in de volgende maand. Die kun je daar meteen afvinken.","Nieuw: in de eerste twee weken van een maand zie je ook wat er van eind vorige maand nog niet is afgevinkt."]},{"version":"2.14.4","date":"29 oktober 2026","items":["Verbeterd: afschrijvingen in Maand en het Overzicht nemen minder ruimte in. Naam en bedrag staan bovenaan, met jouw deel onder het bedrag, en de labels over de volle breedte eronder. Op de iPhone zie je zo veel meer lasten tegelijk.","Verbeterd: het label Nog afvinken is weg; het lege vinkje zegt hetzelfde."]},{"version":"2.14.3","date":"29 oktober 2026","items":["Verbeterd: op de iPhone en iPad staat de knop Nieuwe last bij Lasten, naast het zoekveld. Hij zweeft niet meer over de afschrijvingen, zodat je elk vinkje kunt raken. Op de laptop staat hij zoals altijd in de zijbalk."]},{"version":"2.14.2","date":"29 oktober 2026","items":["Verbeterd: de knoppen Alles, Gezamenlijk en Eigen staan nu bij de inhoud waar ze op werken: bij Maand naast de maandkiezer, bij Overzicht en Lasten bovenaan. Bij Instellingen verdwijnen ze, omdat ze daar niets doen."]},{"version":"2.14.1","date":"27 oktober 2026","items":["Verbeterd: de handleiding in de download heet nu README.md in plaats van LEESMIJ.md, zodat GitHub hem op de pagina van je repository toont. Het oude bestand LEESMIJ.md kun je uit de repository verwijderen."]},{"version":"2.14.0","date":"27 oktober 2026","items":["Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.","Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.","Verbeterd: bij Wat als staat de knop Weg op de telefoon naast het bedrag."]},{"version":"2.13.0","date":"27 oktober 2026","items":["Nieuw: Wat als in het Overzicht. Reken een verandering door zonder je lasten aan te passen: een ander bedrag voor bestaande lasten, lasten die vervallen of nieuwe lasten erbij.","Nieuw: je ziet direct het verschil in totale vaste lasten, jouw deel, de inleg per persoon en, als je je inkomen hebt ingevuld, wat je vrij te besteden hebt. Scenario's bewaar je met een naam; ze staan in je eigen bestand en zijn alleen voor jou zichtbaar.","Opgelost: op de iPhone was de pagina bij Overzicht en Instellingen iets breder dan het scherm, waardoor Safari een beetje uitzoomde. Dat kwam door verborgen tooltips in de grafiek en de keuzerondjes bij de standaardverdeling."]},{"version":"2.12.0","date":"27 oktober 2026","items":["Nieuw: het Overzicht vergelijkt je kosten met vorig jaar: hoeveel procent duurder of goedkoper, de grootste stijgers en dalers per last en de verschillen per categorie.","Nieuw: de jaargrafiek toont vorig jaar als gestippelde omtrek achter elke balk, zodra er verschil is."]},{"version":"2.11.0","date":"27 oktober 2026","items":["Nieuw: tik in Maand of Overzicht op het bedrag van een afschrijving om het werkelijk afgeschreven bedrag in te vullen, bijvoorbeeld bij een variabele rekening. De last wordt dan meteen afgevinkt en het geplande bedrag staat doorgestreept ernaast.","Nieuw: Eenmalig bij Hoe vaak, voor een afrekening, naheffing of andere afschrijving die één keer voorkomt. Die telt mee in de maand zelf en in het jaar, maar niet als vaste last per maand. Bij Lasten staan ze onder Eenmalig.","Nieuw: Maand en het Overzicht tonen gepland tegenover werkelijk als die verschillen. De jaargrafiek en het verrekenen rekenen met het werkelijke bedrag.","Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.11.0 toont een eenmalige post als maandelijkse last."]},{"version":"2.10.0","date":"27 oktober 2026","items":["Nieuw: kies bij een gezamenlijke last wie hem betaalt: de gezamenlijke rekening, of één van jullie van een eigen rekening.","Nieuw: het Overzicht houdt bij wat de ander moet bijdragen, bijvoorbeeld Anne betaalt jou € 572,50, met de laatste betalingen. Met Markeer als verrekend zet je het saldo op nul; dat kun je ongedaan maken.","Nieuw: bij het afvinken legt de app vast wie betaalde, het bedrag en de verdeling op dat moment. Latere wijzigingen aan de last veranderen het saldo dus niet.","Verbeterd: de inleg op de gezamenlijke rekening telt alleen lasten die van die rekening gaan."]},{"version":"2.9.0","date":"27 oktober 2026","items":["Nieuw: vul onder Instellingen → Huishouden je netto inkomen in. Het staat versleuteld in je eigen bestand en is alleen voor jou zichtbaar.","Nieuw: het Overzicht toont welk deel van je inkomen naar vaste lasten gaat en wat er per maand vrij te besteden is.","Nieuw: gezamenlijke lasten naar inkomen verdelen. Delen jullie allebei je inkomen, dan berekent de app de standaardverdeling automatisch. Tot die tijd geldt het vaste percentage.","Verbeterd: de namen van categorieën in Instellingen staan in gewone tekstkleur."]},{"version":"2.8.0","date":"27 oktober 2026","items":["Nieuw: eigen categorieën. Onder Instellingen → Huishouden voeg je categorieën toe, zoals Kinderopvang of Huisdieren, en wijzig je de naam en kleur van elke categorie. Ze worden gedeeld met je partner.","Nieuw: een categorie verwijderen kan ook; de lasten erin gaan dan naar Overig.","Verbeterd: nieuwe kleuren voor de categorieën, die ook voor kleurenblinden goed van elkaar te onderscheiden zijn.","Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.6.2 toont de eigen categorieën als Overig."]},{"version":"2.7.0","date":"27 oktober 2026","items":["Nieuw: zoeken in Lasten op naam, notitie of contract- en polisnummer. Hoofdletters en accenten maken niet uit, en de zoekterm wordt gemarkeerd.","Nieuw: sorteren in Lasten per categorie, op bedrag, naam, dag van afschrijving of einddatum van het contract. Je keuze wordt onthouden.","Nieuw: sneltoets / om op de laptop direct te zoeken; Esc maakt het zoekveld leeg."]},{"version":"2.6.2","date":"27 oktober 2026","items":["Verbeterd: het blok Per categorie in het Overzicht volgt het filter, net als het kostenblok. Bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee, bij Eigen zie je je eigen kosten. De percentages tellen op tot 100%.","Verbeterd: de app bewaart voortaan gegevens die een nieuwere versie toevoegt, ook op een apparaat dat nog niet is bijgewerkt. Zo raak je bij volgende uitbreidingen niets kwijt.","Verbeterd: wishlistpunten houden een vast nummer, ook in de app."]},{"version":"2.6.1","date":"27 oktober 2026","items":["Verbeterd: de balken in de kostengrafiek van het Overzicht tonen in groen wat in die maand is betaald en in blauw wat nog open staat, met een legenda. De tooltip en de schermlezer noemen beide bedragen.","Verbeterd: de wishlist heeft vijf nieuwe punten (10 tot en met 14)."]},{"version":"2.6.0","date":"26 oktober 2026","items":["Nieuw: prijswijzigingen met ingangsdatum. Pas je het bedrag van een bestaande last aan, dan kies je vanaf welke maand het nieuwe bedrag geldt; eerdere maanden houden het oude bedrag. Ook een aangekondigde verhoging per januari kun je alvast invoeren.","Nieuw: de prijsgeschiedenis per last staat in het formulier, met de mogelijkheid een wijziging te verwijderen.","Nieuw: bij Lasten zie je een komende prijswijziging en hoeveel een last ten opzichte van vorig jaar is gestegen of gedaald. De jaargrafiek en de maandlijsten rekenen per maand met het juiste bedrag.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont alleen het huidige bedrag en kan de prijsgeschiedenis wissen als je daar een last bewerkt."]},{"version":"2.5.0","date":"26 oktober 2026","items":["Nieuw: per last een einddatum, opzegtermijn, contract- of polisnummer en de website van de aanbieder, onder Contract en looptijd in het formulier.","Nieuw: het Overzicht waarschuwt bij contracten die binnen twee maanden opgezegd moeten worden of aflopen, en bij een contract dat net is verlopen.","Nieuw: kies Stopt na de einddatum voor een last die daarna vervalt, zoals een afgeloste lening. Na die maand telt hij niet meer mee en staat hij bij Lasten onder Beëindigd.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie kan de contractgegevens wissen als je daar een last bewerkt."]},{"version":"2.4.1","date":"26 oktober 2026","items":["Verbeterd: het kostenblok in het Overzicht volgt het filter. Bij Alles heet het Totale kosten, bij Gezamenlijk Gezamenlijke kosten en bij Eigen Jouw kosten. De bedragen en de jaargrafiek tellen gezamenlijke lasten dan volledig mee; daaronder staat wat jouw deel daarvan is."]},{"version":"2.4.0","date":"26 oktober 2026","items":["Nieuw: vier onderdelen in een logischere volgorde: Overzicht, Maand, Lasten en Instellingen. De app opent op het Overzicht.","Nieuw: het Overzicht toont de stand van deze maand, de eerstvolgende afschrijvingen om meteen af te vinken, jouw kosten met een jaargrafiek per maand, de gezamenlijke rekening en de verdeling per categorie.","Nieuw: Instellingen bundelt huishouden (namen en verdeling), dit apparaat en synchronisatie, back-up en informatie over de app.","Verbeterd: de maandkiezer en de maandsamenvatting staan alleen nog bij Maand, waar de maand ertoe doet. De samenvatting toont jouw deel van die maand in plaats van een jaargemiddelde.","Verbeterd: tik op de naam van een last in Maand of Overzicht om hem te bewerken.","Verbeterd: het filter Alles, Gezamenlijk, Eigen verdwijnt bij Instellingen, waar het niets doet."]},{"version":"2.3.0","date":"26 oktober 2026","items":["Nieuw: het versienummer staat klein naast de naam, linksboven. Tik erop om te zien wat er veranderde.","Nieuw: staat er een nieuwere versie klaar, dan verandert het label in Update beschikbaar. Tik erop en de app werkt zichzelf bij; je hoeft hem niet meer af te sluiten en opnieuw te openen.","Nieuw: het bestand version.json, waarmee de app controleert of er een nieuwe versie is. Upload het voortaan mee."]},{"version":"2.2.0","date":"26 oktober 2026","items":["Nieuw: bij Hoe vaak kun je kiezen voor Per half jaar. Je kiest de eerste maand van afschrijving; de last komt daarna elke zes maanden terug.","Nieuw: het versienummer en deze lijst met wijzigingen staan in de app onder Overzicht.","Let op: werk alle apparaten bij, ook dat van je partner. Een oudere versie toont halfjaarlijkse lasten maar één keer per jaar."]},{"version":"2.1.0","date":"26 oktober 2026","items":["Nieuw: indeling per schermgrootte. iPhone: tabbladen in een balk onderin en grotere tikvlakken. iPad staand: brede samenvatting en twee kolommen. iPad liggend en laptop: vaste zijbalk met een werkvlak van twee tot drie kolommen.","Nieuw: Deze maand is gesplitst in Nog te betalen en Betaald, elk met aantal en totaal.","Nieuw: sneltoetsen op de laptop: N nieuwe last, pijltjes voor de maand, 1 2 3 voor de tabbladen.","Verbeterd: invoervelden zoomen op de iPhone niet meer in."]},{"version":"2.0.0","date":"21 oktober 2026","items":["Nieuw: elke last is Eigen of Gezamenlijk, met per last een eigen verdeling of de standaardverdeling.","Nieuw: filter Alles, Gezamenlijk of Eigen op alle schermen.","Nieuw: overzicht van de maandelijkse inleg per persoon op de gezamenlijke rekening.","Nieuw: synchronisatie gesplitst in een gezamenlijk bestand en een eigen bestand per persoon, elk met een eigen wachtwoord. Je partner ziet jouw eigen lasten niet.","Let op: opnieuw koppelen nodig. Bestaande lasten staan daarna onder Eigen."]},{"version":"1.1.0","date":"15 oktober 2026","items":["Nieuw: synchronisatie tussen apparaten via een privé GitHub-repository, versleuteld met een wachtwoord."]},{"version":"1.0.0","date":"15 oktober 2026","items":["Eerste versie: vaste lasten per maand, kwartaal of jaar bijhouden, per maand afvinken, overzicht per categorie, back-up en installeren als app."]}]/*END*/;
 const STORES=['samen','eigen'];
 const eur=new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR'});
 const $=id=>document.getElementById(id);
@@ -836,6 +842,7 @@ function migrateAll(d){
   return e?{samen:EMPTY(),eigen:e}:null;
 }
 function load(){
+  if(coreMode) return {samen:EMPTY(),eigen:EMPTY()};
   try{const r=localStorage.getItem(DKEY); if(r){const s=migrateAll(JSON.parse(r)); if(s) return s;}}catch(e){}
   const ex={samen:{...EMPTY(),items:mk(EX_SAMEN,'vbs')},eigen:{...EMPTY(),items:mk(EX_EIGEN,'vbe')}};
   /* voorbeeldcontracten, gerekend vanaf vandaag: energie loopt over ruim twee maanden af, telefoon over een half jaar */
@@ -850,8 +857,20 @@ function load(){
   return ex;
 }
 let state=load(); STORES.forEach(st=>prune(state[st]));
-function saveLocal(){try{localStorage.setItem(DKEY,JSON.stringify(state));}catch(e){}}
+function saveLocal(){
+  if(coreMode){
+    if(!coreReady||!coreRuntime) return;
+    const snapshot=structuredClone(state);
+    coreRuntime.persistState(snapshot).then(()=>{corePersistError='';}).catch(e=>{
+      corePersistError=e.message||'Lokaal opslaan in de Core-kluis is mislukt.';
+      syncError=corePersistError; setPill('err','Opslagfout',corePersistError); renderSyncPanel();
+    });
+    return;
+  }
+  try{localStorage.setItem(DKEY,JSON.stringify(state));}catch(e){}
+}
 function save(){
+  if(coreMode&&!coreReady){toast('Ontgrendel eerst de Core-kluizen.');return;}
   if(needVer){   // gegevens van een nieuwere versie: niets opslaan, de wijziging terugdraaien
     try{const s=migrateAll(JSON.parse(localStorage.getItem(DKEY))); if(s) state=s;}catch(e){}
     render(); needToast(); return;
@@ -965,6 +984,10 @@ let view={y:now.getFullYear(),m:now.getMonth()};
 let editing=null;
 let cfg=null;
 try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}
+if(coreMode&&!cfg&&coreProfile&&coreProfile.owner&&coreProfile.repo&&['p1','p2'].includes(coreProfile.me)){
+  cfg={owner:coreProfile.owner,repo:coreProfile.repo,me:coreProfile.me,salt:{},iter:{}};
+  try{localStorage.setItem(CFGKEY,JSON.stringify(cfg));}catch(e){}
+}
 
 const mkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
 const daysIn=(y,m)=>new Date(y,m+1,0).getDate();
@@ -1796,6 +1819,27 @@ async function readRemote(c,file,ref){
   if(!env||!env.kdf||!env.kdf.salt||!env.iv||!env.ct) throw new SyncError('Het bestand '+file+' in de repository is niet door deze app gemaakt.');
   return {env,sha:j.sha};
 }
+const corePathFor=st=>st==='samen'?'pwa-core-v1/samen.json':`pwa-core-v1/eigen-${cfg.me}.json`;
+async function readCoreRemote(c,file,ref){
+  const r=await gh('GET',cpath(c,file)+(ref?'?ref='+encodeURIComponent(ref):''),null,c);
+  if(r.status===404) return {env:null,sha:undefined};
+  if(r.status===403) throw new SyncError('De token heeft geen toegang tot deze repository.');
+  if(!r.ok) throw new SyncError('GitHub gaf een foutmelding ('+r.status+').');
+  const j=await r.json();
+  let content=j.content;
+  if(j.encoding!=='base64'||!content){
+    const blob=await gh('GET','/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/git/blobs/'+j.sha,null,c);
+    if(!blob.ok) throw new SyncError('De Core-back-up kon niet worden opgehaald.');
+    const data=await blob.json(); content=data.content;
+  }
+  let env;
+  try{
+    const bytes=Uint8Array.from(atob(content.replace(/\s/g,'')),char=>char.charCodeAt(0));
+    env=JSON.parse(new TextDecoder().decode(bytes));
+  }catch(e){throw new SyncError('De Core-back-up is beschadigd.');}
+  if(!env||env.format!=='pwa-vault'||!env.kdf||!env.payload||!env.wrappedKey) throw new SyncError('Dit is geen geldig PWA-Core-kluisbestand.');
+  return {env,sha:j.sha};
+}
 async function writeRemote(obj,sha,c,file,key,salt,iter){
   const env=await seal(obj,key,salt,iter);
   const r=await gh('PUT',cpath(c,file),{message:'Vaste lasten bijgewerkt',content:btoa(JSON.stringify(env)),...(sha?{sha}:{})},c);
@@ -1814,6 +1858,14 @@ function setPill(s,text,title){
 }
 const hasKeys=()=>!!(keys.samen&&keys.eigen);
 function pillIdle(){
+  if(coreMode){
+    if(!cfg) return setPill();
+    if(!coreReady) return setPill('warn','Core vergrendeld','Ontgrendel beide Core-kluizen');
+    if(syncError||corePersistError) return setPill('err','Sync-fout',syncError||corePersistError);
+    if(!navigator.onLine||!coreConnected) return setPill('warn','Alleen lokaal','Wijzigingen zijn versleuteld opgeslagen; synchroniseer zodra je verbindt');
+    if(timer) return setPill('busy','Wacht op synchroniseren','Je wijzigingen worden gebundeld');
+    return setPill('ok','PWA-Core actief',lastSync?'Laatst: '+lastSync.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'');
+  }
   if(!cfg) return setPill();
   if(!hasKeys()) return setPill('warn','Wachtwoord nodig','Tik om de synchronisatie te ontgrendelen');
   if(needVer) return setPill('warn','Bijwerken nodig','Werk de app bij; tot die tijd synchroniseert hij niet');
@@ -1825,11 +1877,26 @@ function pillIdle(){
    en synchroniseert direct als je de app verlaat of naar een ander tabblad gaat (2.18.3) */
 const SYNC_DELAY=10000;
 function scheduleSync(){
+  if(coreMode){
+    if(!coreReady||!coreConnected){if(timer){clearTimeout(timer);timer=null;} pillIdle(); return;}
+    clearTimeout(timer); timer=setTimeout(()=>{timer=null; sync();},SYNC_DELAY);
+    if(!syncing) pillIdle();
+    return;
+  }
   if(!cfg||!hasKeys()) return;
   clearTimeout(timer); timer=setTimeout(()=>{timer=null; sync();},SYNC_DELAY);
   if(!syncing) pillIdle();
 }
-function syncNow(){ if(timer){clearTimeout(timer); timer=null; sync();} }
+function syncNow(){
+  if(coreMode){
+    if(timer){clearTimeout(timer);timer=null;}
+    if(coreReady) coreRuntime.flushLocal().then(()=>{if(navigator.onLine&&coreConnected) return sync();}).catch(e=>{
+      corePersistError=e.message||'Lokaal opslaan is mislukt.'; syncError=corePersistError; setPill('err','Opslagfout',corePersistError);
+    });
+    return;
+  }
+  if(timer){clearTimeout(timer); timer=null; sync();}
+}
 
 async function syncStore(st){
   const file=fileOf(st);
@@ -1857,6 +1924,26 @@ async function syncStore(st){
   throw new SyncError('GitHub heeft de wijziging na vier pogingen niet bevestigd. De gegevens zijn nog niet gesynchroniseerd. Probeer het later opnieuw.');
 }
 async function sync(){
+  if(coreMode){
+    if(!coreReady||!coreRuntime) return pillIdle();
+    if(syncing){again=true;return;}
+    if(!navigator.onLine||!coreConnected){
+      try{await coreRuntime.flushLocal();}catch(e){corePersistError=e.message||'Lokaal opslaan is mislukt.';syncError=corePersistError;setPill('err','Opslagfout',corePersistError);renderSyncPanel();return;}
+      return pillIdle();
+    }
+    syncing=true; setPill('busy','Synchroniseren…');
+    try{
+      const result=await coreRuntime.sync();
+      state=result.state; coreConnected=true; await clearCoreStagingAfterSync(); corePersistError=''; lastSync=new Date(); syncError=''; pillIdle(); render(); renderSyncPanel();
+    }catch(e){
+      syncError=e.message||'Synchroniseren via PWA-Core is mislukt.';
+      setPill('err','Sync-fout',syncError); renderSyncPanel();
+    }finally{
+      syncing=false;
+      if(again){again=false;scheduleSync();}
+    }
+    return;
+  }
   if(!cfg||!hasKeys()) return pillIdle();
   if(syncing){again=true;return;}
   if(!navigator.onLine) return pillIdle();
@@ -1914,13 +2001,13 @@ const PW='type="password" autocomplete="new-password"';
 
 /* instellingen: groepen in- en uitklappen; je keuze wordt onthouden */
 function groupDefault(g){
-  if(g==='sync') return !IS_PWA||!cfg||!hasKeys();
+  if(g==='sync') return !IS_PWA||!cfg||(coreMode?!coreReady:!hasKeys());
   return g==='huis';
 }
 function setGroups(){
   const st=ui.groups||{};
   document.querySelectorAll('#v-instellingen details.set-group').forEach(d=>{
-    const g=d.dataset.g, must=g==='sync'&&IS_PWA&&cfg&&!hasKeys();   // wachtwoord nodig: altijd open
+    const g=d.dataset.g, must=g==='sync'&&IS_PWA&&cfg&&(coreMode?!coreReady:!hasKeys());   // ontgrendeling nodig: altijd open
     if(must) syncForced=true;
     autoOpen(d,must||(g in st?st[g]:groupDefault(g)));
   });
@@ -1934,7 +2021,7 @@ function applySetLayout(){
   const v=$('v-instellingen'), groups=v.querySelectorAll('details.set-group');
   if(WIDE.matches){
     const known=g=>g&&v.querySelector('details[data-g="'+g+'"]');
-    const s=IS_PWA&&cfg&&!hasKeys()?'sync':known(setCur)?setCur:known(ui.setSel)?ui.setSel:'sync';
+    const s=IS_PWA&&cfg&&(coreMode?!coreReady:!hasKeys())?'sync':known(setCur)?setCur:known(ui.setSel)?ui.setSel:'sync';
     setCur=s; setWide=true; v.classList.add('set-md');
     groups.forEach(d=>{const on=d.dataset.g===s; d.classList.toggle('sel',on); if(on) autoOpen(d,true);});
     v.querySelectorAll('#setNav [data-sg]').forEach(b=>b.setAttribute('aria-current',b.dataset.sg===s?'true':'false'));
@@ -1963,14 +2050,19 @@ function renderSetState(){
   const el=$('syncSt'); if(!el) return;
   let t='',s='';
   if(IS_PWA){
-    if(!cfg){t='Niet gekoppeld';}
+    if(coreMode){
+      if(!cfg){t='Core-koppeling ontbreekt';s='warn';}
+      else if(!coreReady){t='Core vergrendeld';s='warn';}
+      else if(syncError||corePersistError){t='Niet gelukt';s='warn';}
+      else {t='PWA-Core actief';s='ok';}
+    }else if(!cfg){t='Niet gekoppeld';}
     else if(!hasKeys()){t='Wachtwoord nodig';s='warn';}
     else if(syncError){t='Niet gelukt';s='warn';}
     else {t='Gekoppeld als '+nameOf(cfg.me);s='ok';}
   }
   el.textContent=t; el.dataset.s=s; el.hidden=!t;
   const sd=document.querySelector('#v-instellingen details[data-g="sync"]');
-  if(t==='Wachtwoord nodig'){syncForced=true; autoOpen(sd,true);}
+  if(t==='Wachtwoord nodig'||t==='Core vergrendeld'){syncForced=true; autoOpen(sd,true);}
   else if(syncForced){syncForced=false; if(!(ui.groups&&'sync' in ui.groups)) autoOpen(sd,groupDefault('sync'));}
   applySetLayout(); navStates();
 }
@@ -1992,11 +2084,40 @@ $('themePanel').addEventListener('change',e=>{
   if(t.name==='th-mode') ui.mode=t.value; else if(t.name==='th-acc') ui.accent=t.value; else return;
   saveUi(); applyTheme(); themeState();
 });
+function coreMigrationHtml(){
+  if(!cfg||coreMode) return '';
+  return '<div class="hist" id="coreMigration"><h4>Overstappen naar PWA-Core</h4>'+
+    '<p class="note">Werk eerst alle apparaten bij naar 3.0.0. De migratie gebruikt de gekoppelde privérepository <code>'+esc(cfg.owner+'/'+cfg.repo)+'</code> en verwacht daar in de root de bestaande bestanden <code>samen.json</code> en <code>'+esc(fileOf('eigen'))+'</code>. Controleer dat dit de juiste repository is. Ontbreekt een van deze bestanden, dan stopt de migratie voordat er iets wordt geschreven. De migratie synchroniseert eerst je bestaande gegevens, blokkeert daarna oudere appversies en zet je gezamenlijke en eigen gegevens over naar twee aparte Core-kluizen. Gebruik hier je bestaande gezamenlijke en eigen wachtwoord; die worden ook de wachtwoorden van de nieuwe kluizen. Een apparaat dat nog niet is gemigreerd werkt tijdelijk met de oude bestanden; die wijzigingen worden meegenomen zodra dat apparaat ook migreert. De oude bestanden blijven als terugvaloptie bewaard.</p>'+
+    '<div class="two">'+fieldHtml('core-mig-s','Bestaand gezamenlijk wachtwoord','type="password" autocomplete="current-password"')+
+    fieldHtml('core-mig-e','Bestaand eigen wachtwoord','type="password" autocomplete="current-password"')+'</div>'+
+    '<div class="err" id="core-mig-err"></div><div class="btns"><button class="btn primary" id="core-migrate">Migreer naar PWA-Core</button></div></div>';
+}
 function renderSyncPanel(){
   renderSetState();
   const el=$('syncPanel');
   const h='<h4>Synchroniseren via GitHub</h4>';
   if(!IS_PWA){el.innerHTML=h+'<div class="note">Synchroniseren tussen apparaten en met je partner werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
+  if(coreMode){
+    if(!cfg){el.innerHTML=h+'<div class="err">De Core-kluizen zijn lokaal aanwezig, maar de GitHub-koppeling ontbreekt. Herstel eerst de koppeling met dezelfde privé-repository.</div>';renderCoreGate();return;}
+    if(!coreReady){
+      el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 is actief. De kluizen zijn vergrendeld.</div><div class="note">Ontgrendel beide kluizen om je gegevens te openen. De gezamenlijke kluis en jouw persoonlijke kluis blijven onafhankelijk versleuteld.</div>';
+      renderCoreGate(); return;
+    }
+    const passkeyEnrolled=coreRuntime&&coreRuntime.isBiometricEnrolled(cfg.me);
+    const passkeyControls='<div class="note">Eén passkey ontgrendelt op dit apparaat zowel de gezamenlijke als jouw persoonlijke kluis. De twee kluizen houden ieder hun eigen versleutelde sleutel.</div>'+
+      '<div class="btns">'+
+      (!passkeyEnrolled?'<button class="btn" id="core-passkey-existing">Bestaande passkey koppelen</button><button class="btn" id="core-passkey">Nieuwe passkey instellen</button>':'<span class="ok-line">Passkey voor beide actieve kluizen ingesteld.</span>')+
+      '</div>';
+    el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 · actief als <b>'+esc(nameOf(cfg.me))+'</b>.</div>'+
+      '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
+      '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
+      '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
+      (hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+
+      (pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+
+      '<button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>'+passkeyControls+histHtml()+pwHtml()+
+      '<div class="note">Je gegevens worden lokaal versleuteld opgeslagen. De synchronisatie gebruikt de gepinde PWA-Core v1.1.0-release.</div>';
+    renderCoreGate(); return;
+  }
   if(cfg){
     const where='<code>'+esc(cfg.owner)+'/'+esc(cfg.repo)+'</code>';
     if(!hasKeys()){
@@ -2009,7 +2130,7 @@ function renderSyncPanel(){
         :'Vul je '+(fs&&fe?'wachtwoorden':'wachtwoord')+' in om verder te synchroniseren.';
       el.innerHTML=h+'<div class="ok-line">Gekoppeld met '+where+' als '+esc(nameOf(cfg.me))+'.</div><div class="note'+(changed.length?' pw-new':'')+'">'+msg+'</div>'+
         (fs&&fe?'<div class="two">'+fs+fe+'</div>':fs+fe)+
-        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>';
+        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+coreMigrationHtml();
       return;
     }
     const keep=pwc.open?[...el.querySelectorAll('#pwBox input[type="password"],#pwBox input[type="text"]')].map(i=>[i.id,i.value,i.type]):[];
@@ -2018,7 +2139,7 @@ function renderSyncPanel(){
       '<div class="note">Gezamenlijke lasten staan in <code>samen.json</code> en zie je allebei. Je eigen lasten staan in <code>'+esc(fileOf('eigen'))+'</code>, versleuteld met jouw eigen wachtwoord.</div>'+
       '<div class="err" id="s-err">'+esc(syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button>'+(hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+(pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+'<button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+histHtml()+pwHtml()+
-      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>';
+      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>'+coreMigrationHtml();
     /* wat je in Wachtwoord wijzigen typte blijft staan als de synchronisatie het paneel opnieuw tekent */
     for(const [id,v,t] of keep){const i=$(id); if(i){i.value=v; if(t==='text'){i.type='text'; const b=el.querySelector('[data-eye="'+id+'"]'); if(b){b.setAttribute('aria-pressed','true'); b.setAttribute('aria-label',b.getAttribute('aria-label').replace('Toon','Verberg'));}} if(METER.includes(id)) updateMeter(id);}}
     if(foc&&$(foc)) $(foc).focus();
@@ -2158,6 +2279,257 @@ async function unlock(){
   cfg.salt=salt; cfg.iter=iter; delete cfg.pwNew; saveCfg();
   renderSyncPanel(); sync();
 }
+
+async function ensureCoreRuntime(){
+  if(coreRuntime) return coreRuntime;
+  const mod=await import('./js/vastelasten-core.js');
+  coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge});
+  return coreRuntime;
+}
+async function coreSettings(){
+  if(!cfg) throw new SyncError('Koppel eerst de bestaande privé-repository.');
+  return {owner:cfg.owner,repo:cfg.repo,token:await tokenFor(cfg)};
+}
+async function replaceCoreToken(){
+  if(!cfg) throw new SyncError('De repositorygegevens ontbreken op dit apparaat.');
+  if(!navigator.onLine) throw new SyncError('Een GitHub-token herstellen vereist internet.');
+  const token=$('core-token')?.value.trim()||'';
+  if(!token) throw new SyncError('Plak je nieuwe GitHub-token.');
+  let response;
+  try{
+    response=await fetch('https://api.github.com/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo),{
+      method:'GET',cache:'no-store',
+      headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+    });
+  }catch(e){throw new SyncError('GitHub is niet bereikbaar. Probeer het later opnieuw.');}
+  if(response.status===401) throw new SyncError('Deze GitHub-token is ongeldig of verlopen.');
+  if(response.status===403||response.status===404) throw new SyncError('Deze token heeft geen toegang tot de ingestelde privé-repository.');
+  if(!response.ok) throw new SyncError('GitHub gaf een foutmelding ('+response.status+').');
+  const info=await response.json();
+  if(!info.private) throw new SyncError('De gegevensrepository moet privé zijn.');
+  await idb('readwrite',store=>{store.delete('githubToken');store.delete('githubTokenKey');});
+  cfg={...cfg,token};
+  await storeToken(cfg);
+  renderCoreGate(); renderSyncPanel();
+  toast('GitHub-verbinding hersteld. Ontgrendel daarna je Core-kluizen.');
+}
+async function ensureLegacyKeysForMigration(passwords){
+  if(!cfg) throw new SyncError('Er is geen bestaande GitHub-koppeling.');
+  const {requireLegacyEnvelope}=await import('./js/multi-vault-adapter.js');
+  const next={...keys}, salt={...(cfg.salt||{})}, iter={samen:cfgIter(cfg,'samen'),eigen:cfgIter(cfg,'eigen')};
+  for(const st of STORES){
+    const password=passwords[st];
+    if(!password) throw new SyncError(st==='samen'?'Vul het gezamenlijke wachtwoord in.':'Vul je eigen wachtwoord in.');
+    const file=fileOf(st);
+    const {env}=await readRemote(cfg,file);
+    requireLegacyEnvelope({env,file,owner:cfg.owner,repo:cfg.repo});
+    const useSalt=env.kdf.salt||salt[st];
+    if(!useSalt) throw new SyncError('De bestaande sleutelgegevens ontbreken voor '+(st==='samen'?'het gezamenlijke bestand.':'je eigen bestand.'));
+    const useIter=iterOf(env);
+    const key=await deriveKey(password,useSalt,useIter);
+    try{await openEnv(env,key);}
+    catch(e){throw new SyncError(st==='samen'?'Het gezamenlijke wachtwoord klopt niet.':'Je eigen wachtwoord klopt niet.');}
+    next[st]=key; salt[st]=useSalt; iter[st]=useIter;
+  }
+  keys=next; cfg.salt=salt; cfg.iter=iter; delete cfg.pwNew; saveCfg();
+  await keySet(KEYN.samen,keys.samen); await keySet(KEYN.eigen,keys.eigen);
+}
+async function syncLegacyBeforeMigration(){
+  if(syncing) throw new SyncError('Er loopt al een synchronisatie. Probeer de migratie zo nog eens.');
+  if(!navigator.onLine) throw new SyncError('De eerste migratie vereist internet, zodat de bestaande gegevens eerst veilig kunnen worden gesynchroniseerd.');
+  if(timer){clearTimeout(timer);timer=null;}
+  syncError='';
+  await sync();
+  if(timer){clearTimeout(timer);timer=null;}
+  if(syncError) throw new SyncError(syncError);
+  if(!hasKeys()) throw new SyncError('De bestaande synchronisatie is nog niet ontgrendeld.');
+}
+async function raiseCoreLegacyBarrier(){
+  const {raiseLegacyUpdateBarrier}=await import('./js/multi-vault-adapter.js');
+  return raiseLegacyUpdateBarrier({
+    minApp:'3.0.0',
+    readLegacy:()=>readRemote(cfg,'samen.json'),
+    openLegacy:(env)=>openEnv(env,keys.samen),
+    writeLegacy:(next,sha)=>writeRemote(next,sha,cfg,'samen.json',keys.samen,cfg.salt.samen,cfgIter(cfg,'samen')),
+    compareVersions:cmpVer,
+  });
+}
+async function migrateToCore(){
+  if(!IS_PWA) throw new SyncError('De migratie werkt alleen in de geïnstalleerde PWA.');
+  if(!cfg) throw new SyncError('Koppel eerst de bestaande privé-repository.');
+  const sharedPassword=$('core-mig-s')?.value||'';
+  const personalPassword=$('core-mig-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul beide bestaande wachtwoorden in. Deze worden ook de wachtwoorden van de nieuwe Core-kluizen.');
+  await ensureCoreRuntime();
+  await ensureLegacyKeysForMigration({samen:sharedPassword,eigen:personalPassword});
+  const result=await coreRuntime.migrate({
+    state,
+    getState:()=>state,
+    me:cfg.me,
+    passwords,
+    settings:await coreSettings(),
+    legacySync:syncLegacyBeforeMigration,
+    raiseBarrier:raiseCoreLegacyBarrier,
+  });
+  if(!result.complete){
+    const reason=result.error?.message||'Een van de kluizen kon niet volledig worden gemigreerd.';
+    throw new SyncError(reason+' De bestaande lokale gegevens en legacybestanden zijn behouden. Je kunt de migratie opnieuw proberen.');
+  }
+  state=result.state;
+  coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0'};
+  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
+  coreMode=true;
+  coreReady=true; coreConnected=true;
+  localStorage.removeItem(DKEY); // pas nadat beide Core-kluizen lokaal én remote zijn bevestigd
+  corePersistError=''; syncError=''; lastSync=new Date();
+  if(timer){clearTimeout(timer);timer=null;}
+  render(); renderSyncPanel(); pillIdle();
+  toast('PWA-Core is actief. Beide kluizen zijn gemigreerd.');
+}
+async function unlockCoreLocal(){
+  if(!coreRuntime) await ensureCoreRuntime();
+  const sharedPassword=$('core-u-s')?.value||'';
+  const personalPassword=$('core-u-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
+  syncError='';
+  try{
+    let next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    state=next; coreReady=true; coreConnected=false; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Lokaal ontgrendelen is mislukt.';
+    throw error;
+  }
+}
+async function unlockCore(){
+  if(!coreRuntime) await ensureCoreRuntime();
+  const sharedPassword=$('core-u-s')?.value||'';
+  const personalPassword=$('core-u-e')?.value||'';
+  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
+  syncError='';
+  try{
+    let next;
+    if(navigator.onLine){
+      next=await coreRuntime.unlock({me:cfg.me,passwords,settings:await coreSettings()});
+    }else{
+      next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
+    }
+    next=await mergeStagedLegacyState(next);
+    state=next; coreReady=true; coreConnected=!!navigator.onLine; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Ontgrendelen is mislukt.';
+    throw error;
+  }
+}
+async function unlockCoreBiometric(){
+  if(!coreRuntime) await ensureCoreRuntime();
+  syncError='';
+  try{
+    let next=await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
+    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    state=next; coreReady=true; coreConnected=false; corePersistError='';
+    if(shareMyIncome()) saveLocal();
+    if(navigator.onLine){
+      try{await connectCore();}
+      catch(error){syncError=error.message||'Lokaal ontgrendeld; synchroniseren kan later opnieuw.';}
+    }
+    render(); renderSyncPanel(); pillIdle();
+  }catch(error){
+    renderCoreGate();
+    const box=$('core-gate-err'); if(box) box.textContent=error.message||'Biometrisch ontgrendelen is mislukt.';
+    throw error;
+  }
+}
+async function clearCoreStagingAfterSync(){
+  if(!coreStagingMerged) return;
+  localStorage.removeItem(CORE_STAGING_KEY);
+  localStorage.removeItem(DKEY);
+  coreStagingMerged=false;
+}
+async function mergeStagedLegacyState(baseState,{connectIfOnline=true}={}){
+  const raw=localStorage.getItem(CORE_STAGING_KEY)||localStorage.getItem(DKEY);
+  if(!raw) return baseState;
+  let incoming;
+  try{incoming=migrateAll(JSON.parse(raw));}
+  catch(e){throw new SyncError('Een wijziging uit een nog geopend oud app-tabblad kon niet veilig worden gelezen. De lokale bron is behouden.');}
+  if(!incoming) return baseState;
+  const merged={samen:merge(baseState.samen,incoming.samen),eigen:merge(baseState.eigen,incoming.eigen)};
+  await coreRuntime.persistState(merged);
+  await coreRuntime.flushLocal();
+  coreStagingMerged=true;
+  if(navigator.onLine&&connectIfOnline){
+    try{
+      const result=await coreRuntime.connect(await coreSettings());
+      coreStagingMerged=false;
+      localStorage.removeItem(CORE_STAGING_KEY);
+      localStorage.removeItem(DKEY);
+      return result.state;
+    }catch(error){
+      syncError=error.message||'De Core-gegevens zijn lokaal bewaard; synchroniseren kan later opnieuw.';
+    }
+  }
+  return merged;
+}
+async function connectCore(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+  const result=await coreRuntime.connect(await coreSettings());
+  state=result.state; coreConnected=true; await clearCoreStagingAfterSync(); syncError=''; lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+}
+async function enrollCorePasskey(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst beide Core-kluizen.');
+  if(coreRuntime.isBiometricEnrolled(cfg.me)) throw new SyncError('Voor beide actieve kluizen is al een passkey ingesteld.');
+  await coreRuntime.enrollBiometric();
+  renderSyncPanel(); toast('Eén passkey voor beide actieve kluizen ingesteld.');
+}
+async function relinkCorePasskey(){
+  if(!coreReady) throw new SyncError('Ontgrendel eerst beide Core-kluizen met hun wachtwoorden.');
+  if(coreRuntime.isBiometricEnrolled(cfg.me)) throw new SyncError('Voor beide actieve kluizen is al een passkey ingesteld.');
+  await coreRuntime.enrollExistingBiometric();
+  renderSyncPanel(); toast('Bestaande passkey voor beide actieve kluizen gekoppeld.');
+}
+async function lockCore(){
+  if(coreRuntime&&coreReady) await coreRuntime.lock();
+  coreReady=false; coreConnected=false; state={samen:EMPTY(),eigen:EMPTY()};
+  render(); renderSyncPanel();
+}
+function renderCoreGate(){
+  if(!coreMode||coreReady){
+    document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
+    $('coreGate')?.remove(); return;
+  }
+  let gate=$('coreGate');
+  if(!gate){
+    gate=document.createElement('div'); gate.id='coreGate';
+    gate.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg,#fff);display:grid;place-items:center;padding:24px;overflow:auto;';
+    document.body.appendChild(gate);
+  }
+  const passkeyEnrolled=!!(coreRuntime&&cfg&&cfg.me&&coreRuntime.isBiometricEnrolled(cfg.me));
+  const biometricControls=passkeyEnrolled
+    ?'<div class="field"><span class="flabel">Of ontgrendel beide kluizen met één Face ID / passkey</span><div class="btns"><button class="btn primary" id="core-biometric">Ontgrendel beide kluizen</button></div></div>':'';
+  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2>'+
+    (cfg?'<p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
+      '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
+      '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
+      '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Online ontgrendelen</button><button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
+      biometricControls+
+      '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'+
+      '<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p>'+
+      '<div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div>'+
+      '<div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>'
+      :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>')+
+    '</section>';
+  document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
+}
+
 /* ---------- wachtwoord wijzigen (2.24.0) ----------
    Het bestand in GitHub wordt opnieuw versleuteld met het nieuwe wachtwoord en een nieuwe salt. Andere apparaten zien de nieuwe salt
    bij het synchroniseren en vragen dan één keer om het nieuwe wachtwoord. De oude sleutel blijft op dit apparaat bewaard voor de geschiedenis. */
@@ -2178,6 +2550,21 @@ function pwHtml(){
 }
 async function changePw(){
   const st=pwc.st, s=st==='samen', other=s?'eigen':'samen', old=$('c-old').value, n1=$('c-n1').value, n2=$('c-n2').value;
+  if(coreMode){
+    if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+    if(!navigator.onLine) throw new SyncError('Een Core-wachtwoord wijzigen vereist internet.');
+    if(!old) throw new SyncError('Vul je huidige '+(s?'gezamenlijke':'eigen')+' wachtwoord in.');
+    checkPw(n1,n1,s?'gezamenlijk wachtwoord':'eigen wachtwoord');
+    if(n1!==n2) throw new SyncError('De twee nieuwe wachtwoorden zijn niet gelijk.');
+    if(n1===old) throw new SyncError('Het nieuwe wachtwoord is gelijk aan het huidige. Kies een ander wachtwoord.');
+    await connectCore();
+    const id=s?'shared':`personal-${cfg.me}`;
+    await coreRuntime.changePassword(id,old,n1);
+    state=coreRuntime.getState(); pwc={open:false,st:'samen'}; syncError=''; corePersistError='';
+    lastSync=new Date(); render(); renderSyncPanel(); pillIdle();
+    toast(s?'Gezamenlijk Core-wachtwoord gewijzigd':'Eigen Core-wachtwoord gewijzigd');
+    return;
+  }
   if(!old) throw new SyncError('Vul je huidige '+(s?'gezamenlijke':'eigen')+' wachtwoord in.');
   checkPw(n1,n1,s?'gezamenlijk wachtwoord':'eigen wachtwoord');
   if(n1!==n2) throw new SyncError('De twee nieuwe wachtwoorden zijn niet gelijk.');
@@ -2236,8 +2623,10 @@ function histHtml(){
 async function loadHist(){
   hist={...hist,open:true,list:null,err:'',busy:true,armed:null}; renderSyncPanel();
   try{
-    if(timer){clearTimeout(timer); timer=null;} await sync();   // eerst je laatste wijzigingen wegschrijven
-    const r=await gh('GET','/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+'/commits?path='+encodeURIComponent(fileOf(hist.st))+'&per_page=30',null,cfg);
+    if(timer){clearTimeout(timer); timer=null;}
+    if(coreMode) await connectCore(); else await sync();   // eerst de laatste wijzigingen veilig synchroniseren
+    const historyPath=coreMode?corePathFor(hist.st):fileOf(hist.st);
+    const r=await gh('GET','/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+'/commits?path='+encodeURIComponent(historyPath)+'&per_page=30',null,cfg);
     if(!r.ok) throw new SyncError('De geschiedenis kon niet worden opgehaald ('+r.status+'). Probeer het later opnieuw.');
     hist.list=(await r.json()).map(c=>({sha:c.sha,date:c.commit&&(c.commit.committer||c.commit.author).date}));
   }catch(e){hist.err=e.message==='offline'?'Je bent offline. De geschiedenis staat in GitHub; probeer het opnieuw als je online bent.':e.message;}
@@ -2268,6 +2657,17 @@ function asNewest(old,cur,t){
 }
 async function restoreFrom(sha){
   const st=hist.st, c=hist.list.find(x=>x.sha===sha);
+  if(coreMode){
+    if(!coreReady) throw new SyncError('Ontgrendel eerst de Core-kluizen.');
+    if(!navigator.onLine) throw new SyncError('Herstellen uit de geschiedenis vereist internet.');
+    const id=st==='samen'?'shared':`personal-${cfg.me}`;
+    const {env}=await readCoreRemote(cfg,corePathFor(st),sha);
+    if(!env) throw new SyncError('Deze Core-versie bestaat niet meer in GitHub.');
+    await coreRuntime.restoreDomain(id,env,(old,cur,t)=>asNewest(old,cur,t));
+    state=coreRuntime.getState(); hist={...hist,open:false,armed:null}; render(); renderSyncPanel();
+    toast('Core-kluis teruggezet naar '+histDate(c.date));
+    return;
+  }
   const {env}=await readRemote(cfg,fileOf(st),sha);
   if(!env) throw new SyncError('Deze versie bestaat niet meer in GitHub.');
   /* een versie van vóór een wachtwoordwijziging: gebruik de oude sleutel als dit apparaat die nog heeft (2.24.0) */
@@ -2326,6 +2726,14 @@ $('thisMonth').onclick=()=>{const T=today(); view={y:T.y,m:T.m}; render();};
 $('verBtn').onclick=()=>{newVersion?applyUpdate():showVersionInfo();};
 $('syncPill').onclick=()=>{showTab('instellingen'); openGroup('sync'); $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});};
 
+function appBackupSnapshot(){
+  const clean=st=>{
+    const value=structuredClone(state[st]);
+    delete value.schema; delete value.domain; delete value.__pwaSync;
+    return value;
+  };
+  return {v:2,samen:clean('samen'),eigen:clean('eigen')};
+}
 let unlinkArmed=false;
 document.addEventListener('click',e=>{
   const eye=e.target.closest('[data-eye]');
@@ -2349,10 +2757,10 @@ document.addEventListener('click',e=>{
   const bar=e.target.closest('[data-month]'); if(bar){view={y:today().y,m:+bar.dataset.month}; showTab('maand'); render(); toTop(); return;}
   const id=e.target.id;
   if(id==='clearEx'){STORES.forEach(st=>state[st].items=state[st].items.filter(i=>!i.example)); save(); render(); toast('Voorbeelden gewist');}
-  if(id==='copyBk'){const txt=JSON.stringify({v:2,samen:state.samen,eigen:state.eigen});
+  if(id==='copyBk'){const txt=JSON.stringify(appBackupSnapshot());
     const fb=()=>{$('bkText').value=txt;$('bkText').select();toast('Back-up staat in het tekstvak, kopieer hem daar');};
     try{navigator.clipboard.writeText(txt).then(()=>toast('Back-up gekopieerd'),fb);}catch(err){fb();}}
-  if(id==='dlBk') deliver('vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify({v:2,samen:state.samen,eigen:state.eigen},null,2)],{type:'application/json'}),'Back-up');
+  if(id==='dlBk') deliver('vaste-lasten-'+new Date().toISOString().slice(0,10)+'.json',new Blob([JSON.stringify(appBackupSnapshot(),null,2)],{type:'application/json'}),'Back-up');
   if(id==='restoreBk') restore($('bkText').value);
   if(id==='installBtn'&&installEvt){installEvt.prompt();installEvt=null;render();}
   if(id==='m-save') saveSplit();
@@ -2376,6 +2784,15 @@ document.addEventListener('click',e=>{
   if(id==='s-linkNew') busy(id,'Bezig met koppelen…',linkNew);
   if(id==='s-linkJoin') busy(id,'Bezig met koppelen…',linkJoin);
   if(id==='s-unlock') busy(id,'Controleren…',unlock);
+  if(id==='core-migrate') busy(id,'Migreren…',migrateToCore,'core-mig-err');
+  if(id==='core-unlock') busy(id,'Online ontgrendelen…',unlockCore,'core-gate-err');
+  if(id==='core-unlock-local') busy(id,'Lokaal ontgrendelen…',unlockCoreLocal,'core-gate-err');
+  if(id==='core-biometric') busy(id,'Face ID…',unlockCoreBiometric,'core-gate-err');
+  if(id==='core-token-save') busy(id,'Token controleren…',replaceCoreToken,'core-token-err');
+  if(id==='core-sync') busy(id,'Synchroniseren…',connectCore,'s-err');
+  if(id==='core-passkey') busy(id,'Passkey instellen…',enrollCorePasskey,'s-err');
+  if(id==='core-passkey-existing') busy(id,'Passkey koppelen…',relinkCorePasskey,'s-err');
+  if(id==='core-lock') busy(id,'Vergrendelen…',lockCore,'s-err');
   if(id==='s-back'){lk={step:1,c:lk.c}; renderSyncPanel();}
   if(id==='s-now'){clearTimeout(timer); timer=null; sync();}
   if(id==='h-open'){pwc={...pwc,open:false}; loadHist();}
@@ -2764,12 +3181,21 @@ if(IS_PWA){
   if('serviceWorker' in navigator){try{navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}}
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){sync(); checkUpdate();} else syncNow();});
   window.addEventListener('pagehide',syncNow);
-  window.addEventListener('online',()=>{sync(); checkUpdate(true);});
+  window.addEventListener('online',()=>{if(coreMode&&coreReady) connectCore().catch(e=>{syncError=e.message;renderSyncPanel();}); else sync(); checkUpdate(true);});
   window.addEventListener('offline',pillIdle);
 }
 
 /* meerdere tabbladen of vensters: wat een ander tabblad bewaart, wordt hier samengevoegd (2.18.2) */
 function fromOtherTab(raw){
+  if(coreMode){
+    try{localStorage.setItem(CORE_STAGING_KEY,raw);}catch(e){syncError='Een wijziging uit een oud tabblad kon niet lokaal worden veiliggesteld.';return;}
+    if(coreReady&&coreRuntime){
+      mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
+        state=next; render(); scheduleSync();
+      }).catch(e=>{syncError=e.message||'Een wijziging uit een oud tabblad kon niet worden samengevoegd.';renderSyncPanel();});
+    }
+    return;
+  }
   let inc; try{inc=migrateAll(JSON.parse(raw));}catch(x){return;}
   if(!inc) return;
   const next={};
@@ -2806,8 +3232,10 @@ if(IS_PWA) askPersist();
 setGroups(); applySetLayout(); navStates();
 showTab('overzicht');   // de app opent altijd op het overzicht
 if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
-shareMyIncome(); saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
-if(IS_PWA&&cfg){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(async([s,e])=>{keys={samen:s||null,eigen:e||null}; try{await storeToken(cfg);}catch(e){syncError=e.message;setPill('err','Sync-fout',e.message);} renderSyncPanel(); if(!syncError) sync();});}
+if(!coreMode) shareMyIncome();
+saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
+if(IS_PWA&&cfg&&!coreMode){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(async([s,e])=>{keys={samen:s||null,eigen:e||null}; try{await storeToken(cfg);}catch(e){syncError=e.message;setPill('err','Sync-fout',e.message);} renderSyncPanel(); if(!syncError) sync();});}
+if(IS_PWA&&cfg&&coreMode){ensureCoreRuntime().then(()=>{renderSyncPanel();renderCoreGate();}).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderSyncPanel();});}
 })();
 </script>
 

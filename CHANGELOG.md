@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0 — 14 november 2026
+- Nieuw: Vaste Lasten gebruikt PWA-Core v1.1.0 met drie onafhankelijke, versleutelde kluizen: gezamenlijk, persoonlijk voor persoon 1 en persoonlijk voor persoon 2.
+- Nieuw: gegevens worden op het apparaat versleuteld opgeslagen en per actieve kluis gesynchroniseerd. Offline ontgrendelen en werken blijft mogelijk.
+- Nieuw: één biometrische actie met een apparaatgebonden passkeybundel ontgrendelt de twee actieve kluizen (gedeeld en persoonlijk). De app-eigen bundelsleutel gebruikt expliciete Web Crypto-wraprechten; de kluizen behouden elk hun eigen datasleutel en de PWA-Core v1.1.0-modules blijven ongewijzigd. De persoonlijke kluis van de andere gebruiker wordt niet geopend. Na herinstallatie kan de bestaande passkey opnieuw worden gekoppeld.
+- Verbeterd: de migratie synchroniseert eerst de bestaande gegevens, plaatst daarna een updatebarrière voor oudere appversies en behoudt de legacybestanden als terugvaloptie.
+- Let op: migreer ieder apparaat afzonderlijk met de bestaande gezamenlijke en eigen wachtwoorden. Gebruik op alle apparaten dezelfde Core-wachtwoorden. Oudere appversies worden na de eerste migratie geblokkeerd totdat ze zijn bijgewerkt.
+- Opgelost: handmatig vergrendelen wacht nu op reeds gestarte lokale opslagbewerkingen, zodat er geen save na het vergrendelen probeert door te lopen.
+- Verbeterd: een mislukte lokale opslag blokkeert synchroniseren en vergrendelen totdat een latere volledige opslag succesvol is afgerond.
+
 ## 2.29.3 — 12 november 2026
 - Opgelost: een ontbrekende komma in de ingebouwde changelog is hersteld. Hierdoor kan de app-JavaScript weer correct worden ingelezen.
 - Nieuw: CI controleert voortaan of de ingebouwde changelog geldige JSON is.

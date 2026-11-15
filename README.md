@@ -24,7 +24,7 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 
 ## Wat is privé en wat gedeeld
 
-| Gedeeld met je partner (`samen.json`) | Alleen voor jou (`eigen-p1.json` / `eigen-p2.json`) |
+| Gedeeld met je partner (`pwa-core-v1/samen.json`) | Alleen voor jou (`pwa-core-v1/eigen-p1.json` / `pwa-core-v1/eigen-p2.json`) |
 |---|---|
 | Gezamenlijke lasten en het afvinken ervan | Je eigen lasten en het afvinken ervan |
 | Namen, verdeling (ook het percentage voor de gezamenlijke rekening) en categorieën | Je loondag |
@@ -40,17 +40,33 @@ De app past zich aan de schermbreedte aan, dus ook bij Split View op de iPad of 
 - **iPad liggend en laptop**: een vaste zijbalk met de onderdelen, die je met het pijltje bovenin (of de toets `[`) inklapt tot alleen pictogrammen. Bovenin de zijbalk staan de naam van de app, het versienummer met de synchronisatiestatus eronder, en de knop *Nieuwe last* boven *Overzicht*. Ingeklapt zie je de status als stip en *Nieuwe last* als plusknop. Boven het werkvlak staat de naam van het onderdeel; het werkvlak gebruikt twee tot drie kolommen.
 - **Laptop-sneltoetsen**: `N` nieuwe last, `/` zoeken, `←` `→` vorige of volgende maand, `1` tot `5` onderdelen, `[` zijbalk in- of uitklappen, `Esc` sluit het formulier.
 
-## Hoe de gegevens zijn verdeeld
+## PWA-Core v1.1.0 en de gegevensverdeling
 
-In de privé-repository staan drie bestanden, die de app zelf aanmaakt:
+Vanaf appversie **3.0.0** gebruikt Vaste Lasten PWA-Core v1.1.0 als gedeelde technische basis. De Core-code wordt meegeleverd in deze app-repository; de app haalt tijdens gebruik geen code uit de PWA-Core-repository op. De exacte release is vastgezet in `core-manifest.json` en `pwa-core.lock.json`, en de service worker precachet de Core-modules voor offline gebruik.
 
-| Bestand | Inhoud | Versleuteld met |
-|---|---|---|
-| `samen.json` | Gezamenlijke lasten, afvinken, namen en verdeling | Gezamenlijk wachtwoord (kennen jullie allebei) |
-| `eigen-p1.json` | Eigen lasten van persoon 1 | Eigen wachtwoord van persoon 1 |
-| `eigen-p2.json` | Eigen lasten van persoon 2 | Eigen wachtwoord van persoon 2 |
+De app gebruikt drie onafhankelijke kluizen:
 
-Ieder ziet dus de gezamenlijke lasten plus zijn of haar eigen lasten, maar niet die van de ander.
+| Kluis | Remote bestand in de privé-repository | Inhoud | Sleutel |
+|---|---|---|---|
+| Gezamenlijk | `pwa-core-v1/samen.json` | Gezamenlijke lasten, afvinken, namen, verdeling, categorieën, inkomen en verrekeningen | Gezamenlijk wachtwoord |
+| Persoonlijk persoon 1 | `pwa-core-v1/eigen-p1.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 1 | Eigen wachtwoord persoon 1 |
+| Persoonlijk persoon 2 | `pwa-core-v1/eigen-p2.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 2 | Eigen wachtwoord persoon 2 |
+
+Elke kluis heeft een eigen datasleutel, wachtwoord, lokale opslagruimte en synchronisatie. Eén apparaatgebonden passkey kan met één biometrische actie de sleutelbundel openen die de twee actieve datasleutels (gezamenlijk + eigen persoonlijk) afzonderlijk omhult. De onderliggende kluizen blijven cryptografisch gescheiden; de persoonlijke kluis van de andere gebruiker wordt niet geopend. Na een nieuwe installatie kan de bestaande passkey na een eenmalige wachtwoordontgrendeling opnieuw aan de lokale sleutelbundel worden gekoppeld.
+
+De oude bestanden `samen.json`, `eigen-p1.json` en `eigen-p2.json` blijven tijdens en na de migratie bewaard als terugvalbron. De migratie zet in het oude gezamenlijke bestand een versiebarrière van 3.0.0, zodat oudere appversies geen gegevens meer kunnen terugschrijven.
+
+## Migreren naar PWA-Core
+
+1. Werk eerst alle apparaten bij naar appversie **3.0.0**.
+2. Open de geïnstalleerde PWA en ga naar **Instellingen → Synchronisatie**.
+3. Vul bij **Overstappen naar PWA-Core** het bestaande gezamenlijke en eigen wachtwoord in. Die wachtwoorden worden ook de wachtwoorden van de nieuwe Core-kluizen; je kunt ze daarna afzonderlijk wijzigen.
+4. Herhaal de migratie op ieder apparaat. Gebruik op alle apparaten dezelfde wachtwoorden voor dezelfde kluizen.
+5. Laat de oude bestanden in de privé-repository staan. Verwijder ze niet handmatig.
+
+Na de migratie werkt het apparaat met de Core-kluizen. Een apparaat dat nog niet is gemigreerd kan tijdelijk nog met de legacybestanden werken; wijzigingen daarvan worden meegenomen wanneer dat apparaat zelf migreert. Oudere versies dan 3.0.0 worden door de versiebarrière geblokkeerd.
+
+Ieder ziet dus de gezamenlijke lasten plus zijn of haar eigen persoonlijke lasten, maar niet die van de ander.
 
 ## 1. App publiceren (publieke repository)
 
@@ -114,7 +130,7 @@ Vorige versies van vóór de wijziging kun je nog terugzetten op apparaten die t
 - De gegevensbestanden worden op het apparaat versleuteld (AES-256-GCM, sleutel via PBKDF2) voordat ze naar GitHub gaan. De GitHub-token wordt daarnaast lokaal met AES-GCM versleuteld in IndexedDB opgeslagen; de sleutel is niet-exporteerbaar.
 - Wachtwoorden worden nergens opgeslagen. Elk apparaat bewaart alleen een afgeleide sleutel die niet exporteerbaar is.
 - De lokale tokenversleuteling beschermt tegen het direct uitlezen van de token uit `localStorage`, maar niet tegen kwaadaardige scripts die binnen dezelfde website draaien. Houd browser en apparaat daarom bijgewerkt en gebruik geen onbekende browseruitbreidingen.
-- Let op: de lasten zelf staan op dit moment lokaal nog als leesbare gegevens in `localStorage`. De kopie in GitHub is wel versleuteld. Gebruik daarom een apparaatprofiel met schermvergrendeling; lokale gegevensversleuteling wordt samen met Face ID/passkey verder uitgewerkt.
+- Let op: de legacyversie vóór PWA-Core bewaarde lokale lasten nog als leesbare gegevens in `localStorage`. In Core-mode worden de drie domeinen lokaal afzonderlijk versleuteld; de oude lokale bron wordt pas verwijderd nadat de actieve Core-domeinen lokaal én remote zijn bevestigd. De oude remote JSON-bestanden blijven als terugvalbron behouden.
 - Vergeet je een wachtwoord, dan is dat bestand in GitHub onbruikbaar. De gegevens op je apparaten blijven wel staan.
 - Iemand met een token kan de bestanden technisch overschrijven of verwijderen, maar niet lezen zonder het bijbehorende wachtwoord. GitHub bewaart elke oude versie in de geschiedenis.
 - Apparaat kwijt? Trek de token van die persoon in op GitHub en maak een nieuwe aan.
