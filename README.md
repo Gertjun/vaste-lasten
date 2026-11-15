@@ -52,7 +52,7 @@ De app gebruikt drie onafhankelijke kluizen:
 | Persoonlijk persoon 1 | `pwa-core-v1/eigen-p1.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 1 | Eigen wachtwoord persoon 1 |
 | Persoonlijk persoon 2 | `pwa-core-v1/eigen-p2.json` | Eigen lasten, afvinken, profiel, loondag en scenario's van persoon 2 | Eigen wachtwoord persoon 2 |
 
-Elke kluis heeft een eigen datasleutel, wachtwoord, lokale opslagruimte, synchronisatie en optionele passkey. Een apparaat ontgrendelt alleen de gezamenlijke kluis en de persoonlijke kluis van de gebruiker van dat apparaat. De persoonlijke kluis van de andere gebruiker wordt niet geopend.
+Elke kluis heeft een eigen datasleutel, wachtwoord, lokale opslagruimte en synchronisatie. Eén apparaatgebonden passkey kan met één biometrische actie de sleutelbundel openen die de twee actieve datasleutels (gezamenlijk + eigen persoonlijk) afzonderlijk omhult. De onderliggende kluizen blijven cryptografisch gescheiden; de persoonlijke kluis van de andere gebruiker wordt niet geopend. Na een nieuwe installatie kan de bestaande passkey na een eenmalige wachtwoordontgrendeling opnieuw aan de lokale sleutelbundel worden gekoppeld.
 
 De oude bestanden `samen.json`, `eigen-p1.json` en `eigen-p2.json` blijven tijdens en na de migratie bewaard als terugvalbron. De migratie zet in het oude gezamenlijke bestand een versiebarrière van 3.0.0, zodat oudere appversies geen gegevens meer kunnen terugschrijven.
 
@@ -130,7 +130,7 @@ Vorige versies van vóór de wijziging kun je nog terugzetten op apparaten die t
 - De gegevensbestanden worden op het apparaat versleuteld (AES-256-GCM, sleutel via PBKDF2) voordat ze naar GitHub gaan. De GitHub-token wordt daarnaast lokaal met AES-GCM versleuteld in IndexedDB opgeslagen; de sleutel is niet-exporteerbaar.
 - Wachtwoorden worden nergens opgeslagen. Elk apparaat bewaart alleen een afgeleide sleutel die niet exporteerbaar is.
 - De lokale tokenversleuteling beschermt tegen het direct uitlezen van de token uit `localStorage`, maar niet tegen kwaadaardige scripts die binnen dezelfde website draaien. Houd browser en apparaat daarom bijgewerkt en gebruik geen onbekende browseruitbreidingen.
-- Let op: de lasten zelf staan op dit moment lokaal nog als leesbare gegevens in `localStorage`. De kopie in GitHub is wel versleuteld. Gebruik daarom een apparaatprofiel met schermvergrendeling; lokale gegevensversleuteling wordt samen met Face ID/passkey verder uitgewerkt.
+- Let op: de legacyversie vóór PWA-Core bewaarde lokale lasten nog als leesbare gegevens in `localStorage`. In Core-mode worden de drie domeinen lokaal afzonderlijk versleuteld; de oude lokale bron wordt pas verwijderd nadat de actieve Core-domeinen lokaal én remote zijn bevestigd. De oude remote JSON-bestanden blijven als terugvalbron behouden.
 - Vergeet je een wachtwoord, dan is dat bestand in GitHub onbruikbaar. De gegevens op je apparaten blijven wel staan.
 - Iemand met een token kan de bestanden technisch overschrijven of verwijderen, maar niet lezen zonder het bijbehorende wachtwoord. GitHub bewaart elke oude versie in de geschiedenis.
 - Apparaat kwijt? Trek de token van die persoon in op GitHub en maak een nieuwe aan.
