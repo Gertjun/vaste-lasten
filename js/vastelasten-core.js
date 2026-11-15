@@ -264,18 +264,19 @@ export function createVasteLastenCore({
         throw new Error(`De lokale kluis ${id} ontbreekt. Ontgrendel eerst online met beide wachtwoorden en koppel daarna je bestaande passkey opnieuw.`);
       }
     }
+    const biometric = deviceBiometricFor(meValue);
+    if (!isBiometricEnrolled(meValue)) {
+      throw new Error('Voor beide actieve kluizen is nog geen gezamenlijke passkey ingesteld.');
+    }
+    const bundle = readBiometricBundle(meValue);
+    const bundleKey = await biometric.unlock();
+    const dataKeys = {};
+    for (const id of ids) dataKeys[id] = await unwrapBundleKey(bundle.keys[id], bundleKey);
+    // Vraag pas na de biometrische bevestiging de twee Web Locks aan.
+    // Annuleren van Face ID laat zo geen sessielock achter.
     await acquire(meValue);
     try {
-      const biometric = deviceBiometricFor(meValue);
-      if (!isBiometricEnrolled(meValue)) {
-        throw new Error('Voor beide actieve kluizen is nog geen gezamenlijke passkey ingesteld.');
-      }
-      const bundle = readBiometricBundle(meValue);
-      const bundleKey = await biometric.unlock();
-      for (const id of ids) {
-        const dataKey = await unwrapBundleKey(bundle.keys[id], bundleKey);
-        await registry[id].vault.unlockWithKey(dataKey);
-      }
+      for (const id of ids) await registry[id].vault.unlockWithKey(dataKeys[id]);
       settings = inputSettings ? await resolveSettings(inputSettings) : null;
       if (settings) for (const id of ids) await syncDomain(id);
       return getState();
