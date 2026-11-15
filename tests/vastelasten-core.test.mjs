@@ -2,26 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { webcrypto } from 'node:crypto';
-import { generateDataKey, generateWrappingKey, wrapDataKey, unwrapDataKey, unwrapWrappingKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
+import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
+import { generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey } from '../js/bundle-biometric.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 test('real Web Crypto passkey bundle wraps and restores both independent vault keys', async () => {
-  const bundleKey = await generateWrappingKey();
-  const passkeyKek = await generateWrappingKey();
+  const bundleKey = await generateBundleKey();
+  const passkeyKek = await generateBundleKey();
   const sharedDataKey = await generateDataKey();
   const personalDataKey = await generateDataKey();
   assert.deepEqual([...bundleKey.usages].sort(), ['unwrapKey', 'wrapKey']);
 
-  const wrappedBundle = await wrapDataKey(bundleKey, passkeyKek);
-  const restoredBundleKey = await unwrapWrappingKey(wrappedBundle, passkeyKek);
+  const wrappedBundle = await wrapVaultKey(bundleKey, passkeyKek);
+  const restoredBundleKey = await unwrapBundleKey(wrappedBundle, passkeyKek);
   const [wrappedShared, wrappedPersonal] = await Promise.all([
-    wrapDataKey(sharedDataKey, restoredBundleKey),
-    wrapDataKey(personalDataKey, restoredBundleKey),
+    wrapVaultKey(sharedDataKey, restoredBundleKey),
+    wrapVaultKey(personalDataKey, restoredBundleKey),
   ]);
   const [restoredShared, restoredPersonal] = await Promise.all([
-    unwrapDataKey(wrappedShared, restoredBundleKey),
-    unwrapDataKey(wrappedPersonal, restoredBundleKey),
+    unwrapVaultKey(wrappedShared, restoredBundleKey),
+    unwrapVaultKey(wrappedPersonal, restoredBundleKey),
   ]);
   const sharedBox = await encryptJSON({ domain: 'shared' }, restoredShared);
   const personalBox = await encryptJSON({ domain: 'personal-p1' }, restoredPersonal);
@@ -125,9 +126,9 @@ function setup() {
         isEnrolled: () => state.enrolled,
       };
     },
-    generateWrappingKey: async () => 'synthetic-bundle-key-' + (++bundleCounter),
-    wrapDataKey: async (dataKey, bundleKey) => ({ dataKey, bundleKey }),
-    unwrapWrappingKey: async (wrapped, bundleKey) => {
+    generateBundleKey: async () => 'synthetic-bundle-key-' + (++bundleCounter),
+    wrapVaultKey: async (dataKey, bundleKey) => ({ dataKey, bundleKey }),
+    unwrapVaultKey: async (wrapped, bundleKey) => {
       if (!wrapped || wrapped.bundleKey !== bundleKey) throw new Error('Bundle key mismatch');
       return wrapped.dataKey;
     },
