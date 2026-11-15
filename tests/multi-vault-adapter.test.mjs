@@ -3,8 +3,18 @@ import assert from 'node:assert/strict';
 import {
   VAULT_DOMAINS, splitLegacyState, validateDomainPayload, mergeDomainPayload,
   createVaultRegistry, acquireActiveLocks, openAndSyncDomain,
-  raiseLegacyUpdateBarrier, migrateActiveDomains,
+  raiseLegacyUpdateBarrier, migrateActiveDomains, requireLegacyEnvelope,
 } from '../js/multi-vault-adapter.js';
+
+test('migration preflight fails closed when an active legacy JSON is missing from the configured repository', () => {
+  const env = { app: 'vaste-lasten', kdf: { salt: 'synthetic-salt' }, iv: 'iv', ct: 'ciphertext' };
+  assert.equal(requireLegacyEnvelope({ env, file: 'samen.json', owner: 'Gertjun', repo: 'SyncData' }), env);
+  assert.equal(requireLegacyEnvelope({ env, file: 'eigen-p1.json', owner: 'Gertjun', repo: 'SyncData' }), env);
+  assert.throws(
+    () => requireLegacyEnvelope({ env: null, file: 'samen.json', owner: 'Gertjun', repo: 'vaste-lasten-data' }),
+    /samen\.json ontbreekt in Gertjun\/vaste-lasten-data.*voordat er iets is geschreven/,
+  );
+});
 
 const store = (items = [], extra = {}) => ({ items, del: {}, paid: {}, meta: null, ...extra });
 const mergeStore = (a, b) => {
