@@ -27,6 +27,7 @@ const PRECACHE=[
   "./js/core/vault-factory.js",
   "./js/core/vault.js",
   "./js/multi-vault-adapter.js",
+  "./js/bundle-biometric.js",
   "./js/vastelasten-core.js"
 ];
 const ASSETS=PRECACHE;
