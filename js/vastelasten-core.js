@@ -343,7 +343,6 @@ export function createVasteLastenCore({
 
   async function enrollBiometric() {
     requireSession();
-    if (!settings) throw new Error('Passkey instellen vereist een actieve GitHub-verbinding.');
     const person = me;
     const biometric = deviceBiometricFor(person);
     if (biometric.isEnrolled()) throw new Error('Er is al een passkey voor beide actieve kluizen ingesteld. Kies Bestaande passkey koppelen als je deze opnieuw wilt verbinden.');
