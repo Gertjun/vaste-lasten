@@ -2432,11 +2432,14 @@ async function unlockCore(){
 async function unlockCoreBiometric(){
   if(!coreRuntime) await ensureCoreRuntime();
   try{
-    const settings=navigator.onLine?await coreSettings():undefined;
-    let next=await coreRuntime.unlockWithBiometric({me:cfg.me,settings});
-    next=await mergeStagedLegacyState(next);
-    state=next; coreReady=true; coreConnected=!!settings; corePersistError='';
+    let next=await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
+    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    state=next; coreReady=true; coreConnected=false; corePersistError='';
     if(shareMyIncome()) saveLocal();
+    if(navigator.onLine){
+      try{await connectCore();}
+      catch(error){syncError=error.message||'Lokaal ontgrendeld; synchroniseren kan later opnieuw.';}
+    }
     render(); renderSyncPanel(); pillIdle();
   }catch(error){
     renderCoreGate();
