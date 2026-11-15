@@ -7,6 +7,7 @@
 - Verbeterd: de migratie synchroniseert eerst de bestaande gegevens, plaatst daarna een updatebarrière voor oudere appversies en behoudt de legacybestanden als terugvaloptie.
 - Let op: migreer ieder apparaat afzonderlijk met de bestaande gezamenlijke en eigen wachtwoorden. Gebruik op alle apparaten dezelfde Core-wachtwoorden. Oudere appversies worden na de eerste migratie geblokkeerd totdat ze zijn bijgewerkt.
 - Opgelost: handmatig vergrendelen wacht nu op reeds gestarte lokale opslagbewerkingen, zodat er geen save na het vergrendelen probeert door te lopen.
+- Verbeterd: een mislukte lokale opslag blokkeert synchroniseren en vergrendelen totdat een latere volledige opslag succesvol is afgerond.
 
 ## 2.29.3 — 12 november 2026
 - Opgelost: een ontbrekende komma in de ingebouwde changelog is hersteld. Hierdoor kan de app-JavaScript weer correct worden ingelezen.
