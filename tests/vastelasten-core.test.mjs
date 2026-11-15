@@ -1,6 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
+import { webcrypto } from 'node:crypto';
+import { generateDataKey, generateWrappingKey, wrapDataKey, unwrapDataKey, unwrapWrappingKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
+
+if (!globalThis.crypto) globalThis.crypto = webcrypto;
+
+test('real Web Crypto passkey bundle wraps and restores both independent vault keys', async () => {
+  const bundleKey = await generateWrappingKey();
+  const passkeyKek = await generateWrappingKey();
+  const sharedDataKey = await generateDataKey();
+  const personalDataKey = await generateDataKey();
+  assert.deepEqual([...bundleKey.usages].sort(), ['unwrapKey', 'wrapKey']);
+
+  const wrappedBundle = await wrapDataKey(bundleKey, passkeyKek);
+  const restoredBundleKey = await unwrapWrappingKey(wrappedBundle, passkeyKek);
+  const [wrappedShared, wrappedPersonal] = await Promise.all([
+    wrapDataKey(sharedDataKey, restoredBundleKey),
+    wrapDataKey(personalDataKey, restoredBundleKey),
+  ]);
+  const [restoredShared, restoredPersonal] = await Promise.all([
+    unwrapDataKey(wrappedShared, restoredBundleKey),
+    unwrapDataKey(wrappedPersonal, restoredBundleKey),
+  ]);
+  const sharedBox = await encryptJSON({ domain: 'shared' }, restoredShared);
+  const personalBox = await encryptJSON({ domain: 'personal-p1' }, restoredPersonal);
+  assert.deepEqual(await decryptJSON(sharedBox, sharedDataKey), { domain: 'shared' });
+  assert.deepEqual(await decryptJSON(personalBox, personalDataKey), { domain: 'personal-p1' });
+});
 
 const clone = (value) => structuredClone(value);
 const domainForPrefix = (prefix) => prefix.endsWith('-shared')
@@ -98,9 +125,9 @@ function setup() {
         isEnrolled: () => state.enrolled,
       };
     },
-    generateDataKey: async () => 'synthetic-bundle-key-' + (++bundleCounter),
+    generateWrappingKey: async () => 'synthetic-bundle-key-' + (++bundleCounter),
     wrapDataKey: async (dataKey, bundleKey) => ({ dataKey, bundleKey }),
-    unwrapDataKey: async (wrapped, bundleKey) => {
+    unwrapWrappingKey: async (wrapped, bundleKey) => {
       if (!wrapped || wrapped.bundleKey !== bundleKey) throw new Error('Bundle key mismatch');
       return wrapped.dataKey;
     },
