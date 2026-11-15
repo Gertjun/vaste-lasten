@@ -43,13 +43,13 @@ export function createVasteLastenCore({
   });
 
   const makeBundleKey = factories.generateWrappingKey || generateWrappingKey;
-  const wrapBundleKey = factories.wrapDataKey || wrapDataKey;
+  const wrapBundleKey = factories.wrapVaultKey || wrapVaultKey;
   const unwrapBundleKey = factories.unwrapWrappingKey || unwrapWrappingKey;
   const bundleStorageKey = (person) => `vaste-lasten:biometric-bundle:${person}:v1`;
   const deviceBiometricFor = (person) => {
     if (!['p1', 'p2'].includes(person)) throw new TypeError('Persoon moet p1 of p2 zijn.');
     if (!deviceBiometrics.has(person)) {
-      const factory = factories.createDeviceBiometric || factories.createBiometric || createBiometric;
+      const factory = factories.createDeviceBiometric || createBundleBiometric;
       deviceBiometrics.set(person, factory({
         storagePrefix: `vaste-lasten-device-${person}`, appName, storage,
       }));
