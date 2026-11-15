@@ -27,6 +27,50 @@ test('existing passkey relinking accepts only the shared and matching personal v
 });
 
 
+test('bundle passkey relinking accepts an active vault credential and rejects the other person', async () => {
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const secret = new Uint8Array(32).fill(29);
+  let userHandle = new TextEncoder().encode('vaste-lasten-shared:existing-credential').buffer;
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: {
+      credentials: {
+        async get() {
+          return {
+            rawId: new Uint8Array([9, 8, 7]).buffer,
+            response: { userHandle },
+            getClientExtensionResults: () => ({ prf: { results: { first: secret.buffer } } }),
+          };
+        },
+      },
+    },
+  });
+  try {
+    const values = new Map();
+    const storage = {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, String(value)),
+      removeItem: (key) => values.delete(key),
+    };
+    const biometric = createBundleBiometric({
+      storagePrefix: 'vaste-lasten-device-p1',
+      allowedUserHandlePrefixes: ['vaste-lasten-shared', 'vaste-lasten-personal-p1'],
+      storage,
+    });
+    const bundleKey = await generateBundleKey();
+    await biometric.enrollExisting(bundleKey);
+    assert.equal(biometric.isEnrolled(), true);
+    const previous = storage.getItem('vaste-lasten-device-p1:biometric-bundle');
+
+    userHandle = new TextEncoder().encode('vaste-lasten-personal-p2:other-person').buffer;
+    await assert.rejects(biometric.enrollExisting(bundleKey), /andere app/);
+    assert.equal(storage.getItem('vaste-lasten-device-p1:biometric-bundle'), previous);
+  } finally {
+    if (previousNavigator) Object.defineProperty(globalThis, 'navigator', previousNavigator);
+    else delete globalThis.navigator;
+  }
+});
+
 test('real Web Crypto passkey bundle wraps and restores both independent vault keys', async () => {
   const bundleKey = await generateBundleKey();
   const passkeyKek = await generateBundleKey();
