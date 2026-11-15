@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde code-/test-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: CI **#263**, 43 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De huidige PR-head `30a9ca48b2cd667f705f3e4f09800407fdda7a49` bevat daarna alleen documentatie-updates. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
+Laatste geverifieerde code-/test-head `a9f5c4bcc0399fe6107299cf2b5e451af86817ad`: CI **#263**, 43 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. Daarna zijn alleen documentatie-updates toegevoegd; de geteste applicatiecode is ongewijzigd gebleven. `backup/` is uitgesloten van Pages-publicatie. De fysieke B07-acceptatietest blijft uitgesteld totdat de migraties van alle apps klaar zijn.
 
 ## 3. Open punten
 
