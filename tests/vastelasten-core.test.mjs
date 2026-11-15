@@ -495,6 +495,38 @@ test('app saves cannot roll back a newer Core device and deletion ledger snapsho
   await core.lock();
 });
 
+test('lock waits for an in-flight persistState operation before locking vaults', async () => {
+  const { core, vaults, events } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  let markStarted;
+  const started = new Promise((resolve) => { markStarted = resolve; });
+  let finishWrite;
+  const gate = new Promise((resolve) => { finishWrite = resolve; });
+  const originalSetData = vaults.shared.setData;
+  vaults.shared.setData = async (next) => {
+    markStarted();
+    await gate;
+    return originalSetData(next);
+  };
+  const snapshot = core.getState();
+  snapshot.samen.items.push({ id: 'queued-before-lock', u: 99 });
+  const persist = core.persistState(snapshot);
+  await started;
+  let locked = false;
+  const locking = core.lock().then(() => { locked = true; });
+  await Promise.resolve();
+  assert.equal(locked, false);
+  assert.equal(vaults.shared.isUnlocked(), true);
+  finishWrite();
+  await Promise.all([persist, locking]);
+  assert.deepEqual(vaults.shared.getData().items.map((item) => item.id), ['queued-before-lock']);
+  assert.equal(vaults.shared.isUnlocked(), false);
+  assert.ok(events.indexOf('shared:setData') < events.lastIndexOf('shared:lock'));
+});
+
 test('lock flushes and locks both active vaults before releasing their session locks', async () => {
   const { core, events } = setup();
   await core.unlock({
