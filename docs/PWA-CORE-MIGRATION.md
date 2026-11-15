@@ -1,13 +1,12 @@
 # PWA-Core-migratie – Vaste Lasten
 
-Status: runtime-integratie staat op de draft-migratiebranch; nog niet gemerged, gedeployed of op echte gegevens uitgevoerd.
-Datum: 14 november 2026.
-Uitgangspunt: Vaste Lasten `main` `1bb8a603e9c1fe98be889e9b2d6090b06335b0a5`.
+Status per 15 november 2026: PR #5 is gemerged naar `main` (`a5d1a3eeb981eb288b117803b9638a9b0c293f16`). GitHub Actions-tests (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de geslaagde workflows, niet een handmatige browser-/runtimecontrole van de live pagina. Er is geen echte datarepository geopend en geen productiegegevensmigratie of productie-write uitgevoerd.
+Historische uitgangssituatie vóór migratie: `main` `1bb8a603e9c1fe98be889e9b2d6090b06335b0a5` (appversie 2.29.3).
 Core-basis: PWA-Core `v1.1.0`, releasecommit `9763502c2233ca3824b6525fd5a5785fb3596c9c`.
 
 ## 1. Bestaande contracten
 
-- Baseline op `main`: appversie 2.29.3; deze branch bereidt versie 3.0.0 voor. De app gebruikt een monolithisch klassiek `index.html`-script.
+- Historische baseline vóór migratie: appversie 2.29.3; de migratie wijzigde dit naar versie 3.0.0. De app gebruikt een monolithisch klassiek `index.html`-script.
 - Lokale gecombineerde state: `localStorage["vastelasten.v2"]`, met `{ samen, eigen }`. Dit bevat momenteel leesbare JSON.
 - Lokale UI: `vastelasten.ui`; synchronisatieconfig: `vastelasten.v2.sync`. De GitHub-token staat sinds 2.29.2 versleuteld in IndexedDB.
 - Remote bestanden in de ingestelde privé-repository:
@@ -59,7 +58,7 @@ De bump naar 3.0.0 is bewust MAJOR: oudere apparaten moeten bijwerken voordat zi
 - Eén apparaatgebonden passkey-bundel ontgrendelt met één biometrische actie de twee actieve kluizen. De app-eigen module `js/bundle-biometric.js` gebruikt een AES-GCM-bundelsleutel met uitsluitend `wrapKey`/`unwrapKey`-rechten en afzonderlijke wraps van de gedeelde en eigen persoonlijke DEK. De Core-vault-DEK's behouden hun `encrypt`/`decrypt`-rechten; PWA-Core v1.1.0 blijft byte-identiek aan de release. De andere persoonlijke kluis wordt niet opgenomen.
 - Geen echte passkeys, tokens, privédatarepo of remote JSON-bestanden gebruiken in CI.
 
-## 5. Voortgang en nog te bouwen
+## 5. Gerealiseerde implementatie en automatische validatie
 
 1. **Adapter voorbereid en getest:** domeinsplitsing, drie onafhankelijke vault-/sync-/lock-domeinen, een apparaatgebonden passkey-bundel voor de twee actieve domeinen, import van bestaande envelopes, herstel bij gelijktijdige eerste creatie, legacy-updatebarrière en hervatbare migratiecoördinator.
 2. **Beveiligingsverharding:** payloads met velden uit een ander domein worden geweigerd; merge-resultaten worden opnieuw gevalideerd. Bij het vrijgeven van locks worden eerst beide vaults geflusht en vergrendeld. Gedeeltelijke factory-initialisatie wordt opgeruimd. Een ontbrekend remote bestand kan na migratie niet stilzwijgend als nieuwe lege kluis worden aangemaakt.
@@ -68,22 +67,22 @@ De bump naar 3.0.0 is bewust MAJOR: oudere apparaten moeten bijwerken voordat zi
 5. **Offline/CI-controle:** `sw.js` precachet de Core-bestanden, adapter, runtime bridge, manifest en lockfile. CI controleert Core-module-syntax, de volledige inline app-JavaScript, releasepin, volledige statische precache en alle tests.
 6. **Runtime-integratie aangesloten:** `index.html` gebruikt de bridge voor Core-mode, startup en vergrendelde toestand, migratie vanuit legacy, state/load/save, online/offline ontgrendelen, sync, reconnect, wachtwoord wijzigen, versieherstel en passkeybeheer. Eén apparaatpasskey ontgrendelt lokaal de twee actieve vaults via de app-eigen `js/bundle-biometric.js`-bundelsleutel die hun afzonderlijke datasleutels omhult. De biometrische actie vindt vóór het aanvragen van sessielocks plaats; annuleren laat geen lock achter. Na lokale ontgrendeling wordt synchronisatie geprobeerd; een GitHub-storing laat de lokale sessie open. Core-metadata blijft behouden bij app-saves en oude-tabwijzigingen worden tijdelijk veiliggesteld en samengevoegd. Exportback-ups bevatten geen Core-interne metadata.
 7. **Statische diff-/beveiligingsreview:** de belangrijkste paden voor passkeybundels, domeinscheiding, migratie, herstel, offline gebruik, sync en vergrendelen zijn gecontroleerd. Daarbij is een race gevonden en opgelost: `lock()` en `flushLocal()` wachten op lopende `persistState`-writes en geven een niet-herstelde opslagfout door. De regressietests en beide CI-triggers zijn groen.
-8. **Nog open:** fysieke browser-/apparaatacceptatie van de volledige runtime. B07 fysieke iPhone/iPad-acceptatie blijft uitgesteld totdat alle appmigraties klaar zijn. Geen merge, Pages-deploy of echte datamigratie zonder afzonderlijk akkoord.
+8. **Nog open:** fysieke browser-/apparaatacceptatie van de volledige runtime en geïsoleerde testdeploy met synthetische gegevens. De code is gemerged en de Pages-deploymentworkflow is geslaagd; B07 fysieke iPhone/iPad-acceptatie wordt samen met de overige gemigreerde apps uitgevoerd. Geen echte datamigratie of productie-write zonder afzonderlijk akkoord.
 
-## 6. Grenzen van deze branch
+## 6. Uitgevoerde veiligheidsgrenzen en resterende beperkingen
 
 - Geen echte datarepository geopend.
 - Geen token of echte vaultbestanden gelezen.
 - Geen production writes.
-- Geen wijzigingen aan `main`; alle wijzigingen staan op de draft-migratiebranch.
+- De migratiecode staat inmiddels op `main` via PR #5. De hier beschreven ontwikkelbranchstatus is historisch.
 - `index.html` is aangepast op de migratiebranch. De oorspronkelijke byte-identieke backup staat in `backup/pwa-core-migration-2026-11-14/index.pre-core-integration.html`; aanvullende backups zijn per wijzigingsstap vastgelegd.
 - `sw.js` is op de branch aangepast om de gepinde Core-bestanden, manifest, lockfile, `js/multi-vault-adapter.js`, `js/bundle-biometric.js` en `js/vastelasten-core.js` statisch te precachen; de oorspronkelijke service worker is byte-identiek geback-upt.
 - `_config.yml` sluit `backup/` uit van de GitHub Pages-publicatie; de herstelbestanden blijven alleen in de repository beschikbaar.
-- Appversie 3.0.0 staat uitsluitend op de migratiebranch; geen Pages-deploy, echte migratie of wijziging van productiegegevens heeft plaatsgevonden.
+- Appversie 3.0.0 is onderdeel van de gemergede `main`-code en de Pages-deploymentworkflow is geslaagd. Er is geen echte migratie of wijziging van productiegegevens uitgevoerd.
 
 ## 7. Handmatige acceptatie na afzonderlijk deploy-akkoord
 
-Voer deze stappen uitsluitend uit op een geïsoleerde testdeploy met een privé-testrepository en synthetische gegevens. Gebruik geen productie- of privégegevens voor de eerste acceptatie. De branch is nog niet gemerged of gedeployed; deze tests zijn dus nog niet uitvoerbaar op de gepubliceerde app.
+Voer deze stappen uitsluitend uit op een geïsoleerde testdeploy met een aparte testrepository en synthetische gegevens. Gebruik geen productie- of privégegevens voor de acceptatie. De migratie is gemerged en de Pages-workflow is geslaagd, maar de live runtime is niet handmatig geverifieerd; gebruik de gewone gepubliceerde app niet als proefomgeving.
 
 - [ ] iPhone/iPad Safari: installeer de PWA, controleer opstarten en lokale wachtwoordontgrendeling van gedeeld + eigen persoonlijk; controleer dat de andere persoonlijke kluis niet wordt geopend.
 - [ ] Windows 11 (Edge en Chrome): herhaal wachtwoordontgrendeling en controleer dat beide actieve kluizen beschikbaar zijn.
