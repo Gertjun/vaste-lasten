@@ -495,6 +495,29 @@ test('app saves cannot roll back a newer Core device and deletion ledger snapsho
   await core.lock();
 });
 
+test('failed persistence blocks flush and lock until a later full save succeeds', async () => {
+  const { core, vaults } = setup();
+  await core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: 'shared-password', 'personal-p1': 'personal-password' },
+  });
+  const snapshot = core.getState();
+  snapshot.samen.items.push({ id: 'must-not-be-lost', u: 101 });
+  const originalSetData = vaults.shared.setData;
+  vaults.shared.setData = async () => { throw new Error('synthetic persistence failure'); };
+  await assert.rejects(core.persistState(snapshot), /synthetic persistence failure/);
+  await assert.rejects(core.flushLocal(), /synthetic persistence failure/);
+  await assert.rejects(core.lock(), /synthetic persistence failure/);
+  assert.equal(vaults.shared.isUnlocked(), true);
+
+  vaults.shared.setData = originalSetData;
+  await core.persistState(snapshot);
+  await core.flushLocal();
+  assert.deepEqual(vaults.shared.getData().items.map((item) => item.id), ['must-not-be-lost']);
+  await core.lock();
+  assert.equal(vaults.shared.isUnlocked(), false);
+});
+
 test('lock waits for an in-flight persistState operation before locking vaults', async () => {
   const { core, vaults, events } = setup();
   await core.unlockLocal({
