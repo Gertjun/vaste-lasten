@@ -38,7 +38,9 @@ test('legacy state is split without crossing shared and private fields', () => {
     }),
   };
   const split = splitLegacyState(legacy, 'p1');
-  assert.equal(split.shared.domain, 'shared');\n  assert.equal(split.shared.schema, 2);\n  assert.equal(split['personal-p1'].schema, 2);
+  assert.equal(split.shared.domain, 'shared');
+  assert.equal(split.shared.schema, 2);
+  assert.equal(split['personal-p1'].schema, 2);
   assert.equal(split['personal-p1'].domain, 'personal-p1');
   assert.deepEqual(split.shared.items.map((x) => x.id), ['shared']);
   assert.deepEqual(split['personal-p1'].items.map((x) => x.id), ['private-p1']);
