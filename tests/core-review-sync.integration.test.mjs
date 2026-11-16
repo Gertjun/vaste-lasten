@@ -628,7 +628,7 @@ test('V05 a validly encrypted payload for the wrong domain is rejected before lo
     assert.deepEqual(local.getData().items, localBefore.items, 'verkeerd domein mag lokale records niet vervangen');
     assert.equal(local.getData().domain, localBefore.domain, 'de actieve kluis blijft aan het oorspronkelijke domein gebonden');
     assert.equal(local.getSyncMeta().sha, 'v05-domain-initial', 'ongeldige remote inhoud mag de bekende SHA niet bevestigen');
-    assert.equal(local.getSyncMeta().dirty, false, 'een afgewezen remote payload mag geen lokale dirty-state verzinnen');
+    assert.equal(local.getSyncMeta().dirty, true, 'de lokale device-ledgerwijziging blijft pending; de afgewezen remote payload is niet bevestigd');
   } finally {
     try { if (seed.isUnlocked()) seed.lock(); } catch {}
     try { await seed.dispose(); } catch {}
