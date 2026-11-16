@@ -124,3 +124,41 @@ test('previously persisted conflicts containing only example records are discard
   assert.equal(result.__conflicts.records[task.id],undefined);
   assert.equal(result.__conflicts.decisions[task.id],undefined);
 });
+
+
+test('a later choice on a stale client becomes a concurrent review after the first choice was synced', () => {
+  const a=base(),b=base();
+  a.items=[{id:'rent',name:'Test huur',amount:100,u:1500}];
+  b.items=[{id:'rent',name:'Test huur',amount:200,u:1500}];
+  const initial=merge(a,b),task=pending(initial)[0];
+  assert.ok(task,'the initial conflict must be open on both clients');
+
+  const choose=(snapshot,index,at,deviceId)=>{
+    const next=JSON.parse(JSON.stringify(snapshot));
+    const selected=task.alternatives[index];
+    next.__conflicts=review.resolveConflictState(next.__conflicts,task.id,index,{at,deviceId});
+    if(selected.kind==='record'){
+      next.items=next.items.filter(item=>item.id!==selected.value.id);
+      next.items.push({...selected.value,u:at});
+    }
+    return next;
+  };
+
+  // A resolves and publishes first. B still has the original open task and makes
+  // a different choice locally before incorporating A's published state.
+  const publishedA=choose(initial,0,1600,'client-a');
+  const localB=choose(initial,1,1700,'client-b');
+  const afterBSync=merge(localB,publishedA);
+  const tasks=pending(afterBSync);
+  assert.equal(tasks.length,1);
+  assert.equal(tasks[0].kind,'concurrent-review');
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(tasks[0].alternatives.map(value=>value.value?.amount ?? value.amount).sort((x,y)=>x-y))),
+    [100,200],
+  );
+
+  // A's next pull must converge on the same pending decision conflict.
+  const afterASync=merge(publishedA,afterBSync);
+  assert.equal(pending(afterASync).length,1);
+  assert.equal(pending(afterASync)[0].id,tasks[0].id);
+});
