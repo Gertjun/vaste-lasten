@@ -773,6 +773,7 @@ let coreStagingMerged=false;
 let coreProfile=null, coreMode=false;
 try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
 let coreRuntime=null, coreReady=false, coreConnected=false, corePersistError='';
+let vaultChoiceDismissed=false;
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 const IS_CR06_PREVIEW=location.hostname==='gertjun.github.io'&&location.pathname.startsWith('/vaste-lasten-pr9-preview/');
 /* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
@@ -2208,6 +2209,7 @@ function renderSetState(){
     else {t='Gekoppeld als '+nameOf(cfg.me);s='ok';}
   }
   el.textContent=t; el.dataset.s=s; el.hidden=!t;
+  renderCoreGate();
   const sd=document.querySelector('#v-instellingen details[data-g="sync"]');
   if(t==='Wachtwoord nodig'||t==='Core vergrendeld'){syncForced=true; autoOpen(sd,true);}
   else if(syncForced){syncForced=false; if(!(ui.groups&&'sync' in ui.groups)) autoOpen(sd,groupDefault('sync'));}
@@ -2699,7 +2701,8 @@ async function lockCore(){
   render(); renderSyncPanel();
 }
 function renderCoreGate(){
-  if(!coreMode||coreReady){
+  const firstStart=!coreMode&&!cfg;
+  if((coreMode&&coreReady)||(!coreMode&&cfg)||(firstStart&&vaultChoiceDismissed)){
     document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
     $('coreGate')?.remove(); return;
   }
@@ -2713,7 +2716,8 @@ function renderCoreGate(){
   const passkeyEnrolled=!!(coreRuntime&&coreRuntime.isBiometricEnrolled(me));
   const biometricControls=passkeyEnrolled
     ?'<div class="field"><span class="flabel">Of ontgrendel beide kluizen met één Face ID / passkey</span><div class="btns"><button class="btn primary" id="core-biometric">Ontgrendel beide kluizen</button></div></div>':'';
-  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2>'+
+  gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px">'+
+    (firstStart?'<h2>Kies je gegevenskluis</h2><p class="note">Voordat je Vaste Lasten gebruikt, kies je bewust welke kluis je wilt openen. Koppel een bestaande kluis via GitHub Sync, of maak hieronder een nieuwe lokale kluis aan. Een lokale kluis blijft op dit apparaat totdat je synchronisatie instelt.</p>'+coreEmptySetupHtml()+'<div class="btns"><button class="btn" id="core-vault-existing">Bestaande kluis koppelen</button></div>' : '<h2>Vaste Lasten is vergrendeld</h2>')+
     ((cfg||coreProfile?.localOnly)?'<p class="note">Je gegevens staan in twee afzonderlijk versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.'+(coreProfile?.localOnly?' Deze kluizen zijn alleen op dit apparaat beschikbaar.':'')+'</p>'+
       '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
@@ -2981,6 +2985,13 @@ document.addEventListener('click',e=>{
   if(id==='s-linkJoin') busy(id,'Bezig met koppelen…',linkJoin);
   if(id==='s-unlock') busy(id,'Controleren…',unlock);
   if(id==='core-empty-setup') busy(id,'Kluizen controleren…',initializeEmptyCore,'core-empty-err');
+  if(id==='core-vault-existing'){
+    vaultChoiceDismissed=true;
+    document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
+    $('coreGate')?.remove();
+    showTab('instellingen'); openGroup('sync'); renderSyncPanel();
+    $('syncPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  }
   if(id==='core-migrate') busy(id,'Migreren…',migrateToCore,'core-mig-err');
   if(id==='core-unlock') busy(id,'Online ontgrendelen…',unlockCore,'core-gate-err');
   if(id==='core-unlock-local') busy(id,'Lokaal ontgrendelen…',unlockCoreLocal,'core-gate-err');
