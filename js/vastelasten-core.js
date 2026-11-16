@@ -14,6 +14,7 @@ import {
   mergeDomainPayload,
   splitLegacyState,
   validateDomainPayload,
+  assertEmptyDomainPayload,
   initializeEmptyDomain,
 } from './multi-vault-adapter.js';
 
@@ -284,6 +285,40 @@ export function createVasteLastenCore({
     }
   }
 
+  /** Maakt gedeelde + persoonlijke lege kluizen uitsluitend lokaal aan, zonder GitHub-client. */
+  async function initializeEmptyLocal({ me: meValue, passwords } = {}) {
+    if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+    await acquire(meValue);
+    settings = null;
+    const ids = activeIds();
+    const results = {};
+    try {
+      for (const id of ids) {
+        const vault = registry[id].vault;
+        const password = passwords?.[id];
+        if (typeof password !== 'string' || password.length < 12) {
+          throw new Error(`Kies voor ${id} een wachtwoord van minstens 12 tekens.`);
+        }
+        if (vault.hasVault()) {
+          await vault.unlockWithPassword(password);
+          assertEmptyDomainPayload(vault.getData(), id);
+          results[id] = { id, existing: true, localOnly: true };
+        } else {
+          await vault.create(password, emptyPayload(id));
+          assertEmptyDomainPayload(vault.getData(), id);
+          results[id] = { id, created: true, localOnly: true };
+        }
+        await vault.flush();
+      }
+      return { complete: true, localOnly: true, results, state: getState() };
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'De lokale lege start is gestopt en de sessie kon niet veilig worden vrijgegeven.');
+      }
+      return { complete: false, localOnly: true, results, failedDomain: ids[Object.keys(results).length], error };
+    }
+  }
+
   async function unlockLocal({ me: meValue, passwords } = {}) {
 
     await acquire(meValue);
@@ -478,6 +513,7 @@ export function createVasteLastenCore({
 
     connect,
     initializeEmpty,
+    initializeEmptyLocal,
     migrate,
     getState,
     persistState,
