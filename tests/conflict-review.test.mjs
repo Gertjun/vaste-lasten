@@ -25,9 +25,9 @@ test('identical alternatives do not create a review task', () => {
 
 test('conflicts are isolated by encrypted vault domain and record path', () => {
   const shared = conflict({ amount: 100 }, { amount: 200 });
-  const private = conflict({ amount: 100 }, { amount: 200 }, { domain: 'personal-p1' });
+  const personal = conflict({ amount: 100 }, { amount: 200 }, { domain: 'personal-p1' });
   const otherPath = conflict({ amount: 100 }, { amount: 200 }, { path: 'items:insurance' });
-  assert.notEqual(shared.id, private.id);
+  assert.notEqual(shared.id, personal.id);
   assert.notEqual(shared.id, otherPath.id);
 });
 
