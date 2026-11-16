@@ -67,7 +67,7 @@ test('different concurrent choices become a new review task instead of overwriti
   assert.equal(tasks.length, 1);
   assert.equal(tasks[0].kind, 'concurrent-review');
   assert.equal(tasks[0].parentConflictId, item.id);
-  assert.deepEqual(tasks[0].alternatives.map((x) => x.amount), [100, 200]);
+  assert.deepEqual(JSON.parse(JSON.stringify(tasks[0].alternatives.map((x) => x.amount))), [100, 200]);
 });
 
 test('a concurrent-review task itself can be resolved and stays resolved on stale merges', () => {
