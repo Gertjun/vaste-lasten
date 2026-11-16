@@ -2237,7 +2237,7 @@ $('themePanel').addEventListener('change',e=>{
 function coreFirstStartConnectHtml(){
   return '<div class="hist" id="coreExistingConnect"><h4>Bestaande PWA-Core-kluis koppelen</h4>'+
     '<p class="note">Gebruik dit op een tweede apparaat om de bestaande gedeelde kluis te openen. Je eigen persoonlijke kluis wordt gekoppeld als die al bestaat; anders wordt alleen jouw lege persoonlijke kluis aangemaakt. Oude bestanden in de repository worden niet gelezen of gewijzigd.</p>'+
-    '<div class="two">'+fieldHtml('core-existing-owner','GitHub-gebruikersnaam (eigenaar)','autocapitalize="off" spellcheck="false" autocomplete="off"')+fieldHtml('core-existing-repo','Privé-repository','autocapitalize="off" spellcheck="false"','vaste-lasten-data')+'</div>'+
+    '<div class="two">'+fieldHtml('core-existing-owner','GitHub-gebruikersnaam (eigenaar)','autocapitalize="off" spellcheck="false" autocomplete="off"',cfg?.owner||'')+fieldHtml('core-existing-repo','Privé-repository','autocapitalize="off" spellcheck="false"',cfg?.repo||'vaste-lasten-data')+'</div>'+
     fieldHtml('core-existing-token','GitHub-token','type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"')+
     '<div class="field"><label for="core-existing-me">Wie gebruikt dit apparaat?</label><select id="core-existing-me"><option value="p1">'+esc(nameOf('p1'))+'</option><option value="p2">'+esc(nameOf('p2'))+'</option></select></div>'+
     '<div class="two">'+fieldHtml('core-existing-s','Gezamenlijk Core-wachtwoord','type="password" autocomplete="current-password"')+fieldHtml('core-existing-e','Eigen Core-wachtwoord','type="password" autocomplete="current-password"')+'</div>'+
@@ -2316,7 +2316,7 @@ function renderSyncPanel(){
         :'Vul je '+(fs&&fe?'wachtwoorden':'wachtwoord')+' in om verder te synchroniseren.';
       el.innerHTML=h+'<div class="ok-line">Gekoppeld met '+where+' als '+esc(nameOf(cfg.me))+'.</div><div class="note'+(changed.length?' pw-new':'')+'">'+msg+'</div>'+
         (fs&&fe?'<div class="two">'+fs+fe+'</div>':fs+fe)+
-        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+coreEmptySetupHtml()+coreMigrationHtml();
+        '<div class="err" id="s-err"></div><div class="btns"><button class="btn primary" id="s-unlock">Ontgrendelen</button><button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+coreFirstStartConnectHtml()+coreEmptySetupHtml()+coreMigrationHtml();
       return;
     }
     const keep=pwc.open?[...el.querySelectorAll('#pwBox input[type="password"],#pwBox input[type="text"]')].map(i=>[i.id,i.value,i.type]):[];
@@ -2325,7 +2325,7 @@ function renderSyncPanel(){
       '<div class="note">Gezamenlijke lasten staan in <code>samen.json</code> en zie je allebei. Je eigen lasten staan in <code>'+esc(fileOf('eigen'))+'</code>, versleuteld met jouw eigen wachtwoord.</div>'+
       '<div class="err" id="s-err">'+esc(syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="s-now">Nu synchroniseren</button>'+(hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+(pwc.open?'':'<button class="btn" id="pw-open">Wachtwoord wijzigen</button>')+'<button class="btn danger" id="s-unlink">Ontkoppelen</button></div>'+histHtml()+pwHtml()+
-      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>'+coreEmptySetupHtml()+coreMigrationHtml();
+      '<div class="note">Ontkoppelen haalt de token en sleutels van dit apparaat. Je lasten blijven hier en in GitHub gewoon staan.</div>'+coreFirstStartConnectHtml()+coreEmptySetupHtml()+coreMigrationHtml();
     /* wat je in Wachtwoord wijzigen typte blijft staan als de synchronisatie het paneel opnieuw tekent */
     for(const [id,v,t] of keep){const i=$(id); if(i){i.value=v; if(t==='text'){i.type='text'; const b=el.querySelector('[data-eye="'+id+'"]'); if(b){b.setAttribute('aria-pressed','true'); b.setAttribute('aria-label',b.getAttribute('aria-label').replace('Toon','Verberg'));}} if(METER.includes(id)) updateMeter(id);}}
     if(foc&&$(foc)) $(foc).focus();
@@ -2486,12 +2486,14 @@ async function persistCoreConnection(owner,repo,me,token){
 async function connectExistingCore(){
   if(!IS_PWA) throw new SyncError('PWA-Core koppelen werkt alleen in de geïnstalleerde app.');
   if(!navigator.onLine) throw new SyncError('Koppelen vereist internet.');
-  const owner=$('core-existing-owner')?.value.trim().replace(/^@/,'')||'';
-  const repo=$('core-existing-repo')?.value.trim()||'';
-  const token=$('core-existing-token')?.value.trim()||'';
+  const owner=$('core-existing-owner')?.value.trim().replace(/^@/,'')||cfg?.owner||'';
+  const repo=$('core-existing-repo')?.value.trim()||cfg?.repo||'';
+  let token=$('core-existing-token')?.value.trim()||'';
+  if(!token&&cfg) token=await tokenFor(cfg);
   const me=$('core-existing-me')?.value==='p2'?'p2':'p1';
   const shared=$('core-existing-s')?.value||'', personal=$('core-existing-e')?.value||'';
-  if(!owner||!repo||!token) throw new SyncError('Vul de GitHub-gebruikersnaam, repository en token in.');
+  if(!owner||!repo) throw new SyncError('Vul de GitHub-gebruikersnaam en repository in.');
+  if(!token) throw new SyncError('Vul je GitHub-token in.');
   if(!shared||!personal) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
   await checkPrivateDataRepository(owner,repo,token);
   await ensureCoreRuntime();
