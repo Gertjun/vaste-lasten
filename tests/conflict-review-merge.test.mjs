@@ -220,7 +220,7 @@ test('choosing either category alternative applies its name and deletion flag as
 
   for (const selected of task.alternatives) {
     const data = {cats:{transport:{id:'transport',name:'oude waarde',c:'c1',u:1,del:false}}};
-    applyChoice('samen',task,selected, {samen:data});
+    applyChoiceContext.state = {samen:data};\n    applyChoice('samen',task,selected);
     assert.equal(data.cats.transport.id,'transport');
     assert.equal(data.cats.transport.name,selected.name);
     assert.equal(data.cats.transport.del,selected.del);
