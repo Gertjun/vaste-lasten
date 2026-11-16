@@ -204,6 +204,10 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
     assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
     assert.equal(canon(publishedA.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[0]), 'A moet werkelijk alternatief 1 hebben gepubliceerd');
+    assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
+    const directMerge = mergeDomainPayload(localB, publishedA, 'shared', mergeStore);
+    assert.equal(directMerge.__conflicts.decisions[task.id]?.length, 2, 'de directe app-merge moet beide keuzes verenigen');
+    assert.equal(pending(directMerge.__conflicts).length, 1, 'de directe app-merge moet een vervolgtaak opleveren');
     const resultB = await core.sync();
     assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
     assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, JSON.stringify({ decisionKeys: Object.keys(resultB.state.samen.__conflicts.decisions || {}), decisions: resultB.state.samen.__conflicts.decisions[task.id], pendingKeys: Object.keys(resultB.state.samen.__conflicts.pending || {}), recordPresent: !!resultB.state.samen.__conflicts.records?.[task.id] }));
