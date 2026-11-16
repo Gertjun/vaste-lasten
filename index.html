@@ -598,6 +598,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
   <div class="phead"><h1 id="pTitle">Overzicht</h1></div>
   <div class="need-upd" id="needUpd" role="alert" hidden></div>
   <div id="conflictReview" class="conflict-review" role="region" aria-label="Gegevens die beoordeling nodig hebben" hidden></div>
+  <div id="cr06Fixture" class="conflict-review" aria-label="CR06 acceptatietest" hidden></div>
 
   <section id="v-overzicht" role="tabpanel" aria-labelledby="t-overzicht"><div class="fslot" id="fslot-overzicht"></div><div id="ov-dyn"></div></section>
 
@@ -758,6 +759,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 <div class="toast" id="toast" hidden></div>
 
 <script src="./js/conflict-review.js"></script>
+<script src="./js/cr06-fixture.js"></script>
 <script>
 (function(){
 const BASE='vastelasten';
@@ -771,6 +773,7 @@ let coreProfile=null, coreMode=false;
 try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
 let coreRuntime=null, coreReady=false, coreConnected=false, corePersistError='';
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
+const IS_CR06_PREVIEW=location.hostname==='gertjun.github.io'&&location.pathname.startsWith('/vaste-lasten-pr9-preview/');
 /* standaardcategorieën; namen en kleuren zijn aan te passen en er kunnen eigen categorieën bij (samen.cats) */
 const BASE_CATS=[
   {id:'wonen',name:'Wonen',c:'c1'},
@@ -1262,6 +1265,32 @@ function renderConflictReview(){
         '<div class="conflict-choices">'+choices+'</div></section>';
     }).join('');
 }
+function renderCr06Fixture(){
+  const host=$('cr06Fixture'); if(!host) return;
+  const allowed=IS_CR06_PREVIEW&&coreMode&&coreReady&&!!coreRuntime&&cfg&&['p1','p2'].includes(cfg.me);
+  host.hidden=!allowed;
+  if(!allowed){host.innerHTML='';return;}
+  host.innerHTML='<h2>CR06 · synthetische testgegevens</h2>'+
+    '<p>Maakt zes gezamenlijke en één persoonlijk synthetisch reviewconflict aan. Bestaande reviewtaken blijven behouden. Alleen beschikbaar in deze PR-preview.</p>'+
+    '<button class="btn primary" id="cr06Seed" type="button">CR06-testconflicten aanmaken / aanvullen</button>';
+}
+$('cr06Fixture')?.addEventListener('click',async event=>{
+  const button=event.target.closest('#cr06Seed'); if(!button)return;
+  if(!IS_CR06_PREVIEW||!coreMode||!coreReady||!coreRuntime||!cfg||!['p1','p2'].includes(cfg.me))return;
+  button.disabled=true; button.textContent='Testgegevens worden lokaal opgeslagen…';
+  try{
+    const fixture=globalThis.VasteLastenCr06Fixture.createCr06Fixture({me:cfg.me});
+    state.samen.__conflicts=globalThis.VasteLastenConflictReview.mergeConflictState(state.samen.__conflicts,fixture.shared);
+    state.eigen.__conflicts=globalThis.VasteLastenConflictReview.mergeConflictState(state.eigen.__conflicts,fixture.personal);
+    await coreRuntime.persistState(structuredClone(state));
+    await coreRuntime.flushLocal();
+    render(); renderSyncPanel(); scheduleSync();
+    toast('CR06-testconflicten lokaal opgeslagen. Synchronisatie volgt automatisch.');
+  }catch(error){
+    toast('CR06-testgegevens konden niet worden opgeslagen: '+(error.message||error));
+    renderCr06Fixture();
+  }
+});
 function applyConflictChoice(store,item,value){
   const data=state[store], now=Date.now(), parts=item.path.split(':');
   if(parts[0]==='items'){
@@ -1311,7 +1340,7 @@ function render(){
   const nPaid=list.filter(i=>i.paid).length;
   $('countNote').textContent=list.length?nPaid+' van '+list.length+' afgevinkt':'';
   renderMonth(list); renderLasten(items); renderOverview(items);
-  renderDevicePanel(); renderInstall(); renderSetState(); renderConflictReview();
+  renderDevicePanel(); renderInstall(); renderSetState(); renderConflictReview(); renderCr06Fixture();
   if(!$('splitPanel').contains(document.activeElement)) renderSplitPanel();
   renderCatPanel(); renderIncomePanel(); renderPayPanel(); fillYears();
 }
