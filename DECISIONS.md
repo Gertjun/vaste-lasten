@@ -47,3 +47,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - Veiligheid: een remote Core-bestand mag alleen worden hergebruikt als de SHA al lokaal als eigen publicatie is bevestigd en het bestand met de lokale datasleutel kan worden ontsleuteld. Onbekende of afwijkende remote bestanden worden geweigerd; ze worden niet samengevoegd of overschreven.
 - Hervatten: na een gedeeltelijke upload mag de gebruiker opnieuw proberen; reeds bevestigde bestanden worden gecontroleerd en ontbrekende bestanden gepubliceerd.
 - Tweede apparaat: de gedeelde remote kluis is verplicht; alleen de gekozen persoonlijke kluis wordt geïmporteerd of, als die nog niet bestaat, leeg aangemaakt. Legacybestanden blijven onaangeraakt.
+
+
+### D10 – Herstelroute vanaf het Core-vergrendelscherm (17 nov 2026, 3.5.0)
+- **Besluit:** vanaf het vergrendelscherm is het altijd mogelijk terug te keren naar de kluisinstellingen, ook als de huidige wachtwoorden niet meer werken.
+- **Veiligheid:** alleen teruggaan naar instellen wist niets. Het vervangen van lokale Core-kluizen vereist een afzonderlijke bevestiging en wist uitsluitend de lokale drie Core-kluizen plus de lokale passkey-koppeling op dat apparaat. Remote GitHub-bestanden en gegevens op andere apparaten blijven onaangeroerd.
+- **Waarom:** een gebruiker mag niet permanent vastlopen op een vergrendelscherm wanneer een wachtwoord of repositorykoppeling niet meer werkt.
