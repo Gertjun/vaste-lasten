@@ -201,12 +201,11 @@ test('category delete versus rename with different timestamps follows the newer 
 
 
 
-const applyChoiceMatch = html.match(/function applyConflictChoice\\(store,item,value\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+const applyChoiceMatch = html.match(/function applyConflictChoice\(store,item,value\)\s*\{[\s\S]*?\n\}/);
 assert.ok(applyChoiceMatch, 'de app moet conflictkeuzes kunnen toepassen');
-const applyChoice = vm.runInNewContext('(' + applyChoiceMatch[0] + ')', {
-  Date: { now: () => 1800000000100 },
-});
-const renderReviewMatch = html.match(/function renderConflictReview\\(\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+const applyChoiceContext = { Date: { now: () => 1800000000100 }, state: {} };
+const applyChoice = vm.runInNewContext('(' + applyChoiceMatch[0] + ')', applyChoiceContext);
+const renderReviewMatch = html.match(/function renderConflictReview\(\)\s*\{[\s\S]*?\n\}/);
 assert.ok(renderReviewMatch, 'de app moet reviewtaken kunnen renderen');
 
 test('choosing either category alternative applies its name and deletion flag as a new change', () => {
