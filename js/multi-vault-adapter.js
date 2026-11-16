@@ -202,8 +202,13 @@ export async function openAndSyncDomain({
 
   const syncOptions = {
     settings: remoteSettings,
-    merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
-    migrate: (incoming) => validateDomainPayload(incoming, id),
+    merge: (local, incoming) => {
+      assertEmptyDomainPayload(local, id);
+      assertEmptyDomainPayload(incoming, id);
+      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore), id);
+    },
+    // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
+    migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id), id),
     schemaVersion: 2,
   };
 
