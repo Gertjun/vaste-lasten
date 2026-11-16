@@ -635,6 +635,13 @@ export function createVasteLastenCore({
     return registry[id].vault.hasVault();
   }
 
+  /** Verwijdert uitsluitend de lokale Core-kluizen op dit apparaat; remote GitHub-bestanden blijven intact. */
+  async function resetLocalVaults() {
+    if (session) await release();
+    for (const id of Object.keys(VAULT_DOMAINS)) await registry[id].vault.reset();
+    for (const person of ['p1', 'p2']) deviceBiometricFor(person).disable();
+  }
+
   function isBiometricEnrolled(person = me) {
     if (!['p1', 'p2'].includes(person)) return false;
     return deviceBiometricFor(person).isEnrolled() && !!storage.getItem(bundleStorageKey(person));
@@ -678,6 +685,7 @@ export function createVasteLastenCore({
     enrollExistingBiometric,
     restoreDomain,
     hasVault,
+    resetLocalVaults,
     isBiometricEnrolled,
     getSyncDevices,
     deactivateSyncDevice,
