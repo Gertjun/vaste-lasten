@@ -232,7 +232,8 @@ export async function openAndSyncDomain({
 
 /** Verhoogt alleen de minimumversie in het legacy gedeelde bestand; het envelope-formaat blijft legacy. */
 export async function raiseLegacyUpdateBarrier({
-  readLegacy, openLegacy, writeLegacy, minApp = '3.0.0', attempts = 4, compareVersions,
+  readLegacy, openLegacy, writeLegacy, minApp = '3.0.0',
+  currentAppVersion = minApp, attempts = 4, compareVersions,
 } = {}) {
   for (const name of ['readLegacy', 'openLegacy', 'writeLegacy', 'compareVersions']) {
     if (typeof ({ readLegacy, openLegacy, writeLegacy, compareVersions })[name] !== 'function') {
@@ -244,13 +245,17 @@ export async function raiseLegacyUpdateBarrier({
     if (!remote?.env) throw new Error('Het bestaande gezamenlijke legacybestand ontbreekt; migratie is afgebroken.');
     const data = await openLegacy(remote.env);
     if (!isRecord(data)) throw new Error('Het gezamenlijke legacybestand bevat geen geldig gegevensobject.');
-    if (data.minApp && compareVersions(data.minApp, minApp) > 0) {
+    if (data.minApp && compareVersions(data.minApp, currentAppVersion) > 0) {
       throw new Error(`De legacygegevens vereisen appversie ${data.minApp} of nieuwer.`);
     }
-    if (data.minApp && compareVersions(data.minApp, minApp) === 0) {
+    // Behoud een bestaande, hogere minimumversie; verlaag de barrière nooit.
+    const targetMinApp = data.minApp && compareVersions(data.minApp, minApp) > 0
+      ? data.minApp
+      : minApp;
+    if (data.minApp && compareVersions(data.minApp, targetMinApp) === 0) {
       return { alreadyMarked: true, sha: remote.sha };
     }
-    const next = { ...data, minApp };
+    const next = { ...data, minApp: targetMinApp };
     const sha = await writeLegacy(next, remote.sha);
     if (sha) return { alreadyMarked: false, sha };
   }
