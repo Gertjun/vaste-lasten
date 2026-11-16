@@ -407,12 +407,13 @@ test('runtime: nieuw apparaat weigert een te kort of gedeeld wachtwoord voor een
 });
 
 
-test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen en laat een nieuwe lege start toe', async () => {
+test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen, behoudt GitHub en laat een nieuwe lege start toe', async () => {
   const h = runtimeHarness();
-  const first = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  const first = await h.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
   assert.equal(first.complete, true);
   assert.equal(h.vaults.shared.hasVault(), true);
   assert.equal(h.vaults['personal-p1'].hasVault(), true);
+  const remoteBefore = [...h.remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
 
   await h.core.lock();
   await h.core.resetLocalVaults();
@@ -420,7 +421,7 @@ test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen en laa
   assert.equal(h.vaults.shared.hasVault(), false);
   assert.equal(h.vaults['personal-p1'].hasVault(), false);
   assert.equal(h.vaults['personal-p2'].hasVault(), false);
-  assert.deepEqual(h.remoteFiles.size, 0);
+  assert.deepEqual([...h.remoteFiles.entries()], remoteBefore);
 
   const nextPasswords = {
     shared: 'another-new-shared-password',
