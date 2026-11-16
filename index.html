@@ -567,6 +567,14 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .set-md .set-nav{container-type:inline-size}
 .set-nav .set-st{white-space:nowrap}
 @container (max-width:330px){.set-nav button{grid-template-columns:1fr 18px}.set-nav .set-st{grid-column:1;grid-row:2;justify-self:start}.set-nav .chev{grid-column:2;grid-row:1}}
+
+.conflict-review{margin:12px 0;padding:14px 16px;border:1px solid var(--warn);border-radius:14px;background:var(--warn-soft);color:var(--ink)}
+.conflict-review h2{font-size:1rem;margin:0 0 6px}
+.conflict-review p{margin:4px 0 10px}
+.conflict-task{padding:10px 0;border-top:1px solid var(--line)}
+.conflict-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}
+.conflict-choice{white-space:normal;text-align:left;min-height:42px}
+.conflict-value{font-size:.88rem;overflow-wrap:anywhere;background:var(--surface);padding:8px;border-radius:8px;margin-top:5px}
 </style>
 
 <div class="wrap" lang="nl">
@@ -589,6 +597,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
  <main class="main">
   <div class="phead"><h1 id="pTitle">Overzicht</h1></div>
   <div class="need-upd" id="needUpd" role="alert" hidden></div>
+  <div id="conflictReview" class="conflict-review" role="region" aria-label="Gegevens die beoordeling nodig hebben" hidden></div>
 
   <section id="v-overzicht" role="tabpanel" aria-labelledby="t-overzicht"><div class="fslot" id="fslot-overzicht"></div><div id="ov-dyn"></div></section>
 
@@ -748,6 +757,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="./js/conflict-review.js"></script>
 <script>
 (function(){
 const BASE='vastelasten';
@@ -925,22 +935,54 @@ $('sideTog').onclick=toggleSide;
 
 /* samenvoegen: per last, per vinkje en voor de verdeling wint de nieuwste wijziging */
 function merge(a,b){
-  const out=EMPTY();
-  for(const s of [a,b]) for(const id in s.del) out.del[id]=Math.max(out.del[id]||0,s.del[id]);
+  const out=EMPTY(), review=globalThis.VasteLastenConflictReview;
+  let conflicts=review?review.mergeConflictState(a.__conflicts,b.__conflicts):null;
+  const register=(path,kind,left,right,stamp)=>{
+    if(!review||canon(left)===canon(right)) return;
+    const item=review.createConflict({domain:a.domain||b.domain||'shared',path,kind,left,right,timestamp:stamp||0});
+    if(item&&!conflicts.decisions[item.id]?.length) conflicts.pending[item.id]=item;
+  };
+  for(const source of [a,b]) for(const id in source.del||{}) out.del[id]=Math.max(out.del[id]||0,source.del[id]);
   const map=new Map();
-  for(const s of [a,b]) for(const i of s.items){const cur=map.get(i.id); if(!cur||i.u>cur.u) map.set(i.id,i);}
-  for(const i of map.values()) if(!(out.del[i.id]>=i.u)) out.items.push({...i});
-  for(const s of [a,b]) for(const k in s.paid){
-    out.paid[k]=out.paid[k]||{};
-    for(const id in s.paid[k]){const v=s.paid[k][id], cur=out.paid[k][id]; if(!cur||v.u>cur.u) out.paid[k][id]={...v};}
+  for(const source of [a,b]) for(const item of source.items||[]){
+    const cur=map.get(item.id);
+    if(cur&&(+cur.u||0)===(+item.u||0)&&canon(cur)!==canon(item))
+      register('items:'+item.id,'content',{kind:'record',value:cur},{kind:'record',value:item},item.u);
+    if(!cur||(+item.u||0)>(+cur.u||0)) map.set(item.id,item);
+  }
+  for(const item of map.values()){
+    const deleted=out.del[item.id]||0, edited=+item.u||0;
+    if(deleted===edited&&deleted>0)
+      register('items:'+item.id,'delete-vs-edit',{kind:'record',value:item},{kind:'delete',value:deleted},deleted);
+    if(!(deleted>=edited)) out.items.push({...item});
+  }
+  for(const source of [a,b]) for(const month in source.paid||{}){
+    out.paid[month]=out.paid[month]||{};
+    for(const id in source.paid[month]){
+      const value=source.paid[month][id], current=out.paid[month][id];
+      if(current&&(+current.u||0)===(+value.u||0)&&canon(current)!==canon(value))
+        register('paid:'+month+':'+id,'content',current,value,value.u);
+      if(!current||(+value.u||0)>(+current.u||0)) out.paid[month][id]={...value};
+    }
   }
   const ma=a.meta, mb=b.meta;
+  if(ma&&mb&&(+ma.u||0)===(+mb.u||0)&&canon(ma)!==canon(mb)) register('meta','content',ma,mb,ma.u);
   out.meta=!ma?(mb?{...mb}:null):!mb?{...ma}:(mb.u>ma.u?{...mb}:{...ma});
-  /* overige onderdelen: met een eigen samenvoegregel, anders de versie van GitHub */
-  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){
-    if(k in out) continue;
-    out[k]=MERGE[k]?MERGE[k](a[k],b[k]):(b[k]!==undefined?b[k]:a[k]);
+  for(const key of ['cats','settle','scen']) for(const [id,x] of Object.entries(a[key]||{})){
+    const y=(b[key]||{})[id];
+    if(x&&y&&(+x.u||0)===(+y.u||0)&&canon(x)!==canon(y)) register(key+':'+id,'content',x,y,x.u);
   }
+  for(const person of ['p1','p2']){
+    const x=a.inc&&a.inc[person], y=b.inc&&b.inc[person];
+    if(x&&y&&(+x.u||0)===(+y.u||0)&&canon(x)!==canon(y)) register('inc:'+person,'content',x,y,x.u);
+  }
+  if(a.prof&&b.prof&&(+a.prof.u||0)===(+b.prof.u||0)&&canon(a.prof)!==canon(b.prof))
+    register('prof','content',a.prof,b.prof,a.prof.u);
+  for(const key of new Set([...Object.keys(a),...Object.keys(b)])){
+    if(key in out||key==='__conflicts') continue;
+    out[key]=MERGE[key]?MERGE[key](a[key],b[key]):(b[key]!==undefined?b[key]:a[key]);
+  }
+  if(review) out.__conflicts=conflicts;
   return prune(out);
 }
 /* verwijdermarkeringen opruimen (2.18.4). Een markering zorgt dat een verwijderde last niet terugkomt via een apparaat
@@ -1183,6 +1225,57 @@ function dueLists(items){
   return {late,soon,curLeft:cur.filter(i=>i.d>=T.d).length,toPay:!!PP&&ahead>14};
 }
 
+function renderConflictReview(){
+  const host=$('conflictReview'); if(!host) return;
+  const tasks=[];
+  for(const store of STORES){
+    const domain=store==='samen'?'shared':'personal-'+(cfg&&cfg.me||'p1');
+    const data=state[store]||{};
+    for(const item of (globalThis.VasteLastenConflictReview?.pendingConflicts(data.__conflicts)||[])) tasks.push({store,domain,item});
+  }
+  if(!tasks.length){host.hidden=true;host.innerHTML='';return;}
+  host.hidden=false;
+  host.innerHTML='<h2>Gegevens vragen om jouw beoordeling ('+tasks.length+')</h2>'+
+    '<p>Op twee apparaten zijn verschillende wijzigingen met hetzelfde wijzigingsmoment gevonden. Beide versies zijn bewaard. Kies per conflict welke versie leidend moet worden; die keuze wordt als nieuwe wijziging gesynchroniseerd.</p>'+
+    tasks.map(({store,domain,item})=>{
+      const title=esc(item.path.replace(/^(items|paid|meta|cats|settle|scen|inc|prof):?/,'').replaceAll(':',' · ')||'Gegevens');
+      const choices=item.alternatives.map((value,index)=>{
+        const label=value&&value.kind==='delete'?'Verwijderen':'Versie '+(index+1);
+        const display=value&&value.kind==='record'?value.value:value&&value.kind==='delete'?'Verwijderd':value;
+        return '<div><div class="conflict-value"><b>'+label+'</b><br>'+esc(JSON.stringify(display,null,2))+'</div><button class="btn primary conflict-choice" data-conflict-domain="'+store+'" data-conflict-id="'+item.id+'" data-conflict-choice="'+index+'">Kies deze versie</button></div>';
+      }).join('');
+      return '<section class="conflict-task"><b>'+title+'</b> <span class="chip">'+(domain==='shared'?'Gezamenlijke kluis':'Persoonlijke kluis')+'</span>'+
+        (item.kind==='concurrent-review'?'<p>Op twee apparaten is een verschillende keuze gemaakt. Beoordeel deze keuzes opnieuw.</p>':'')+
+        '<div class="conflict-choices">'+choices+'</div></section>';
+    }).join('');
+}
+function applyConflictChoice(store,item,value){
+  const data=state[store], now=Date.now(), parts=item.path.split(':');
+  if(parts[0]==='items'){
+    const id=parts[1];
+    if(value&&value.kind==='delete'){data.items=data.items.filter(x=>x.id!==id);data.del={...(data.del||{}),[id]:now};}
+    else if(value&&value.kind==='record'){data.items=data.items.filter(x=>x.id!==id);data.items.push({...value.value,u:now});}
+  }else if(parts[0]==='paid'){
+    const month=parts[1],id=parts.slice(2).join(':');data.paid=data.paid||{};data.paid[month]=data.paid[month]||{};data.paid[month][id]={...value,u:now};
+  }else if(parts[0]==='meta') data.meta={...value,u:now};
+  else if(['cats','settle','scen'].includes(parts[0])){
+    const key=parts[0],id=parts.slice(1).join(':');data[key]=data[key]||{};data[key][id]={...value,u:now};
+  }else if(parts[0]==='inc'){const person=parts[1];data.inc=data.inc||{};data.inc[person]={...value,u:now};}
+  else if(parts[0]==='prof') data.prof={...value,u:now};
+}
+function resolveAppConflict(store,id,choice){
+  const data=state[store],review=globalThis.VasteLastenConflictReview;
+  const task=review.pendingConflicts(data.__conflicts).find(x=>x.id===id); if(!task)return;
+  const selected=task.alternatives[choice];
+  data.__conflicts=review.resolveConflictState(data.__conflicts,id,choice,{at:Date.now(),deviceId:(cfg&&cfg.me||'device')});
+  applyConflictChoice(store,task,selected);
+  saveLocal(); render(); scheduleSync();
+}
+$('conflictReview')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-conflict-id]');if(!button)return;
+  resolveAppConflict(button.dataset.conflictDomain,button.dataset.conflictId,+button.dataset.conflictChoice);
+});
+
 function render(){
   _cats=null;
   document.querySelectorAll('#filters button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===ui.filter)));
@@ -1205,7 +1298,7 @@ function render(){
   const nPaid=list.filter(i=>i.paid).length;
   $('countNote').textContent=list.length?nPaid+' van '+list.length+' afgevinkt':'';
   renderMonth(list); renderLasten(items); renderOverview(items);
-  renderDevicePanel(); renderInstall(); renderSetState();
+  renderDevicePanel(); renderInstall(); renderSetState(); renderConflictReview();
   if(!$('splitPanel').contains(document.activeElement)) renderSplitPanel();
   renderCatPanel(); renderIncomePanel(); renderPayPanel(); fillYears();
 }
