@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 16 november 2026 · versie **3.1.1 in voorbereiding** (bugfix in PR #9).
+Laatst bijgewerkt: 16 november 2026 · versie **3.2.0 in voorbereiding** (schone start met lege PWA-Core-kluizen, PR #10).
 
 ---
 
@@ -34,6 +34,8 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 
 ## 3. Open punten
 
+0. PR #10: lege Core-start is geïmplementeerd op featurebranch `feat/empty-pwa-core-vault-setup`; draft review en volledige CI moeten nog groen worden. Geautomatiseerde synthetische tests zijn toegevoegd. Geen legacydata of productiekluis aangeraakt. Zie `docs/EMPTY-CORE-SETUP.md`.
+
 1. Aanvullende browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime: wachtwoordmigratie, herstel, herinstallatie/herkoppeling en de resterende passkey-/PRF-combinaties. De fysieke praktijkscope op iPhone Safari en Windows 11 Edge is op 16 november 2026 door de gebruiker als geslaagd gemeld.
 2. De resterende S01–S07- en V01–V06-acceptatiepunten integraal afvinken; S06 blijft PARTIAL voor UI-foutzichtbaarheid en fysieke netwerkuitval.
 3. Geïsoleerde synthetische acceptatie afronden vóór enige echte data-cutover. De integratie is al gemerged en de Pages-deploymentworkflow is geslaagd; een echte productiegegevensmigratie blijft afzonderlijk geblokkeerd. Geen test gebruikt de echte privé-datarepository, tokens, passkeys of productiegegevens.
@@ -41,6 +43,8 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **16 nov 2026 – PR #10 schone start:** aparte `initializeEmpty`-route toegevoegd. Deze maakt of opent uitsluitend lege shared + actieve persoonlijke Core-kluis, valideert lokale en remote inhoud en controleert na synchronisatie de remote bevestiging. Legacydata wordt niet gelezen of geïmporteerd; een lokale marker voorkomt latere automatische legacy-merge. Oude bestanden worden niet verwijderd. Synthetische tests toegevoegd voor eerste apparaat, tweede apparaat, profielspecifieke kluis, niet-lege data, verkeerd wachtwoord en uploadfout. CI nog af te wachten.
 
 - **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. V05 (verkeerd wachtwoord, verkeerd domein en beschadigde remote ciphertext) en S06 (remote HTTP 500 en expliciete retry) toegevoegd. Vervolgens S03, S04 en S07 uitgebreid van losse merge-/ledgerproeven naar de echte Core-vault-/syncclientroute met twee onafhankelijke synthetische clients en mock GitHub Contents API. S03 slaagt in beide uploadvolgordes met identieke conflict-ID; S04 voorkomt herleving van een ouder offline record; S07 controleert device-acknowledgement en tombstone-opruiming. CI #467 op head `7a9f6766`: 89/89 geslaagd. S03/S04/S07 en V05 zijn PASS voor synthetische tests; S06 blijft PARTIAL omdat UI-foutzichtbaarheid en fysieke netwerkuitval niet zijn getest. Geen productiegegevens of productietokens gebruikt.
 

@@ -14,6 +14,7 @@ import {
   mergeDomainPayload,
   splitLegacyState,
   validateDomainPayload,
+  initializeEmptyDomain,
 } from './multi-vault-adapter.js';
 
 const clone = (value) => structuredClone(value);
@@ -253,6 +254,36 @@ export function createVasteLastenCore({
     }
   }
 
+  /**
+   * Veilige schone start: maakt alleen de actieve shared + persoonlijke kluis aan.
+   * Deze route leest of migreert nooit legacygegevens en behoudt gedeeltelijk succes.
+   */
+  async function initializeEmpty({ me: meValue, passwords, settings: inputSettings } = {}) {
+    const resolved = await resolveSettings(inputSettings);
+    await acquire(meValue);
+    settings = resolved;
+    const ids = activeIds();
+    const results = {};
+    try {
+      for (const id of ids) {
+        results[id] = await initializeEmptyDomain({
+          id,
+          password: passwords?.[id],
+          registry,
+          settings,
+          createClient: clientFactory,
+          mergeStore,
+        });
+      }
+      return { complete: true, results, state: getState() };
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'De lege start is gestopt en de sessie kon niet veilig worden vrijgegeven.');
+      }
+      return { complete: false, results, failedDomain: ids[Object.keys(results).length], error };
+    }
+  }
+
   async function unlockLocal({ me: meValue, passwords } = {}) {
 
     await acquire(meValue);
@@ -446,6 +477,7 @@ export function createVasteLastenCore({
 
 
     connect,
+    initializeEmpty,
     migrate,
     getState,
     persistState,

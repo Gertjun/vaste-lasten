@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.2.0 — 16 november 2026
+- Nieuw: veilige schone start van Vaste Lasten met drie onafhankelijke lege PWA-Core-kluizen. Het eerste apparaat maakt de gedeelde en eigen kluis aan; het tweede apparaat sluit aan op de gedeelde kluis en maakt alleen de eigen persoonlijke kluis aan.
+- Beveiliging: bestaande Core-kluizen met inhoud worden geweigerd; er is geen automatische reset of overschrijving. Oude lokale en remote gegevens worden niet geïmporteerd of verwijderd.
+- Verbeterd: na een schone start worden oude lokale gegevens expliciet buiten de automatische legacy-samenvoeging gehouden totdat de afzonderlijke opruimstap is uitgevoerd.
+
 ## 3.1.1 — 16 november 2026
 - Opgelost: fictieve voorbeeldlasten worden bij het koppelen en samenvoegen volledig uit de lokale toestand gefilterd en kunnen geen conflictbeoordelingen veroorzaken.
 - Verbeterd: eerder opgeslagen reviewtaken die uitsluitend uit voorbeeldlasten bestaan, worden veilig opgeschoond zonder echte conflicten te verwijderen.

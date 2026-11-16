@@ -1,4 +1,5 @@
 // App-adapter voor de drie onafhankelijke Vaste Lasten-domeinen.
+import * as coreCrypto from './core/crypto.js';
 // De Core-factories worden geïnjecteerd zodat de domeinregels afzonderlijk testbaar blijven.
 
 export const VAULT_DOMAINS = Object.freeze({
@@ -201,8 +202,13 @@ export async function openAndSyncDomain({
 
   const syncOptions = {
     settings: remoteSettings,
-    merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
-    migrate: (incoming) => validateDomainPayload(incoming, id),
+    merge: (local, incoming) => {
+      assertEmptyDomainPayload(local, id);
+      assertEmptyDomainPayload(incoming, id);
+      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore), id);
+    },
+    // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
+    migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id), id),
     schemaVersion: 2,
   };
 
@@ -229,6 +235,104 @@ export async function openAndSyncDomain({
   }
 }
 
+
+/**
+ * Controleert dat een Core-domein werkelijk leeg is op app-niveau.
+ * Core mag daarnaast zijn eigen __pwaSync-apparaat-/verwijdermetadata bewaren.
+ */
+export function assertEmptyDomainPayload(payload, id) {
+  validateDomainPayload(payload, id);
+  if (payload.schema !== 2) throw new Error(`De kluis ${id} heeft een onbekend schema; er wordt niets gewijzigd.`);
+  const allowed = id === 'shared'
+    ? ['items', 'del', 'paid', 'meta', 'schema', 'domain', '__pwaSync']
+    : ['items', 'del', 'paid', 'schema', 'domain', '__pwaSync'];
+  if (Object.keys(payload).some((key) => !allowed.includes(key))) {
+    throw new Error(`De kluis ${id} bevat bestaande of onbekende gegevens. De lege start is afgebroken; niets is overschreven.`);
+  }
+  if (!Array.isArray(payload.items) || payload.items.length !== 0
+    || !isRecord(payload.del) || Object.keys(payload.del).length !== 0
+    || !isRecord(payload.paid) || Object.keys(payload.paid).length !== 0
+    || (id === 'shared' ? payload.meta !== null : Object.hasOwn(payload, 'meta'))) {
+    throw new Error(`De kluis ${id} is niet leeg. De lege start is afgebroken; bestaande gegevens zijn behouden.`);
+  }
+  if (Object.hasOwn(payload, '__pwaSync') && !isRecord(payload.__pwaSync)) {
+    throw new Error(`De Core-synchronisatiemetadata van ${id} is ongeldig. Er is niets gewijzigd.`);
+  }
+  return payload;
+}
+
+/**
+ * Maakt een lege kluis aan of sluit aan op een bestaande lege remote kluis.
+ * De legacybestanden en legacy-state worden bewust nergens gelezen.
+ */
+async function decryptEnvelopeWithPassword(vault, envelope, password) {
+  vault.validateEnvelope(envelope);
+  const kek = await coreCrypto.passwordKey(password, coreCrypto.b64ToBytes(envelope.kdf.salt), envelope.kdf.iterations);
+  let key;
+  try { key = await coreCrypto.unwrapDataKey(envelope.wrappedKey, kek); }
+  catch { throw new Error('Het wachtwoord voor de bestaande Core-kluis klopt niet. Er is niets gewijzigd.'); }
+  try { return await coreCrypto.decryptJSON(envelope.payload, key); }
+  catch { throw new Error('De bestaande Core-kluis kan niet veilig worden ontsleuteld. Er is niets gewijzigd.'); }
+}
+
+export async function initializeEmptyDomain({
+  id, password, registry, settings, createClient, mergeStore,
+  openEnvelope = decryptEnvelopeWithPassword,
+} = {}) {
+  assertDomainId(id);
+  if (typeof password !== 'string' || password.length < 12) throw new Error(`Kies voor ${id} een nieuw wachtwoord van minstens 12 tekens.`);
+  const entry = registry?.[id];
+  if (!entry?.vault || !entry?.sync) throw new TypeError(`De kluisinstantie voor ${id} ontbreekt.`);
+  if (typeof createClient !== 'function' || typeof mergeStore !== 'function') {
+    throw new TypeError('De GitHub-client en Vaste Lasten-samenvoegfunctie zijn verplicht.');
+  }
+
+  const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+  const client = createClient(remoteSettings);
+  const remote = await client.getFile();
+  const localExists = entry.vault.hasVault();
+
+  if (localExists) {
+    await entry.vault.unlockWithPassword(password);
+    assertEmptyDomainPayload(entry.vault.getData(), id);
+    if (remote) {
+      // Alleen dezelfde lokale datasleutel mag de remote inhoud inspecteren.
+      // Een sleutelconflict stopt; we resetten of vervangen geen bestaande kluis.
+      const remoteData = assertEmptyDomainPayload(
+        await entry.vault.decryptRemote(remote.envelope), id,
+      );
+      void remoteData;
+    }
+  } else if (remote) {
+    // Inspecteer vóór import: een bestaande niet-lege kluis komt niet in lokale opslag terecht.
+    assertEmptyDomainPayload(await openEnvelope(entry.vault, remote.envelope, password), id);
+    await entry.vault.importEnvelope(remote.envelope, password);
+    assertEmptyDomainPayload(entry.vault.getData(), id);
+    entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
+  } else {
+    const empty = {
+      items: [], del: {}, paid: {},
+      ...(id === 'shared' ? { meta: null } : {}),
+      schema: 2, domain: VAULT_DOMAINS[id].domain,
+    };
+    await entry.vault.create(password, empty);
+  }
+
+  const syncOptions = {
+    settings: remoteSettings,
+    merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
+    migrate: (incoming) => validateDomainPayload(incoming, id),
+    schemaVersion: 2,
+  };
+  const result = await entry.sync.syncNow(syncOptions);
+  await entry.vault.flush();
+  assertEmptyDomainPayload(entry.vault.getData(), id);
+
+  const confirmed = await client.getFile();
+  if (!confirmed) throw new Error(`GitHub heeft de lege kluis ${id} niet bevestigd. De lokale kluis is behouden; probeer opnieuw.`);
+  assertEmptyDomainPayload(await entry.vault.decryptRemote(confirmed.envelope), id);
+  return { id, result, path: remoteSettings.path, confirmed: true };
+}
 
 /** Verhoogt alleen de minimumversie in het legacy gedeelde bestand; het envelope-formaat blijft legacy. */
 export async function raiseLegacyUpdateBarrier({
