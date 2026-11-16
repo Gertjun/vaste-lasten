@@ -97,6 +97,10 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
         getSyncMeta: () => ({ ...meta }),
         setSyncMeta: (next) => { meta = { ...next }; },
         async flush() {},
+        async reset() {
+          envelope = null; dataKey = null; data = null; meta = { sha: null, dirty: false };
+          events.push(id + ':reset');
+        },
         lock() { dataKey = null; data = null; events.push(id + ':lock'); },
         async dispose() { this.lock(); },
         getDataKey: () => dataKey,
@@ -400,4 +404,32 @@ test('runtime: nieuw apparaat weigert een te kort of gedeeld wachtwoord voor een
   assert.equal(rejectedSame.complete, false);
   assert.match(rejectedSame.error.message, /ander wachtwoord/);
   assert.equal(same.remoteFiles.has('pwa-core-v1/eigen-p2.json'), false);
+});
+
+
+test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen en laat een nieuwe lege start toe', async () => {
+  const h = runtimeHarness();
+  const first = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  assert.equal(first.complete, true);
+  assert.equal(h.vaults.shared.hasVault(), true);
+  assert.equal(h.vaults['personal-p1'].hasVault(), true);
+
+  await h.core.lock();
+  await h.core.resetLocalVaults();
+
+  assert.equal(h.vaults.shared.hasVault(), false);
+  assert.equal(h.vaults['personal-p1'].hasVault(), false);
+  assert.equal(h.vaults['personal-p2'].hasVault(), false);
+  assert.deepEqual(h.remoteFiles.size, 0);
+
+  const nextPasswords = {
+    shared: 'another-new-shared-password',
+    'personal-p1': 'another-new-personal-password',
+    'personal-p2': 'another-new-p2-password',
+  };
+  const second = await h.core.initializeEmptyLocal({ me: 'p1', passwords: nextPasswords });
+  assert.equal(second.complete, true);
+  assert.deepEqual(second.state.samen.items, []);
+  assert.deepEqual(second.state.eigen.items, []);
+  await h.core.lock();
 });
