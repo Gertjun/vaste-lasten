@@ -2725,7 +2725,7 @@ function renderCoreGate(){
       biometricControls+
       (cfg?'<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>':'<p class="hint">Deze lokale kluis synchroniseert niet met andere apparaten. Je kunt later GitHub Sync instellen.</p>')+
       (cfg?'<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p><div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div><div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>':'')
-      :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>')+
+      :(firstStart?'':'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>'))+
     '</section>';
   document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
 }
