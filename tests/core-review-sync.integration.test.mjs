@@ -198,12 +198,17 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     await core.persistState(staleB);
     const localB = core.getRegistry().shared.vault.getData();
     assert.equal(localB.__conflicts.decisions[task.id]?.length, 1, 'persistState moet B\'s beslissing duurzaam bewaren');
+    assert.equal(canon(localB.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[1]), 'B moet werkelijk alternatief 2 hebben vastgelegd');
     assert.equal(core.getRegistry().shared.vault.getSyncMeta().dirty, true, 'B\'s beslissing moet de kluis dirty maken');
     const publishedA = await clientAVault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
     assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
+    assert.equal(canon(publishedA.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[0]), 'A moet werkelijk alternatief 1 hebben gepubliceerd');
     const resultB = await core.sync();
     assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
     assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, 'de twee onafhankelijke beslissingen moeten beide in de payload staan');
+    const mergedDecisions = resultB.state.samen.__conflicts.decisions[task.id];
+    assert.notEqual(canon(mergedDecisions[0].selected), canon(mergedDecisions[1].selected), 'de twee samengevoegde keuzes moeten verschillend zijn');
+    assert.ok(resultB.state.samen.__conflicts.records[task.id], 'de oorspronkelijke conflictregistratie moet behouden blijven');
     const afterB = pending(resultB.state.samen.__conflicts);
     assert.equal(afterB.length, 1);
     assert.equal(afterB[0].kind, 'concurrent-review');
