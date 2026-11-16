@@ -14,13 +14,10 @@
     return JSON.stringify(value === undefined ? null : value);
   };
   const hash = (value) => {
-    let h = 2166136261;
-    for (const char of value) {
-      h ^= char.charCodeAt(0);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0).toString(16).padStart(8, '0');
+    const run = (seed) => { let h = seed; for (const char of value) { h ^= char.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16).padStart(8, '0'); };
+    return run(2166136261) + run(2246822519);
   };
+  const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   const empty = () => ({ version: 1, pending: {}, decisions: {} });
   const normalize = (input) => {
     const out = empty();
@@ -40,7 +37,7 @@
   function createConflict({ domain, path, kind = 'content', left, right, timestamp = 0 } = {}) {
     if (!['shared', 'personal-p1', 'personal-p2'].includes(domain)) throw new TypeError('Onbekend kluisdomein.');
     if (typeof path !== 'string' || !path) throw new TypeError('Een conflictpad is verplicht.');
-    const alternatives = [left, right].map(clone).sort((a, b) => canonical(a).localeCompare(canonical(b)));
+    const alternatives = [left, right].map(clone).sort((a, b) => compare(canonical(a), canonical(b)));
     if (canonical(alternatives[0]) === canonical(alternatives[1])) return null;
     const id = conflictId(domain, path, kind, alternatives);
     return { id, domain, path, kind, createdAt: Number(timestamp) || 0, alternatives };
@@ -57,7 +54,7 @@
       for (const [id, decisions] of Object.entries(source.decisions)) {
         const byId = new Map((out.decisions[id] || []).map((d) => [d.id, d]));
         for (const decision of decisions) byId.set(decision.id, clone(decision));
-        out.decisions[id] = [...byId.values()].sort((x, y) => x.id.localeCompare(y.id));
+        out.decisions[id] = [...byId.values()].sort((x, y) => compare(x.id, y.id));
       }
     }
 
@@ -70,7 +67,7 @@
       }
       const original = a.pending[id] || b.pending[id] || out.pending[id];
       if (!original) continue;
-      const alternatives = [...selected.values()].sort((x, y) => canonical(x).localeCompare(canonical(y)));
+      const alternatives = [...selected.values()].sort((x, y) => compare(canonical(x), canonical(y)));
       const nextId = conflictId(original.domain, original.path, 'concurrent-review', alternatives);
       out.pending[nextId] = {
         id: nextId,
@@ -112,7 +109,7 @@
 
   function pendingConflicts(state) {
     return Object.values(normalize(state).pending).sort((a, b) =>
-      a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+      a.createdAt - b.createdAt || compare(a.id, b.id));
   }
 
   root.VasteLastenConflictReview = Object.freeze({
