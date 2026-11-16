@@ -48,7 +48,7 @@ const appContext = {
 };
 const mergeStore = vm.runInNewContext('(' + match[0] + ')', appContext);
 const base = () => ({ items: [], del: {}, paid: {}, meta: null, schema: 2, domain: 'shared' });
-const pending = state => review.pendingConflicts(state.__conflicts);
+const pending = conflicts => review.pendingConflicts(conflicts);
 const storage = () => {
   const values = new Map();
   return {
@@ -122,7 +122,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const initial = mergeStore(left, right);
     initial.schema = 2;
     initial.domain = 'shared';
-    const task = pending(initial)[0];
+    const task = pending(initial.__conflicts)[0];
     assert.ok(task, 'de twee oorspronkelijke versies moeten een reviewtaak opleveren');
 
     const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 1000, storage: storage() });
