@@ -162,3 +162,40 @@ test('a later choice on a stale client becomes a concurrent review after the fir
   assert.equal(pending(afterASync).length,1);
   assert.equal(pending(afterASync)[0].id,tasks[0].id);
 });
+
+test('category delete versus equal-time rename creates a review task with both explicit alternatives', () => {
+  const renamed=base(),deleted=base(),timestamp=1800000000000;
+  renamed.cats={transport:{id:'transport',name:'Vervoer CR05 gewijzigd',c:'c1',u:timestamp,del:false}};
+  deleted.cats={transport:{id:'transport',name:'Vervoer',c:'c1',u:timestamp,del:true}};
+
+  const forward=merge(renamed,deleted),reverse=merge(deleted,renamed);
+  const forwardTasks=pending(forward),reverseTasks=pending(reverse);
+  assert.equal(forwardTasks.length,1,'de gelijke-tijd delete-versus-rename moet één reviewtaak opleveren');
+  assert.equal(reverseTasks.length,1,'de uitkomst mag niet afhangen van de merge-volgorde');
+
+  const task=forwardTasks[0];
+  assert.equal(task.path,'cats:transport');
+  assert.equal(task.kind,'content');
+  assert.equal(task.id,reverseTasks[0].id,'beide clients moeten dezelfde conflictidentiteit berekenen');
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(task.alternatives.map(value=>({name:value.name,deleted:value.del===true})).sort((a,b)=>a.name.localeCompare(b.name)))),
+    [
+      {name:'Vervoer',deleted:true},
+      {name:'Vervoer CR05 gewijzigd',deleted:false},
+    ],
+    'de reviewtaak moet zowel de verwijderde als de gewijzigde categorie bewaren',
+  );
+  assert.equal(canon(forward.cats),canon(reverse.cats),'de voorlopige categorie-uitkomst moet deterministisch zijn');
+});
+
+test('category delete versus rename with different timestamps follows the newer category without a tie review', () => {
+  const renamed=base(),deleted=base();
+  renamed.cats={transport:{id:'transport',name:'Vervoer CR05 gewijzigd',c:'c1',u:1800000000001,del:false}};
+  deleted.cats={transport:{id:'transport',name:'Vervoer',c:'c1',u:1800000000000,del:true}};
+
+  const result=merge(renamed,deleted);
+  assert.equal(pending(result).length,0,'verschillende timestamps zijn geen gelijk-tijdconflict');
+  assert.equal(result.cats.transport.name,'Vervoer CR05 gewijzigd');
+  assert.equal(result.cats.transport.del,false);
+});
+
