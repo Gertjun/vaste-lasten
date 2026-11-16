@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0 — 16 november 2026
+- Nieuw: de app vraagt bij een niet-gekoppelde installatie eerst om een bewuste kluiskeuze: een bestaande kluis koppelen via GitHub Sync of een nieuwe lokale kluis aanmaken.
+- Nieuw: een volledig nieuwe lokale PWA-Core-start werkt zonder GitHub Sync; gedeelde en persoonlijke gegevens blijven afzonderlijk versleuteld op dit apparaat.
+- Beveiliging: lokale lege kluizen worden nooit over bestaande niet-lege lokale kluizen heen geschreven; gedeeltelijke aanmaak kan veilig worden hervat.
+
+
 ## 3.2.0 — 16 november 2026
 - Nieuw: veilige schone start van Vaste Lasten met drie onafhankelijke lege PWA-Core-kluizen. Het eerste apparaat maakt de gedeelde en eigen kluis aan; het tweede apparaat sluit aan op de gedeelde kluis en maakt alleen de eigen persoonlijke kluis aan.
 - Beveiliging: bestaande Core-kluizen met inhoud worden geweigerd; er is geen automatische reset of overschrijving. Oude lokale en remote gegevens worden niet geïmporteerd of verwijderd.
