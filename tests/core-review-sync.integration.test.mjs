@@ -229,38 +229,17 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     // B kiest vanuit zijn eerder geopende UI-snapshot, ook via de echte app-functies.
     const appB = makeAppClient(core, staleB, 1700);
     for (const currentTask of [task, categoryTask]) appB.choose('samen', currentTask.id, 1);
-    await core.flushLocal();
-    const localB = core.getRegistry().shared.vault.getData();
-    assert.equal(localB.__conflicts.decisions[task.id]?.length, 1, 'persistState moet B\'s beslissing duurzaam bewaren');
-    assert.equal(canon(localB.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[1]), 'B moet werkelijk alternatief 2 hebben vastgelegd');
-    assert.equal(core.getRegistry().shared.vault.getSyncMeta().dirty, true, 'B\'s beslissing moet de kluis dirty maken');
-    const publishedA = await coreA.getRegistry().shared.vault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
-    assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
-    assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
-    assert.ok(localB.__conflicts.records[task.id], 'B moet de oorspronkelijke conflictregistratie behouden');
-    assert.ok(publishedA.__conflicts.records[task.id], 'A moet de oorspronkelijke conflictregistratie behouden');
-    const directConflictState = review.mergeConflictState(localB.__conflicts, publishedA.__conflicts);
-    assert.equal(review.pendingConflicts(directConflictState).length, 2, JSON.stringify({
-      record: directConflictState.records[task.id],
-      decisions: directConflictState.decisions[task.id],
-      categoryRecord: directConflictState.records[categoryTask.id],
-      categoryDecisions: directConflictState.decisions[categoryTask.id],
-      pendingKeys: Object.keys(directConflictState.pending || {}),
-    }));
-    assert.equal(directConflictState.decisions[categoryTask.id]?.length, 2, 'beide categoriebeoordelingen moeten worden verenigd');
-    assert.equal(canon(publishedA.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[0]), 'A moet werkelijk alternatief 1 hebben gepubliceerd');
-    assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
-    const directMerge = mergeDomainPayload(localB, publishedA, 'shared', mergeStore);
-    assert.equal(directMerge.__conflicts.decisions[task.id]?.length, 2, 'de directe app-merge moet beide keuzes verenigen');
-    assert.equal(pending(directMerge.__conflicts).length, 2, 'de directe app-merge moet voor zowel last als categorie een vervolgtaak opleveren');
+
+    // Net als in de browser wordt saveLocal() niet afgewacht. De eerste online
+    // synchronisatie moet zelf alle nog lopende persistState-writes flushen.
     const resultB = await core.connect(connection);
     assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
-    assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, JSON.stringify({ decisionKeys: Object.keys(resultB.state.samen.__conflicts.decisions || {}), decisions: resultB.state.samen.__conflicts.decisions[task.id], pendingKeys: Object.keys(resultB.state.samen.__conflicts.pending || {}), recordPresent: !!resultB.state.samen.__conflicts.records?.[task.id] }));
     const mergedDecisions = resultB.state.samen.__conflicts.decisions[task.id];
+    assert.equal(mergedDecisions?.length, 2, 'B moet beide offline keuzes samenvoegen');
     assert.notEqual(canon(mergedDecisions[0].selected), canon(mergedDecisions[1].selected), 'de twee samengevoegde keuzes moeten verschillend zijn');
     assert.ok(resultB.state.samen.__conflicts.records[task.id], 'de oorspronkelijke conflictregistratie moet behouden blijven');
     const afterB = pending(resultB.state.samen.__conflicts);
-    assert.equal(afterB.length, 2);
+    assert.equal(afterB.length, 2, 'de synchronisatie moet twee vervolg-reviewtaken opleveren');
     const recordReview = afterB.find(item => item.path === 'items:rent');
     const categoryReview = afterB.find(item => item.path === 'cats:cr06-category');
     assert.equal(recordReview?.kind, 'concurrent-review');
@@ -273,7 +252,9 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       JSON.parse(JSON.stringify(categoryReview.alternatives.map(value => value.name).sort())),
       ['CR06 categorie A', 'CR06 categorie B'],
     );
-
+    assert.equal(resultB.state.samen.cats['cr06-category']?.name, 'CR06 categorie B',
+      'de voorlopige categorie mag B tonen, maar beide keuzes moeten als review bewaard blijven');
+    
     // A en B halen elkaars vervolgtaak op en eindigen met dezelfde review-identiteit.
     await coreA.sync();
     const resultFinal = await core.sync();
