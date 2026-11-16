@@ -1982,10 +1982,21 @@ function pillIdle(){
 /* wijzigingen worden gebundeld: de app wacht even na de laatste wijziging (minder commits in GitHub),
    en synchroniseert direct als je de app verlaat of naar een ander tabblad gaat (2.18.3) */
 const SYNC_DELAY=10000;
+function syncCoreWhenPossible(){
+  if(!coreReady||!coreRuntime) return Promise.resolve();
+  if(!navigator.onLine) return coreRuntime.flushLocal();
+  return coreConnected?sync():connectCore();
+}
 function scheduleSync(){
   if(coreMode){
-    if(!coreReady||!coreConnected){if(timer){clearTimeout(timer);timer=null;} pillIdle(); return;}
-    clearTimeout(timer); timer=setTimeout(()=>{timer=null; sync();},SYNC_DELAY);
+    if(!coreReady||!navigator.onLine){if(timer){clearTimeout(timer);timer=null;} pillIdle(); return;}
+    clearTimeout(timer); timer=setTimeout(()=>{
+      timer=null;
+      syncCoreWhenPossible().catch(e=>{
+        syncError=e.message||'Synchroniseren via PWA-Core is mislukt.';
+        setPill('err','Sync-fout',syncError); renderSyncPanel();
+      });
+    },SYNC_DELAY);
     if(!syncing) pillIdle();
     return;
   }
@@ -1996,8 +2007,8 @@ function scheduleSync(){
 function syncNow(){
   if(coreMode){
     if(timer){clearTimeout(timer);timer=null;}
-    if(coreReady) coreRuntime.flushLocal().then(()=>{if(navigator.onLine&&coreConnected) return sync();}).catch(e=>{
-      corePersistError=e.message||'Lokaal opslaan is mislukt.'; syncError=corePersistError; setPill('err','Opslagfout',corePersistError);
+    if(coreReady) syncCoreWhenPossible().catch(e=>{
+      corePersistError=e.message||'Lokaal opslaan is mislukt.'; syncError=corePersistError; setPill('err','Opslagfout',corePersistError); renderSyncPanel();
     });
     return;
   }
