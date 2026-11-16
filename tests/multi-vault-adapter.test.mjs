@@ -38,7 +38,7 @@ test('legacy state is split without crossing shared and private fields', () => {
     }),
   };
   const split = splitLegacyState(legacy, 'p1');
-  assert.equal(split.shared.domain, 'shared');
+  assert.equal(split.shared.domain, 'shared');\n  assert.equal(split.shared.schema, 2);\n  assert.equal(split['personal-p1'].schema, 2);
   assert.equal(split['personal-p1'].domain, 'personal-p1');
   assert.deepEqual(split.shared.items.map((x) => x.id), ['shared']);
   assert.deepEqual(split['personal-p1'].items.map((x) => x.id), ['private-p1']);
@@ -57,7 +57,7 @@ test('each Core payload is bound to exactly one domain', () => {
   assert.throws(() => validateDomainPayload({ ...shared, prof: { income: 1 } }, 'shared'), /buiten het toegestane gegevensdomein/);
   assert.throws(() => validateDomainPayload({ ...personal, cats: {} }, 'personal-p1'), /buiten het toegestane gegevensdomein/);
   assert.throws(() => mergeDomainPayload(shared, shared, 'shared', (a, b) => ({ ...mergeStore(a, b), scen: {} })), /buiten het toegestane gegevensdomein/);
-  assert.equal(mergeDomainPayload(shared, shared, 'shared', mergeStore).domain, 'shared');
+  const next = mergeDomainPayload(shared, shared, 'shared', mergeStore);\n  assert.equal(next.domain, 'shared');\n  assert.equal(next.schema, 2);\n  assert.equal(validateDomainPayload({ ...shared, schema: 2 }, 'shared').schema, 2);
 });
 
 test('real app merge defaults do not reintroduce empty shared metadata into a personal vault', () => {
