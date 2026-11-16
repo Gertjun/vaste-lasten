@@ -2,7 +2,7 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 3.3.0 in voorbereiding, 16 november 2026
+Laatst bijgewerkt: versie 3.5.0 in voorbereiding, 17 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
@@ -12,6 +12,7 @@ Laatst bijgewerkt: versie 3.3.0 in voorbereiding, 16 november 2026
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Gerealiseerd
+- **Herstelroute vanaf vergrendelscherm** — versie 3.5.0; terug naar kluis instellen zonder data te wissen, met een apart bevestigde lokale reset als een nieuwe start nodig is.
 - **Lokale PWA-Core-kluis koppelen aan GitHub Sync** — versie 3.4.0; bestaande versleutelde kluizen veilig publiceren en op een tweede apparaat koppelen, zonder legacy-import.
 - #40 **Veilige lege start met PWA-Core** — versie 3.2.0; drie onafhankelijke lege kluizen aanmaken of aansluiten zonder oude gegevens te importeren of bestaande kluizen te overschrijven.
 - **Kluiskeuze zonder GitHub Sync** — versie 3.3.0; bij een niet-gekoppelde installatie eerst expliciet een bestaande kluis koppelen of een nieuwe lokale versleutelde kluis aanmaken.
