@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde code-/test-head `c59f24ae9df151a427b92b7e6173f3692a00680b`: CI **#300 en #301**, 47 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De passkey-herkoppeling accepteert nu de eigen gedeelde en persoonlijke Core-passkeys en weigert de persoonlijke passkey van de andere gebruiker. `backup/` is uitgesloten van Pages-publicatie. B07 is RETIRED en geen acceptatiegate meer. De vervangende sync-/concurrencytests S01–S07 zijn uitgewerkt voor Vaste Lasten in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`; uitvoering met uitsluitend synthetische data staat nog open.
+Laatste geverifieerde PR #9-code-/test-head `29404ca2c3b7e0870a8362adb1f5321bc2abf8a3`: CI **#448**, 82 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. De automatische synthetische acceptatie dekt nu onder meer een echte SHA-409/retry-race voor alle drie de kluisdomeinen (S01/S02), oudere wijziging tegenover nieuwere verwijdering (S04), offline opslag en volledige vault-herstart met latere merge (S05), en Core-verwijderledger/acknowledgement (S07). S03, S04, S06 en S07 zijn nog gedeeltelijk gedekt; de exacte grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De volledige browser-/apparaatacceptatie en productiegegevensmigratie zijn NIET UITGEVOERD.
 
 ## 3. Open punten
 
@@ -43,7 +43,7 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 ## 4. Sessielog
 
-- **16 nov 2026 – PR #9 praktijktest:** de eerste geïsoleerde koppeling liet 12 reviewtaken zien met fictieve records (`example: true`). Onderzoek wees uit dat `merge()` voorbeeldrecords niet uitsloot en oude voorbeeldconflicten niet opruimde; `finishLink()` behield de lokale fixtures als er nog geen remote records waren. Bugfix in voorbereiding: voorbeelden vóór elke merge verwijderen, bestaande voorbeeldconflicten opruimen, en regressietests toevoegen. De test is gepauzeerd; geen beoordelingen uitgevoerd en geen productiegegevens gebruikt.
+- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. S01/S02, S04, S05 en S07 zijn gedeeltelijk of volledig synthetisch afgedekt; CI #448 op head `29404ca2`: 82/82 geslaagd. De resterende beperkingen en PASS/PARTIAL-statussen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De eerdere CR06-voorbeeldconflicten zijn met de PR-fix afgevangen; geen productiegegevens of productietokens gebruikt.
 
 - **14 nov 2026:**
   - PWA-Core v1.1.0 lokaal vastgepind en geprecachet.
