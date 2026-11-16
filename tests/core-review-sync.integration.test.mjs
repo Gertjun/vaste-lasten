@@ -198,16 +198,17 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const staleA = coreA.getState();
     const choose = (snapshot, index, at) => {
       const next = structuredClone(snapshot);
+      const data = next.samen;
       for (const currentTask of [task, categoryTask]) {
         const selected = currentTask.alternatives[index];
-        next.__conflicts = review.resolveConflictState(next.__conflicts, currentTask.id, index, { at, deviceId: 'p1' });
+        data.__conflicts = review.resolveConflictState(data.__conflicts, currentTask.id, index, { at, deviceId: 'p1' });
         if (currentTask.path.startsWith('items:') && selected.kind === 'record') {
-          next.items = next.items.filter(item => item.id !== selected.value.id);
-          next.items.push({ ...selected.value, u: at });
+          data.items = data.items.filter(item => item.id !== selected.value.id);
+          data.items.push({ ...selected.value, u: at });
         } else if (currentTask.path.startsWith('cats:')) {
           const id = currentTask.path.slice('cats:'.length);
-          next.cats = next.cats || {};
-          next.cats[id] = { ...selected, u: at };
+          data.cats = data.cats || {};
+          data.cats[id] = { ...selected, u: at };
         }
       }
       return next;
