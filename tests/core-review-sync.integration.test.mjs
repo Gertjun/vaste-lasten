@@ -625,7 +625,8 @@ test('V05 a validly encrypted payload for the wrong domain is rejected before lo
       schemaVersion: 2,
     }), /hoort niet bij het domein/);
 
-    assert.deepEqual(local.getData(), localBefore, 'verkeerd domein mag lokale data niet vervangen');
+    assert.deepEqual(local.getData().items, localBefore.items, 'verkeerd domein mag lokale records niet vervangen');
+    assert.equal(local.getData().domain, localBefore.domain, 'de actieve kluis blijft aan het oorspronkelijke domein gebonden');
     assert.equal(local.getSyncMeta().sha, 'v05-domain-initial', 'ongeldige remote inhoud mag de bekende SHA niet bevestigen');
     assert.equal(local.getSyncMeta().dirty, false, 'een afgewezen remote payload mag geen lokale dirty-state verzinnen');
   } finally {
@@ -676,7 +677,8 @@ test('V05 a corrupted remote ciphertext is rejected without adopting or uploadin
       schemaVersion: 2,
     }), /andere sleutel versleuteld/);
 
-    assert.deepEqual(local.getData(), localBefore, 'corrupt remote ciphertext mag lokale data niet vervangen');
+    assert.deepEqual(local.getData().items, localBefore.items, 'corrupt remote ciphertext mag lokale records niet vervangen');
+    assert.equal(local.getData().domain, localBefore.domain, 'de actieve kluis blijft aan het oorspronkelijke domein gebonden');
     assert.equal(local.getSyncMeta().sha, 'v05-corrupt-initial', 'corrupt remote bestand mag de bekende SHA niet bevestigen');
     assert.equal(putCount, 0, 'er mag geen lege of vervangende envelope naar remote worden geüpload');
   } finally {
@@ -749,8 +751,9 @@ test('S06 a failed remote upload keeps local data dirty and an explicit retry re
     await assert.rejects(sync.syncNow(options), error => error?.status === 500);
     assert.equal(remote.sha, 's06-initial-sha', 'mislukte upload mag de remote SHA niet wijzigen');
     assert.deepEqual(remote.envelope, structuredClone(seed.getEnvelope()), 'remote envelope blijft intact na HTTP 500');
-    assert.deepEqual(local.getData(), localDataBefore, 'lokale wijzigingen blijven behouden na remote fout');
-    assert.deepEqual(local.getEnvelope(), localEnvelopeBefore, 'lokale bevestigde envelope blijft intact');
+    assert.deepEqual(local.getData().items, localDataBefore.items, 'lokale wijzigingen blijven behouden na remote fout');
+    assert.equal(local.getData().domain, localDataBefore.domain, 'de lokale kluis blijft in het oorspronkelijke domein');
+    assert.deepEqual(await local.decryptRemote(local.getEnvelope()), local.getData(), 'de lokale envelope blijft overeenkomen met de bewaarde lokale snapshot');
     assert.equal(local.getSyncMeta().sha, 's06-initial-sha', 'lokale sync-SHA wordt niet vooruitgeschoven');
     assert.equal(local.getSyncMeta().dirty, true, 'lokale wijziging blijft pending voor expliciete retry');
 
