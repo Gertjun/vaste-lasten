@@ -282,6 +282,7 @@ test('password unlock opens and syncs only shared plus the active personal vault
   assert.equal(vaults['personal-p1'].isUnlocked(), true);
   assert.equal(vaults['personal-p2'].isUnlocked(), false);
   assert.equal(syncCalls.length, 2);
+  assert.deepEqual(syncCalls.map(call => call.options.schemaVersion), [2, 2]);
   assert.ok(events.includes('shared:acquire'));
   assert.ok(events.includes('personal-p1:acquire'));
   assert.equal(events.includes('personal-p2:acquire'), false);
