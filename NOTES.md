@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde PR #9-code-/test-head `2d9def1eff82860baa7acd70b8cbf2922f2c41e7`: CI **#457**, 86 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. De automatische synthetische acceptatie dekt onder meer SHA-409/retry-races voor alle drie de kluisdomeinen (S01/S02), offline opslag en volledige vault-herstart met latere merge (S05), verkeerde sleutel/domein/beschadigde remote ciphertext fail-closed (V05) en remote HTTP 500-fout plus expliciet herstel na retry (S06). S03, S04, S06 en S07 blijven gedeeltelijk gedekt; de exacte grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De volledige browser-/apparaatacceptatie en productiegegevensmigratie zijn NIET UITGEVOERD.
+Laatste geverifieerde PR #9-code-/test-head `7a9f67664bb8e8a02780d6dcb3ba03f1da7d0af9`: CI **#467**, 89 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. S01/S02 en nu ook S03/S04/S07 zijn via de echte Core-vault-/syncclientcode met twee onafhankelijke synthetische clients en een mock GitHub Contents API getest; S03 controleert beide uploadvolgordes, S04 een oudere offline bewerking tegenover een nieuwere verwijdering en S07 device-acknowledgement plus tombstone-opruiming. V05 blijft PASS; S06 blijft PARTIAL (UI-foutzichtbaarheid en fysieke netwerkuitval niet getest). De volledige browser-/apparaatacceptatie en productiegegevensmigratie zijn NIET UITGEVOERD.
 
 ## 3. Open punten
 
@@ -43,7 +43,7 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 ## 4. Sessielog
 
-- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. Daarna zijn V05 (verkeerd wachtwoord, verkeerd domein en beschadigde remote ciphertext) en S06 (remote HTTP 500, behoud van lokale pending-data en expliciete succesvolle retry) toegevoegd. CI #457 op head `2d9def1e`: 86/86 geslaagd. V05 is PASS op synthetische Core-routes; S06 blijft PARTIAL omdat UI-foutzichtbaarheid en fysieke netwerkuitval niet zijn getest. De resterende grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. Geen productiegegevens of productietokens gebruikt.
+- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. V05 (verkeerd wachtwoord, verkeerd domein en beschadigde remote ciphertext) en S06 (remote HTTP 500 en expliciete retry) toegevoegd. Vervolgens S03, S04 en S07 uitgebreid van losse merge-/ledgerproeven naar de echte Core-vault-/syncclientroute met twee onafhankelijke synthetische clients en mock GitHub Contents API. S03 slaagt in beide uploadvolgordes met identieke conflict-ID; S04 voorkomt herleving van een ouder offline record; S07 controleert device-acknowledgement en tombstone-opruiming. CI #467 op head `7a9f6766`: 89/89 geslaagd. S03/S04/S07 en V05 zijn PASS voor synthetische tests; S06 blijft PARTIAL omdat UI-foutzichtbaarheid en fysieke netwerkuitval niet zijn getest. Geen productiegegevens of productietokens gebruikt.
 
 - **14 nov 2026:**
   - PWA-Core v1.1.0 lokaal vastgepind en geprecachet.
