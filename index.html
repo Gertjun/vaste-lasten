@@ -2494,6 +2494,7 @@ async function raiseCoreLegacyBarrier(){
   const {raiseLegacyUpdateBarrier}=await import('./js/multi-vault-adapter.js');
   return raiseLegacyUpdateBarrier({
     minApp:'3.0.0',
+    currentAppVersion:APP_VERSION,
     readLegacy:()=>readRemote(cfg,'samen.json'),
     openLegacy:(env)=>openEnv(env,keys.samen),
     writeLegacy:(next,sha)=>writeRemote(next,sha,cfg,'samen.json',keys.samen,cfg.salt.samen,cfgIter(cfg,'samen')),
