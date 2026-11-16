@@ -1,6 +1,6 @@
 # Sync- en concurrencyacceptatie – Vaste Lasten
 
-**Status: NIET UITGEVOERD.** Dit protocol beschrijft de vereiste synthetische acceptatie van de PWA-Core v1.1.0-integratie in Vaste Lasten. Het is geen bewijs dat de tests al zijn uitgevoerd en geeft geen toestemming voor een productiegegevensmigratie.
+**Status: GEDEELTELIJK GEACCEPTEERD – PR #9 blijft draft.** De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
 
 ## Doel en architectuurgrenzen
 
@@ -97,8 +97,8 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 - PWA-Core v1.1.0-integratie: gemerged in Vaste Lasten PR #5.
 - Automatische codevalidatie van de integratie: 47 tests geslaagd op de gedocumenteerde code-/test-head.
 - Pages-workflow: eerder succesvol; dit bewijst niet dat de volledige live runtime handmatig is geaccepteerd.
-- S01–S07 en V01–V06 voor Vaste Lasten: **NOT RUN**.
-- Fysieke browser-/apparaatacceptatie: **NOT RUN**.
+- S01–S07 en V01–V06: zie de afzonderlijke automatische en fysieke bewijsregistraties hieronder; de volledige set is niet integraal afgevinkt.
+- Fysieke acceptatie op iPhone Safari en Windows 11 Edge: **PASS voor de expliciet beschreven praktijkscope**.
 - Productiegegevensmigratie: **NIET UITGEVOERD en afzonderlijk geblokkeerd**.
 
 
@@ -181,7 +181,7 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 
 ### Automatische acceptatiedekking – 16 november 2026 (PR #9)
 
-Laatste geverifieerde PR-head: `7a9f67664bb8e8a02780d6dcb3ba03f1da7d0af9`. GitHub Actions-run **#467**: **89 tests geslaagd, 0 mislukt**. De onderstaande statussen beschrijven uitsluitend geautomatiseerde synthetische dekking; ze betekenen niet dat de volledige acceptatiecriteria hierboven zijn afgerond.
+Laatste geverifieerde PR-head: `686a44ac1e9138836a56ceaf5604ae3df8989839`. GitHub Actions-runs **#469 en #470**: **89 tests geslaagd, 0 mislukt per run**. De onderstaande statussen beschrijven uitsluitend geautomatiseerde synthetische dekking; ze betekenen niet dat de volledige acceptatiecriteria hierboven zijn afgerond.
 
 | ID | Geautomatiseerde dekking | Status en beperking |
 |---|---|---|
@@ -203,4 +203,18 @@ Aanvullende domeincontroles:
 | V05 | Verkeerd wachtwoord bij envelope-import, geldig versleutelde payload met verkeerd domein en beschadigde remote ciphertext worden fail-closed geweigerd; lokale gebruikersrecords en bekende remote SHA blijven behouden. | **PASS** voor de synthetische Core-import- en remote-syncroutes; geen fysieke apparaten getest. |
 | V06 | Twee clients synchroniseren ieder persoonlijk domein afzonderlijk; p1 en p2 blijven gescheiden. | **PASS** voor de synthetische domeinsync; fysieke apparaten niet getest. |
 
-**Nog niet afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, Safari/iOS/iPadOS, Windows Hello en de volledige passkey-/herinstallatie-/herstelproeven. De handmatige CR03 offline-herstartvariant blijft BLOCKED door de twee Edge-profielen op hetzelfde fysieke apparaat. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
+**Nog niet volledig afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, alle Safari/iOS/iPadOS- en Windows Hello-combinaties en de volledige passkey-/herinstallatie-/herstelproeven. De uitgevoerde fysieke praktijktest hieronder dekt de gedeelde/persoonlijke kluisscheiding, synchronisatie, offline wijziging tegenover verwijdering en biometrisch vergrendelen/ontgrendelen. De handmatige CR03 offline-herstartvariant is niet afzonderlijk bewezen. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
+
+
+### Fysieke acceptatie – 16 november 2026
+
+**Resultaat: PASS voor de hieronder genoemde scope, op basis van de terugkoppeling van de gebruiker.** De uitvoering is niet onafhankelijk door CI of door deze documentatie geobserveerd.
+
+- Apparaten/browsers: iPhone met Safari en Windows 11 met Microsoft Edge.
+- Beide clients konden de bedoelde gedeelde en eigen persoonlijke kluizen openen; de persoonlijke kluis van de andere gebruiker bleef afgeschermd.
+- Synchronisatie tussen de twee fysieke apparaten verliep zonder gemelde fouten.
+- De offline wijziging op het ene apparaat tegenover de online verwijdering op het andere apparaat leidde niet tot het terugkomen van het verwijderde record na synchronisatie.
+- Vergrendelen en opnieuw biometrisch ontgrendelen werkte op beide apparaten.
+- De gebruiker rapporteerde na uitvoering van de volledige afgesproken praktijktest: “Alles is goed gegaan.”
+
+**Afbakening:** dit PASS-resultaat geldt voor de uitgevoerde praktijkscope en is geen bewijs dat elk scenario S01–S07, V01–V06 of CR01–CR09 fysiek is uitgevoerd. Gelijke-timestampconvergentie en tombstone-acknowledgement zijn aanvullend synthetisch via de echte Core-vault-/syncclientcode en een mock GitHub Contents API getest. De S06 UI-foutzichtbaarheid en fysieke netwerkuitval blijven PARTIAL. De volledige passkey-/herinstallatie-/wachtwoordherstelmatrix en productiegegevensmigratie zijn niet afgevinkt.
