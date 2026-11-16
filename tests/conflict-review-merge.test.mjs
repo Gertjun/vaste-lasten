@@ -199,3 +199,57 @@ test('category delete versus rename with different timestamps follows the newer 
   assert.equal(result.cats.transport.del,false);
 });
 
+
+
+const applyChoiceMatch = html.match(/function applyConflictChoice\\(store,item,value\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+assert.ok(applyChoiceMatch, 'de app moet conflictkeuzes kunnen toepassen');
+const applyChoice = vm.runInNewContext('(' + applyChoiceMatch[0] + ')', {
+  Date: { now: () => 1800000000100 },
+});
+const renderReviewMatch = html.match(/function renderConflictReview\\(\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+assert.ok(renderReviewMatch, 'de app moet reviewtaken kunnen renderen');
+
+test('choosing either category alternative applies its name and deletion flag as a new change', () => {
+  const timestamp = 1800000000000;
+  const renamed = {id:'transport',name:'Vervoer CR05 gewijzigd',c:'c1',u:timestamp,del:false};
+  const deleted = {id:'transport',name:'Vervoer',c:'c1',u:timestamp,del:true};
+  const task = review.createConflict({
+    domain:'shared',path:'cats:transport',kind:'content',timestamp,
+    left:renamed,right:deleted,
+  });
+
+  for (const selected of task.alternatives) {
+    const data = {cats:{transport:{id:'transport',name:'oude waarde',c:'c1',u:1,del:false}}};
+    applyChoice('samen',task,selected, {samen:data});
+    assert.equal(data.cats.transport.id,'transport');
+    assert.equal(data.cats.transport.name,selected.name);
+    assert.equal(data.cats.transport.del,selected.del);
+    assert.equal(data.cats.transport.u,1800000000100,'de keuze moet als nieuwe wijziging worden vastgelegd');
+  }
+});
+
+test('category review UI renders both the renamed and deleted alternatives with separate choice buttons', () => {
+  const timestamp = 1800000000000;
+  const task = review.createConflict({
+    domain:'shared',path:'cats:transport',kind:'content',timestamp,
+    left:{id:'transport',name:'Vervoer CR05 gewijzigd',c:'c1',u:timestamp,del:false},
+    right:{id:'transport',name:'Vervoer',c:'c1',u:timestamp,del:true},
+  });
+  const host = {hidden:true,innerHTML:''};
+  const context = {
+    $: () => host,
+    STORES: ['samen'],
+    cfg: {me:'p1'},
+    state: {samen:{__conflicts:{version:1,pending:{[task.id]:task},records:{[task.id]:task},decisions:{}}}},
+    globalThis: {VasteLastenConflictReview:review},
+    esc: value => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'),
+  };
+  const render = vm.runInNewContext('(' + renderReviewMatch[0] + ')', context);
+  render();
+  assert.equal(host.hidden,false);
+  assert.match(host.innerHTML,/Vervoer CR06? gewijzigd|Vervoer CR05 gewijzigd/);
+  assert.match(host.innerHTML,/"del": true/);
+  assert.match(host.innerHTML,/"del": false/);
+  assert.equal((host.innerHTML.match(/data-conflict-choice=/g)||[]).length,2);
+  assert.match(host.innerHTML,/Kies deze versie/);
+});
