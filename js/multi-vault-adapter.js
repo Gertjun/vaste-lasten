@@ -47,14 +47,14 @@ export function splitLegacyState(state, me) {
   for (const key of ['meta', 'cats', 'inc', 'settle']) delete personal[key];
 
   return {
-    shared: { ...shared, schema: 1, domain: 'shared' },
-    [`personal-${me}`]: { ...personal, schema: 1, domain: `personal-${me}` },
+    shared: { ...shared, schema: 2, domain: 'shared' },
+    [`personal-${me}`]: { ...personal, schema: 2, domain: `personal-${me}` },
   };
 }
 
 export function validateDomainPayload(payload, id) {
   assertDomainId(id);
-  if (!isRecord(payload) || payload.schema !== 1 || payload.domain !== VAULT_DOMAINS[id].domain) {
+  if (!isRecord(payload) || ![1, 2].includes(payload.schema) || payload.domain !== VAULT_DOMAINS[id].domain) {
     throw new Error(`De inhoud van de kluis hoort niet bij het domein ${id} of heeft een onbekend schema.`);
   }
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
@@ -75,7 +75,7 @@ export function mergeDomainPayload(local, remote, id, mergeStore) {
   // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
-  return validateDomainPayload({ ...merged, schema: 1, domain: VAULT_DOMAINS[id].domain }, id);
+  return validateDomainPayload({ ...merged, schema: 2, domain: VAULT_DOMAINS[id].domain }, id);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
