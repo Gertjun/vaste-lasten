@@ -275,7 +275,7 @@ export async function initializeEmptyDomain({
   openEnvelope = decryptEnvelopeWithPassword,
 } = {}) {
   assertDomainId(id);
-  if (typeof password !== 'string' || !password) throw new Error(`Het nieuwe wachtwoord voor ${id} ontbreekt.`);
+  if (typeof password !== 'string' || password.length < 12) throw new Error(`Kies voor ${id} een nieuw wachtwoord van minstens 12 tekens.`);
   const entry = registry?.[id];
   if (!entry?.vault || !entry?.sync) throw new TypeError(`De kluisinstantie voor ${id} ontbreekt.`);
   if (typeof createClient !== 'function' || typeof mergeStore !== 'function') {
