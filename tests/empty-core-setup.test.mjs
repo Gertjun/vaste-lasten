@@ -9,7 +9,7 @@ const emptyPayload = (id) => ({
   schema: 2, domain: VAULT_DOMAINS[id].domain,
 });
 
-function setup({ id = 'shared', remoteData = null, localData = null, password = 'new-password', syncFails = false } = {}) {
+function setup({ id = 'shared', remoteData = null, localData = null, password = 'new-password', syncFails = false, raceRemoteData = null } = {}) {
   let remote = remoteData ? { sha: 'remote-sha', envelope: { key: 'key-1', payload: clone(remoteData) } } : null;
   let local = localData ? { key: 'key-1', payload: clone(localData) } : null;
   let localPassword = local ? password : null;
@@ -44,8 +44,12 @@ function setup({ id = 'shared', remoteData = null, localData = null, password = 
   const entry = {
     vault,
     sync: {
-      async syncNow() {
+      async syncNow(options) {
         syncCalls++;
+        if (raceRemoteData) {
+          remote = { sha: 'raced-sha', envelope: { key: 'key-1', payload: clone(raceRemoteData) } };
+          options.migrate(clone(raceRemoteData));
+        }
         if (syncFails) throw new Error('synthetic upload failure');
         if (!remote) remote = { sha: 'created-sha', envelope: clone(local) };
         return remote.sha === 'created-sha' ? 'uploaded' : 'up-to-date';
@@ -120,6 +124,14 @@ test('niet-lege remote Core-kluis wordt geweigerd en nooit overschreven', async 
   assert.deepEqual(h.state().remote.envelope.payload, existing);
   assert.equal(h.state().importCalls, 0);
   assert.equal(h.state().syncCalls, 0);
+});
+
+test('niet-lege remote wijziging die na de preflight verschijnt wordt ook door sync geweigerd', async () => {
+  const raced = { ...emptyPayload('shared'), items: [{ id: 'raced-record' }] };
+  const h = setup({ raceRemoteData: raced });
+  await assert.rejects(run(h), /niet leeg|bestaande of onbekende gegevens/);
+  assert.deepEqual(h.state().remote.envelope.payload, raced);
+  assert.deepEqual(h.state().local.payload, emptyPayload('shared'));
 });
 
 test('niet-lege lokale Core-kluis wordt geweigerd vóór synchronisatie', async () => {
