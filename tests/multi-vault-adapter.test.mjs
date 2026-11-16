@@ -351,6 +351,35 @@ test('legacy update barrier preserves encrypted store data and retries a conflic
   assert.deepEqual(stored.inc, { p1: 1 });
 });
 
+test('legacy update barrier accepts data requiring 3.1.0 when current app is 3.1.1 and preserves that minimum', async () => {
+  let stored = { minApp: '3.1.0', items: [{ id: 'shared' }] };
+  let writes = 0;
+  const result = await raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: { marker: true }, sha: 'sha-current' }),
+    openLegacy: async () => structuredClone(stored),
+    writeLegacy: async (next) => { writes++; stored = next; return 'sha-written'; },
+    minApp: '3.0.0',
+    currentAppVersion: '3.1.1',
+    compareVersions: (a, b) => a.localeCompare(b, undefined, { numeric: true }),
+  });
+  assert.equal(result.alreadyMarked, true);
+  assert.equal(result.sha, 'sha-current');
+  assert.equal(writes, 0);
+  assert.equal(stored.minApp, '3.1.0');
+  assert.deepEqual(stored.items, [{ id: 'shared' }]);
+});
+
+test('legacy update barrier still rejects data requiring a newer app version', async () => {
+  await assert.rejects(raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: { marker: true }, sha: 'sha-current' }),
+    openLegacy: async () => ({ minApp: '3.2.0' }),
+    writeLegacy: async () => 'sha-written',
+    minApp: '3.0.0',
+    currentAppVersion: '3.1.1',
+    compareVersions: (a, b) => a.localeCompare(b, undefined, { numeric: true }),
+  }), /legacygegevens vereisen appversie 3.2.0/);
+});
+
 test('legacy update barrier refuses to proceed when the shared file is missing', async () => {
   await assert.rejects(raiseLegacyUpdateBarrier({
     readLegacy: async () => ({ env: null }),
