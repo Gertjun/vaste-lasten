@@ -78,6 +78,14 @@ const run = (h, id = 'shared', password = 'new-password') => initializeEmptyDoma
   mergeStore: (a, b) => ({ ...a, ...b }),
 });
 
+test('zwakke nieuwe wachtwoorden worden geweigerd voordat lokale of remote opslag wijzigt', async () => {
+  const h = setup();
+  await assert.rejects(run(h, 'shared', 'te-kort'), /minstens 12 tekens/);
+  assert.equal(h.state().local, null);
+  assert.equal(h.state().remote, null);
+  assert.equal(h.state().createCalls, 0);
+});
+
 test('eerste apparaat maakt één lege shared-kluis en bevestigt het remote bestand', async () => {
   const h = setup();
   const result = await run(h);
