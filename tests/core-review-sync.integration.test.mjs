@@ -441,3 +441,109 @@ test('S01/S02 two independent clients retry a real stale-SHA race and preserve r
     globalThis.fetch = previousFetch;
   }
 });
+
+
+test('S05 an offline edit survives a full local restart and merges with another clients online edit', async () => {
+  const previousFetch = globalThis.fetch;
+  const remoteFiles = new Map();
+  let revision = 0;
+  const path = 'pwa-core-v1/samen.json';
+  const localStorageA = storage();
+
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    const marker = '/contents/';
+    const index = url.pathname.indexOf(marker);
+    if (index < 0) return new Response(null, { status: 404 });
+    const filePath = decodeURIComponent(url.pathname.slice(index + marker.length));
+    if ((init.method || 'GET') === 'GET') {
+      const file = remoteFiles.get(filePath);
+      if (!file) return new Response(null, { status: 404 });
+      return new Response(JSON.stringify({
+        sha: file.sha,
+        encoding: 'base64',
+        content: Buffer.from(JSON.stringify(file.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+    if (init.method === 'PUT') {
+      const body = JSON.parse(init.body);
+      const current = remoteFiles.get(filePath);
+      if (!current || body.sha !== current.sha) return new Response(null, { status: 409 });
+      const file = {
+        sha: 's05-sha-' + (++revision),
+        envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
+      };
+      remoteFiles.set(filePath, file);
+      return new Response(JSON.stringify({ content: { sha: file.sha } }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response(null, { status: 405 });
+  };
+
+  const seed = createVault({ storagePrefix: 's05-seed', kdfIterations: 1000, storage: storage() });
+  const vaultA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 1000, storage: localStorageA });
+  const vaultB = createVault({ storagePrefix: 's05-client-b', kdfIterations: 1000, storage: storage() });
+  let restartedA;
+  try {
+    await seed.create('synthetic-password', {
+      items: [], del: {}, paid: {}, meta: null, schema: 2, domain: 'shared',
+    });
+    await seed.flush();
+    const initialEnvelope = structuredClone(seed.getEnvelope());
+    const initialSha = 's05-initial-sha';
+    remoteFiles.set(path, { sha: initialSha, envelope: initialEnvelope });
+
+    await vaultA.importEnvelope(structuredClone(initialEnvelope), 'synthetic-password');
+    vaultA.setSyncMeta({ sha: initialSha, dirty: false });
+    await vaultB.importEnvelope(structuredClone(initialEnvelope), 'synthetic-password');
+    vaultB.setSyncMeta({ sha: initialSha, dirty: false });
+
+    await vaultA.setData({
+      ...structuredClone(vaultA.getData()),
+      items: [{ id: 'offline-A', name: 'Offline wijziging A', amount: 101, u: 1800000000300 }],
+    });
+    await vaultA.flush();
+    await vaultA.lock();
+    await vaultA.dispose();
+
+    await vaultB.setData({
+      ...structuredClone(vaultB.getData()),
+      items: [{ id: 'online-B', name: 'Online wijziging B', amount: 202, u: 1800000000400 }],
+    });
+    const options = {
+      settings: {
+        owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main',
+        path, token: 'synthetic-token',
+      },
+      merge: (local, remote) => mergeDomainPayload(local, remote, 'shared', mergeStore),
+      migrate: remote => validateDomainPayload(remote, 'shared'),
+      schemaVersion: 2,
+    };
+    const syncB = createSync({ vault: vaultB, appName: 'Vaste Lasten S05 B' });
+    assert.equal(await syncB.syncNow(options), 'uploaded');
+
+    // Een nieuwe vault-instantie met dezelfde lokale opslag simuleert sluiten en heropenen.
+    restartedA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 1000, storage: localStorageA });
+    await restartedA.unlockWithPassword('synthetic-password');
+    assert.deepEqual(restartedA.getData().items.map(item => item.id), ['offline-A'],
+      'de offline wijziging moet na herstart lokaal aanwezig zijn');
+    const syncA = createSync({ vault: restartedA, appName: 'Vaste Lasten S05 A' });
+    assert.equal(await syncA.syncNow(options), 'merged');
+
+    const finalData = await restartedA.decryptRemote(remoteFiles.get(path).envelope);
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(finalData.items.map(item => item.id).sort())),
+      ['offline-A', 'online-B'],
+      'na herstart moeten de offline en online wijzigingen beide behouden blijven',
+    );
+    assert.equal(finalData.domain, 'shared');
+  } finally {
+    for (const vault of [seed, vaultA, vaultB, restartedA]) {
+      if (!vault) continue;
+      try { if (vault.isUnlocked()) vault.lock(); } catch { /* cleanup continues */ }
+      try { await vault.dispose(); } catch { /* cleanup continues */ }
+    }
+    globalThis.fetch = previousFetch;
+  }
+});
