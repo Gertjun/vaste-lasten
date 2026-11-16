@@ -164,7 +164,7 @@ export function createVasteLastenCore({
       settings: { ...settings, path: spec.path },
       merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore),
       migrate: (remote) => validateDomainPayload(remote, id),
-      schemaVersion: 1,
+      schemaVersion: 2,
     };
   }
 
