@@ -15,7 +15,7 @@ const source = [
   extract('syncNow'),
   'globalThis.runSchedule = scheduleSync;',
   'globalThis.runSyncNow = syncNow;',
-].join('\\n');
+].join('\n');
 
 function harness({ online = true, connected = false } = {}) {
   const events = [];
