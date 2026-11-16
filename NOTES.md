@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 16 november 2026 · versie **3.0.0 geïntegreerd** (PR #5 gemerged; documentatiestatus bijgewerkt na PR #6).
+Laatst bijgewerkt: 16 november 2026 · versie **3.1.1 in voorbereiding** (bugfix in PR #9).
 
 ---
 
@@ -42,6 +42,8 @@ Laatste geverifieerde code-/test-head `c59f24ae9df151a427b92b7e6173f3692a00680b`
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **16 nov 2026 – PR #9 praktijktest:** de eerste geïsoleerde koppeling liet 12 reviewtaken zien met fictieve records (`example: true`). Onderzoek wees uit dat `merge()` voorbeeldrecords niet uitsloot en oude voorbeeldconflicten niet opruimde; `finishLink()` behield de lokale fixtures als er nog geen remote records waren. Bugfix in voorbereiding: voorbeelden vóór elke merge verwijderen, bestaande voorbeeldconflicten opruimen, en regressietests toevoegen. De test is gepauzeerd; geen beoordelingen uitgevoerd en geen productiegegevens gebruikt.
 
 - **14 nov 2026:**
   - PWA-Core v1.1.0 lokaal vastgepind en geprecachet.
