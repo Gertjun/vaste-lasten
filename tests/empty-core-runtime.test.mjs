@@ -55,6 +55,7 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
   const syncCalls = [];
   const events = [];
   let nextSha = 0;
+  let failPath = failUploadPath;
 
   const factories = {
     createVault: ({ storagePrefix }) => {
@@ -114,7 +115,7 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
       async syncNow(options) {
         const path = options.settings.path;
         syncCalls.push(path);
-        if (path === failUploadPath) throw new Error('synthetic upload failure');
+        if (path === failPath) { failPath = null; throw new Error('synthetic upload failure'); }
         if (!remoteFiles.has(path)) {
           remoteFiles.set(path, { sha: 'sha-' + (++nextSha), envelope: vault.getEnvelope() });
           return 'uploaded';
@@ -197,13 +198,9 @@ test('runtime: gedeeltelijk succes blijft behouden en lege start kan veilig word
   assert.equal(shared.has('pwa-core-v1/eigen-p1.json'), false);
   assert.ok(first.vaults['personal-p1'].hasVault());
 
-  const retry = runtimeHarness({ remoteFiles: shared });
-  // Simuleer dezelfde lokale opslag van het eerste apparaat: het Core-runtimeobject
-  // van de eerste poging blijft beschikbaar en kan direct opnieuw worden gebruikt.
-  first.core.initializeEmpty = first.core.initializeEmpty.bind(first.core);
+  // Hetzelfde runtimeobject en dezelfde lokale opslag worden hervat.
   const resumed = await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
   assert.equal(resumed.complete, true);
   assert.ok(shared.has('pwa-core-v1/eigen-p1.json'));
   await first.core.lock();
-  await retry.core.lock().catch(() => {});
 });
