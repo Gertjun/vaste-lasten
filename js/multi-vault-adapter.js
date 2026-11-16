@@ -203,7 +203,7 @@ export async function openAndSyncDomain({
     settings: remoteSettings,
     merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
     migrate: (incoming) => validateDomainPayload(incoming, id),
-    schemaVersion: 1,
+    schemaVersion: 2,
   };
 
   try {
