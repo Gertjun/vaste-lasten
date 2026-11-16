@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.4.0 in voorbereiding** (lokale Core-kluizen veilig koppelen aan GitHub Sync).
+Laatst bijgewerkt: 17 november 2026 · versie **3.5.0 in voorbereiding** (herstelroute naar kluisinstellingen vanaf het vergrendelscherm).
 
 ---
 
@@ -43,6 +43,8 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **17 nov 2026 – herstel vanaf vergrendelscherm:** PR #13 voegt een route terug naar kluisinstellingen toe zonder gegevens te wissen. Een afzonderlijk bevestigde lokale reset verwijdert alleen de drie lokale Core-kluizen en de lokale passkey-koppeling; remote GitHub-bestanden blijven staan. Runtime-test toegevoegd. CI: module-/inline-/pin-/precache-controles groen; volledige testworkflow heeft nog vijf reeds bestaande fouten in `equal-timestamp-merge-probe.test.mjs` (`canon is not defined`), terwijl de nieuwe resettest slaagt. PR #13 staat open; geen merge of Pages-deployment uitgevoerd.
 
 - **16 nov 2026 – PR #10 schone start:** aparte `initializeEmpty`-route toegevoegd. Deze maakt of opent uitsluitend lege shared + actieve persoonlijke Core-kluis, valideert lokale en remote inhoud en controleert na synchronisatie de remote bevestiging. Legacydata wordt niet gelezen of geïmporteerd; een lokale marker voorkomt latere automatische legacy-merge. Oude bestanden worden niet verwijderd. Synthetische tests toegevoegd voor eerste apparaat, tweede apparaat, profielspecifieke kluis, niet-lege data, verkeerd wachtwoord en uploadfout. CI nog af te wachten.
 
