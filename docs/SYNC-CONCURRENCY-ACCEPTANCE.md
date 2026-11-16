@@ -114,7 +114,7 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 2. Gebruik een aparte, lege synthetische GitHub-datarepository met een token dat uitsluitend toegang heeft tot die repository. Gebruik nooit de bestaande productie-datarepository of het productietoken.
 3. Gebruik twee onafhankelijke browserprofielen/apparaten (A en B), met aparte lokale opslag en verschillende synthetische device-ID's. Beide clients melden aan als dezelfde testpersoon wanneer ze dezelfde persoonlijke kluis moeten delen.
 4. Maak uitsluitend herkenbare testrecords, bijvoorbeeld `TEST-HUUR`, `TEST-ENERGIE` en `TEST-PROFIEL`. Geen echte namen, bedragen, contracten of bankgegevens.
-5. Synchroniseer beide clients eerst volledig en controleer dat ze dezelfde uitgangsgegevens hebben. Noteer de commit-SHA, preview-URL, synthetische repository en begin-SHA. Noteer nooit het token of wachtwoord.
+5. Synchroniseer beide clients eerst volledig en controleer dat ze dezelfde uitgangsgegevens hebben. Controleer vóór CR01 dat op beide clients **nul** reviewtaken openstaan en dat geen voorbeeldrecord (`example: true`) in de actieve toestand of remote bestanden aanwezig is. Noteer de commit-SHA, preview-URL, synthetische repository en begin-SHA. Noteer nooit het token of wachtwoord.
 
 ### Gelijk-tijdstempel betrouwbaar opwekken
 
@@ -169,3 +169,11 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 - Praktische test op twee apparaten: **BLOCKED totdat een geïsoleerde preview van de PR-head beschikbaar is**.
 - Synthetische remote repository en testtoken: nog aan te maken door de tester, uitsluitend voor de acceptatie.
 - Productiegegevens, productie-token en bestaande kluizen: buiten scope.
+
+
+### Eerste praktijktest – bevinding 16 november 2026
+
+- Resultaat: **BLOCKED vóór CR01**. Beide geïsoleerde browserprofielen toonden 12 reviewtaken.
+- Inspectie van een taak liet zien dat beide alternatieven hetzelfde voorbeeldrecord `Hypotheek` bevatten met `example: true`.
+- Geen van de taken is beoordeeld; geen bestanden zijn handmatig verwijderd en er zijn geen productiegegevens gebruikt.
+- PR #9 krijgt een regressiefix: voorbeeldrecords worden vóór samenvoegen gefilterd en eerder opgeslagen voorbeeldconflicten worden opgeschoond. Hervat de acceptatie pas met een nieuwe preview van de gefixte PR-head en een schone synthetische repository.
