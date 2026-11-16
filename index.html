@@ -2568,7 +2568,7 @@ async function initializeEmptyCore(){
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   if(timer){clearTimeout(timer);timer=null;}
   render(); renderSyncPanel(); pillIdle();
-  toast('De lege Core-kluizen zijn aangemaakt en op GitHub bevestigd.');
+  toast('De twee actieve lege Core-kluizen zijn op GitHub bevestigd. Herhaal dit op het andere apparaat.');
 }
 async function unlockCoreLocal(){
   if(!coreRuntime) await ensureCoreRuntime();
