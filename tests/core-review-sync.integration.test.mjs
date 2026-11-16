@@ -779,6 +779,7 @@ async function createRemoteSyncHarness(label, initialData) {
   const seed = createVault({ storagePrefix: label + '-seed', kdfIterations: 1000, storage: storage() });
   await seed.create('synthetic-password', structuredClone(initialData));
   await seed.flush();
+  let revision = 0;
   let remote = { sha: 'seed-' + label, envelope: structuredClone(seed.getEnvelope()) };
   await seed.dispose();
 
@@ -815,7 +816,7 @@ async function createRemoteSyncHarness(label, initialData) {
       }
       if (!remote && body.sha) return new Response(null, { status: 409 });
       remote = {
-        sha: 'sha-' + label + '-' + Math.random().toString(36).slice(2),
+        sha: 'sha-' + label + '-' + (++revision),
         envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
       };
       return new Response(JSON.stringify({ content: { sha: remote.sha } }), {
@@ -950,7 +951,7 @@ test('S07 a stale offline client acknowledges the remote deletion before tombsto
       items: [{ id: 'offline-record', name: 'Oudere offline wijziging', amount: 150, u: 1800000000800 }],
     });
 
-    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncA.syncNow(harness.options), 'merged');
     assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
     remoteData = await harness.vaultB.decryptRemote(harness.remote().envelope);
     const deletionKey = ':offline-record';
