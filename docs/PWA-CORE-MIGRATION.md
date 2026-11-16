@@ -1,6 +1,6 @@
 # PWA-Core-migratie – Vaste Lasten
 
-Status per 15 november 2026: PR #5 is gemerged naar `main` (`a5d1a3eeb981eb288b117803b9638a9b0c293f16`). GitHub Actions-tests (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de geslaagde workflows, niet een handmatige browser-/runtimecontrole van de live pagina. Er is geen echte datarepository geopend en geen productiegegevensmigratie of productie-write uitgevoerd.
+Status per 16 november 2026: PR #5 en documentatie-PR #6 zijn gemerged naar `main` (laatste bekende main-head vóór deze PR: `77591c46404698371d11f04e4c5c05c77feb58f2`). GitHub Actions-tests (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de geslaagde workflows, niet een handmatige browser-/runtimecontrole van de live pagina. Er is geen echte datarepository geopend en geen productiegegevensmigratie of productie-write uitgevoerd.
 Historische uitgangssituatie vóór migratie: `main` `1bb8a603e9c1fe98be889e9b2d6090b06335b0a5` (appversie 2.29.3).
 Core-basis: PWA-Core `v1.1.0`, releasecommit `9763502c2233ca3824b6525fd5a5785fb3596c9c`.
 
@@ -94,4 +94,4 @@ Voer deze stappen uitsluitend uit op een geïsoleerde testdeploy met een aparte 
 - [ ] Legacybescherming: controleer dat `samen.json`, `eigen-p1.json` en `eigen-p2.json` als legacy-envelopes behouden blijven, de updatebarrière oudere appversies blokkeert en er geen Core-envelope over legacybestanden wordt geschreven.
 - [ ] Rollback: exporteer/controleer eerst de herstelbestanden; test herstel uitsluitend met synthetische data. Verwijder de oude lokale bron nooit handmatig als de Core-migratie niet volledig is bevestigd.
 
-B07 blijft een afzonderlijke fysieke acceptatiegate voor iPhone/iPad en wordt pas samen met de overige apps uitgevoerd. Geen merge, Pages-deploy, productie-migratie of productie-write zonder afzonderlijk akkoord.
+B07 is RETIRED en vormt geen acceptatiegate. De nieuwe S01–S07-procedure is app-specifiek uitgewerkt in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. Fysieke iPhone/iPad/Windows-controles blijven nodig voor runtime- en WebAuthn-gedrag, maar worden niet langer gekoppeld aan de oude cross-container lockproef. Geen merge, Pages-deploy, productie-migratie of productie-write zonder afzonderlijk akkoord.
