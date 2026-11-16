@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { createVault } from '../js/core/vault-factory.js';
 import { createSync } from '../js/core/sync-factory.js';
+import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { mergeDomainPayload, validateDomainPayload } from '../js/multi-vault-adapter.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
@@ -59,33 +60,61 @@ const storage = () => {
   };
 };
 
-test('real encrypted vault sync preserves a later stale-client choice as a concurrent review', async () => {
+test('Core persistState plus encrypted sync preserves a later stale-client choice', async () => {
   const previousFetch = globalThis.fetch;
-  let remoteEnvelope;
-  let remoteSha = 'seed-sha';
-  let revision = 0;
-  globalThis.fetch = async (url, init = {}) => {
+  const remoteFiles = new Map();
+  let remoteRevision = 0;
+  let core;
+  let clientAVault;
+  let seedVaults = [];
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
     const method = init.method || 'GET';
+    if (method === 'GET' && url.pathname === '/repos/synthetic-owner/synthetic-repo') {
+      return new Response(JSON.stringify({ private: true, default_branch: 'main' }), { status: 200 });
+    }
+    const marker = '/contents/';
+    const index = url.pathname.indexOf(marker);
+    if (index < 0) return new Response(null, { status: 404 });
+    const path = decodeURIComponent(url.pathname.slice(index + marker.length));
     if (method === 'GET') {
-      if (!remoteEnvelope) return new Response(null, { status: 404 });
+      const file = remoteFiles.get(path);
+      if (!file) return new Response(null, { status: 404 });
       return new Response(JSON.stringify({
-        sha: remoteSha,
+        sha: file.sha,
         encoding: 'base64',
-        content: Buffer.from(JSON.stringify(remoteEnvelope)).toString('base64'),
+        content: Buffer.from(JSON.stringify(file.envelope)).toString('base64'),
       }), { status: 200, headers: { 'content-type': 'application/json' } });
     }
     if (method === 'PUT') {
       const body = JSON.parse(init.body);
-      remoteEnvelope = JSON.parse(Buffer.from(body.content, 'base64').toString('utf8'));
-      remoteSha = 'sha-' + (++revision);
-      return new Response(JSON.stringify({ content: { sha: remoteSha } }), {
+      const file = {
+        sha: 'sha-' + (++remoteRevision),
+        envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
+      };
+      remoteFiles.set(path, file);
+      return new Response(JSON.stringify({ content: { sha: file.sha } }), {
         status: 200, headers: { 'content-type': 'application/json' },
       });
     }
     return new Response(null, { status: 405 });
   };
 
-  const vaults = [];
+  const disposeVaults = async () => {
+    if (core) {
+      try { await core.lock(); } catch { /* cleanup continues */ }
+      for (const entry of Object.values(core.getRegistry())) {
+        try { await entry.vault.dispose(); } catch { /* cleanup continues */ }
+      }
+    }
+    if (clientAVault) {
+      try { await clientAVault.dispose(); } catch { /* cleanup continues */ }
+    }
+    for (const vault of seedVaults) {
+      try { await vault.dispose(); } catch { /* cleanup continues */ }
+    }
+  };
+
   try {
     const left = base(), right = base();
     left.items = [{ id: 'rent', name: 'PR9 TEST', amount: 125, u: 1500 }];
@@ -96,28 +125,49 @@ test('real encrypted vault sync preserves a later stale-client choice as a concu
     const task = pending(initial)[0];
     assert.ok(task, 'de twee oorspronkelijke versies moeten een reviewtaak opleveren');
 
-    const seed = createVault({ storagePrefix: 'pr9-review-seed', kdfIterations: 1000, storage: storage() });
-    await seed.create('synthetic-password', initial);
-    await seed.flush();
-    remoteEnvelope = structuredClone(seed.getEnvelope());
-    await seed.dispose();
+    const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 1000, storage: storage() });
+    const seedPersonal = createVault({ storagePrefix: 'pr9-seed-personal', kdfIterations: 1000, storage: storage() });
+    seedVaults.push(seedShared, seedPersonal);
+    await seedShared.create('synthetic-password', initial);
+    await seedPersonal.create('synthetic-password', {
+      items: [], del: {}, paid: {}, schema: 2, domain: 'personal-p1',
+    });
+    await seedShared.flush();
+    await seedPersonal.flush();
+    remoteFiles.set('pwa-core-v1/samen.json', { sha: 'seed-shared', envelope: structuredClone(seedShared.getEnvelope()) });
+    remoteFiles.set('pwa-core-v1/eigen-p1.json', { sha: 'seed-personal', envelope: structuredClone(seedPersonal.getEnvelope()) });
+    await Promise.all(seedVaults.map(vault => vault.dispose()));
+    seedVaults = [];
 
-    async function makeClient(prefix) {
-      const vault = createVault({ storagePrefix: prefix, kdfIterations: 1000, storage: storage() });
-      vaults.push(vault);
-      await vault.importEnvelope(structuredClone(remoteEnvelope), 'synthetic-password');
-      vault.setSyncMeta({ sha: remoteSha, dirty: false });
-      return { vault, sync: createSync({ vault, appName: 'Vaste Lasten test' }) };
-    }
-    const a = await makeClient('pr9-review-client-a');
-    const b = await makeClient('pr9-review-client-b');
-    const options = {
-      settings: { owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main', path: 'pwa-core-v1/samen.json', token: 'synthetic-token' },
-      schemaVersion: 2,
-      migrate: value => validateDomainPayload(value, 'shared'),
-      merge: (local, remote) => mergeDomainPayload(local, remote, 'shared', mergeStore),
-    };
+    const connection = { owner: 'synthetic-owner', repo: 'synthetic-repo', token: 'synthetic-token' };
+    core = createVasteLastenCore({
+      storage: storage(),
+      kdfIterations: 1000,
+      mergeStore,
+      factories: {
+        createSessionLock: () => ({ acquireSessionLock: async () => ({ release: async () => {} }) }),
+        createBiometric: () => ({
+          isEnrolled: () => false,
+          async unlock() { throw new Error('not used in this test'); },
+          async enroll() {},
+          async enrollExisting() {},
+        }),
+      },
+    });
 
+    // B opent eerst de oorspronkelijke taak en houdt die lokaal open.
+    await core.unlock({
+      me: 'p1',
+      passwords: { shared: 'synthetic-password', 'personal-p1': 'synthetic-password' },
+      settings: connection,
+    });
+    const staleB = core.getState();
+
+    // A opent dezelfde gepubliceerde kluis, kiest alternatief 1 en publiceert dat eerst.
+    const currentRemote = remoteFiles.get('pwa-core-v1/samen.json');
+    clientAVault = createVault({ storagePrefix: 'pr9-client-a-shared', kdfIterations: 1000, storage: storage() });
+    await clientAVault.importEnvelope(structuredClone(currentRemote.envelope), 'synthetic-password');
+    clientAVault.setSyncMeta({ sha: currentRemote.sha, dirty: false });
     const choose = (snapshot, index, at) => {
       const next = structuredClone(snapshot);
       const selected = task.alternatives[index];
@@ -128,16 +178,26 @@ test('real encrypted vault sync preserves a later stale-client choice as a concu
       }
       return next;
     };
+    await clientAVault.setData(choose(clientAVault.getData(), 0, 1600));
+    const syncA = createSync({ vault: clientAVault, appName: 'Vaste Lasten test A' });
+    const optionsA = {
+      settings: { ...connection, branch: 'main', path: 'pwa-core-v1/samen.json' },
+      schemaVersion: 2,
+      migrate: value => validateDomainPayload(value, 'shared'),
+      merge: (local, remote) => mergeDomainPayload(local, remote, 'shared', mergeStore),
+    };
+    await syncA.syncNow(optionsA);
 
-    // Beide clients beginnen met dezelfde versleutelde kluis en dezelfde open reviewtaak.
-    await a.vault.setData(choose(a.vault.getData(), 0, 1600));
-    await b.vault.setData(choose(b.vault.getData(), 1, 1700));
-
-    // A publiceert eerst; B synchroniseert daarna vanaf zijn verouderde lokale snapshot.
-    await a.sync.syncNow(options);
-    await b.sync.syncNow(options);
-
-    const afterB = pending(b.vault.getData().__conflicts);
+    // B maakt daarna zijn afwijkende keuze vanuit de verouderde UI-snapshot.
+    const selectedB = task.alternatives[1];
+    staleB.samen.__conflicts = review.resolveConflictState(staleB.samen.__conflicts, task.id, 1, { at: 1700, deviceId: 'p1' });
+    if (selectedB.kind === 'record') {
+      staleB.samen.items = staleB.samen.items.filter(item => item.id !== selectedB.value.id);
+      staleB.samen.items.push({ ...selectedB.value, u: 1700 });
+    }
+    await core.persistState(staleB);
+    const resultB = await core.sync();
+    const afterB = pending(resultB.state.samen.__conflicts);
     assert.equal(afterB.length, 1);
     assert.equal(afterB[0].kind, 'concurrent-review');
     assert.deepEqual(
@@ -145,17 +205,18 @@ test('real encrypted vault sync preserves a later stale-client choice as a concu
       [125, 140],
     );
 
-    // A haalt de door B gemaakte vervolgtaak op; daarna moeten beide clients convergeren.
-    await a.sync.syncNow(options);
-    await b.sync.syncNow(options);
-    for (const client of [a, b]) {
-      const tasks = pending(client.vault.getData().__conflicts);
-      assert.equal(tasks.length, 1);
-      assert.equal(tasks[0].kind, 'concurrent-review');
-      assert.equal(tasks[0].id, afterB[0].id);
-    }
+    // A en B halen elkaars vervolgtaak op en eindigen met dezelfde review-identiteit.
+    await syncA.syncNow(optionsA);
+    const resultFinal = await core.sync();
+    const tasksA = pending(clientAVault.getData().__conflicts);
+    const tasksB = pending(resultFinal.state.samen.__conflicts);
+    assert.equal(tasksA.length, 1);
+    assert.equal(tasksB.length, 1);
+    assert.equal(tasksA[0].kind, 'concurrent-review');
+    assert.equal(tasksB[0].kind, 'concurrent-review');
+    assert.equal(tasksA[0].id, tasksB[0].id);
   } finally {
+    await disposeVaults();
     globalThis.fetch = previousFetch;
-    for (const vault of vaults.reverse()) await vault.dispose();
   }
 });
