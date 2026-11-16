@@ -62,6 +62,7 @@ function setup({ id = 'shared', remoteData = null, localData = null, password = 
   return {
     registry, createClient,
     state: () => ({ remote: clone(remote), local: clone(local), createCalls, importCalls, syncCalls }),
+    expectedPassword: password,
     setSyncFailure(value) { syncFails = value; },
   };
 }
@@ -71,7 +72,7 @@ const run = (h, id = 'shared', password = 'new-password') => initializeEmptyDoma
   settings: { owner: 'synthetic', repo: 'private-test', branch: 'main', token: 'not-a-real-token' },
   createClient: h.createClient,
   openEnvelope: async (_vault, envelope, value) => {
-    if (value !== password) throw new Error('wrong password');
+    if (value !== h.expectedPassword) throw new Error('wrong password');
     return clone(envelope.payload);
   },
   mergeStore: (a, b) => ({ ...a, ...b }),
