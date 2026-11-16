@@ -34,3 +34,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** Vaste Lasten wordt voor de nieuwe start opgebouwd uit drie lege PWA-Core-kluizen. Het eerste apparaat maakt shared + eigen aan; het tweede apparaat sluit aan op shared en maakt alleen de eigen persoonlijke kluis aan.
 - **Waarom:** de gebruiker voert de lasten opnieuw handmatig in. Oude lokale en remote legacygegevens worden niet gemigreerd. Ze blijven behouden tot beide apparaten en de drie nieuwe kluizen zijn gecontroleerd; opruiming gebeurt daarna afzonderlijk.
 - **Veiligheidsgrens:** bestaande niet-lege Core-kluizen worden geweigerd. Geen automatische reset, overschrijving of legacy-import.
+
+
+### D8 – Eerst expliciet een kluis kiezen (16 nov 2026, 3.3.0)
+- **Besluit:** zonder actieve GitHub Sync toont Vaste Lasten eerst een kluiskeuze: een bestaande kluis koppelen via synchronisatie-instellingen of een nieuwe lokale PWA-Core-kluis aanmaken.
+- **Besluit:** een lokale-only kluis bestaat uit een afzonderlijke gedeelde en persoonlijke Core-kluis, beide versleuteld op dit apparaat. Ze synchroniseren niet automatisch naar andere apparaten.
+- **Veiligheid:** een lege start leest of importeert geen oude legacygegevens en weigert bestaande niet-lege Core-kluizen; gedeeltelijk aangemaakte lege kluizen blijven hervatbaar.
