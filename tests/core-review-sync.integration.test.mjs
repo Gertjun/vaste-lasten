@@ -954,7 +954,7 @@ test('S07 a stale offline client acknowledges the remote deletion before tombsto
     assert.equal(await harness.syncA.syncNow(harness.options), 'merged');
     assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
     remoteData = await harness.vaultB.decryptRemote(harness.remote().envelope);
-    const deletionKey = ':offline-record';
+    const deletionKey = 'items:offline-record';
     assert.equal(remoteData.__pwaSync.deletions[deletionKey], 1800000000900,
       'de remote deletion ledger moet de nieuwere verwijdering bewaren');
     assert.equal(remoteData.items.some(item => item.id === 'offline-record' && !item.deleted), false,
