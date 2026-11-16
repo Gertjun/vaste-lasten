@@ -772,3 +772,205 @@ test('S06 a failed remote upload keeps local data dirty and an explicit retry re
     globalThis.fetch = previousFetch;
   }
 });
+
+
+async function createRemoteSyncHarness(label, initialData) {
+  const path = 'pwa-core-v1/samen.json';
+  const seed = createVault({ storagePrefix: label + '-seed', kdfIterations: 1000, storage: storage() });
+  await seed.create('synthetic-password', structuredClone(initialData));
+  await seed.flush();
+  let remote = { sha: 'seed-' + label, envelope: structuredClone(seed.getEnvelope()) };
+  await seed.dispose();
+
+  const storageA = storage(), storageB = storage();
+  storageA.setItem(label + '-client-a:device-id', label + '-device-a');
+  storageB.setItem(label + '-client-b:device-id', label + '-device-b');
+  const vaultA = createVault({ storagePrefix: label + '-client-a', kdfIterations: 1000, storage: storageA });
+  const vaultB = createVault({ storagePrefix: label + '-client-b', kdfIterations: 1000, storage: storageB });
+  await vaultA.importEnvelope(structuredClone(remote.envelope), 'synthetic-password');
+  await vaultB.importEnvelope(structuredClone(remote.envelope), 'synthetic-password');
+  vaultA.setSyncMeta({ sha: remote.sha, dirty: false });
+  vaultB.setSyncMeta({ sha: remote.sha, dirty: false });
+
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    const method = init.method || 'GET';
+    const marker = '/contents/';
+    const index = url.pathname.indexOf(marker);
+    if (index < 0) return new Response(null, { status: 404 });
+    const requestedPath = decodeURIComponent(url.pathname.slice(index + marker.length));
+    if (requestedPath !== path) return new Response(null, { status: 404 });
+    if (method === 'GET') {
+      if (!remote) return new Response(null, { status: 404 });
+      return new Response(JSON.stringify({
+        sha: remote.sha,
+        encoding: 'base64',
+        content: Buffer.from(JSON.stringify(remote.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+    if (method === 'PUT') {
+      const body = JSON.parse(init.body);
+      if (remote && body.sha !== remote.sha) {
+        return new Response(JSON.stringify({ message: 'sha does not match' }), { status: 409 });
+      }
+      if (!remote && body.sha) return new Response(null, { status: 409 });
+      remote = {
+        sha: 'sha-' + label + '-' + Math.random().toString(36).slice(2),
+        envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
+      };
+      return new Response(JSON.stringify({ content: { sha: remote.sha } }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response(null, { status: 405 });
+  };
+
+  const options = {
+    settings: {
+      owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main',
+      path, token: 'synthetic-token',
+    },
+    merge: (local, incoming) => mergeDomainPayload(local, incoming, 'shared', mergeStore),
+    migrate: incoming => validateDomainPayload(incoming, 'shared'),
+    schemaVersion: 2,
+  };
+  return {
+    vaultA, vaultB, remote: () => remote, options,
+    syncA: createSync({ vault: vaultA, appName: 'Vaste Lasten ' + label + ' A' }),
+    syncB: createSync({ vault: vaultB, appName: 'Vaste Lasten ' + label + ' B' }),
+    async dispose() {
+      for (const vault of [vaultA, vaultB]) {
+        try { if (vault.isUnlocked()) vault.lock(); } catch {}
+        try { await vault.dispose(); } catch {}
+      }
+    },
+  };
+}
+
+test('S03 equal-timestamp conflict converges through the remote sync route in either upload order', async () => {
+  const previousFetch = globalThis.fetch;
+  const outcomes = [];
+  try {
+    for (const first of ['A', 'B']) {
+      const label = 's03-remote-' + first.toLowerCase();
+      const harness = await createRemoteSyncHarness(label, {
+        ...base(), items: [{ id: 'rent', name: 'Huur', amount: 100, u: 1000 }],
+      });
+      try {
+        await harness.vaultA.setData({
+          ...structuredClone(harness.vaultA.getData()),
+          items: [{ id: 'rent', name: 'Huur', amount: 125, u: 1800000000700 }],
+        });
+        await harness.vaultB.setData({
+          ...structuredClone(harness.vaultB.getData()),
+          items: [{ id: 'rent', name: 'Huur', amount: 140, u: 1800000000700 }],
+        });
+
+        const firstSync = first === 'A' ? harness.syncA : harness.syncB;
+        const secondSync = first === 'A' ? harness.syncB : harness.syncA;
+        assert.equal(await firstSync.syncNow(harness.options), 'uploaded');
+        assert.equal(await secondSync.syncNow(harness.options), 'merged');
+
+        const remoteData = await harness.vaultA.decryptRemote(harness.remote().envelope);
+        const task = pending(remoteData.__conflicts).find(item => item.path === 'items:rent');
+        assert.ok(task, 'de echte remote merge-route moet bij gelijke timestamps een reviewtaak bewaren');
+        assert.equal(task.kind, 'content');
+        assert.deepEqual(
+          JSON.parse(JSON.stringify(task.alternatives.map(value => value.value.amount).sort((a, b) => a - b))),
+          [125, 140],
+        );
+        outcomes.push({ id: task.id, alternatives: canon(task.alternatives) });
+      } finally {
+        await harness.dispose();
+      }
+    }
+    assert.equal(outcomes[0].id, outcomes[1].id,
+      'de conflictidentiteit mag niet afhangen van welke client als eerste uploadt');
+    assert.equal(outcomes[0].alternatives, outcomes[1].alternatives,
+      'de alternatieven moeten onafhankelijk van de uploadvolgorde dezelfde canonieke volgorde hebben');
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('S04 an older offline edit is rejected by a newer deletion through the remote sync route', async () => {
+  const previousFetch = globalThis.fetch;
+  const harness = await createRemoteSyncHarness('s04-remote', {
+    ...base(), items: [{ id: 'offline-record', name: 'Oorspronkelijke last', amount: 100, u: 1000 }],
+  });
+  try {
+    await harness.vaultA.setData({
+      ...structuredClone(harness.vaultA.getData()),
+      items: [],
+      del: { 'offline-record': 1800000000800 },
+    });
+    await harness.vaultB.setData({
+      ...structuredClone(harness.vaultB.getData()),
+      items: [{ id: 'offline-record', name: 'Oudere offline bewerking', amount: 150, u: 1800000000700 }],
+    });
+
+    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
+    const finalData = await harness.vaultB.decryptRemote(harness.remote().envelope);
+    assert.equal(finalData.items.some(item => item.id === 'offline-record'), false,
+      'de oudere offline recordversie mag na remote merge niet terugkomen');
+    assert.equal(finalData.del['offline-record'], 1800000000800,
+      'de nieuwere verwijdermarkering moet in de gedeelde remote kluis behouden blijven');
+    assert.equal(pending(finalData.__conflicts).some(item => item.path === 'items:offline-record'), false,
+      'een oudere wijziging tegenover een nieuwere verwijdering mag geen gelijk-tijdreview openen');
+  } finally {
+    await harness.dispose();
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('S07 a stale offline client acknowledges the remote deletion before tombstone cleanup', async () => {
+  const previousFetch = globalThis.fetch;
+  const harness = await createRemoteSyncHarness('s07-remote', {
+    ...base(), items: [{ id: 'offline-record', name: 'Oorspronkelijke last', amount: 100, u: 1000 }],
+  });
+  try {
+    // Beide clients registreren zich eerst in dezelfde remote kluis.
+    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
+    let remoteData = await harness.vaultA.decryptRemote(harness.remote().envelope);
+    assert.ok(remoteData.__pwaSync.devices['s07-remote-device-a']);
+    assert.ok(remoteData.__pwaSync.devices['s07-remote-device-b']);
+
+    // A verwijdert; B houdt bewust een oudere, offline bewerkte kopie vast.
+    await harness.vaultA.setData({
+      ...structuredClone(harness.vaultA.getData()),
+      items: [{
+        id: 'offline-record', name: 'Verwijderde last', amount: 100,
+        u: 1800000000900, updatedAt: 1800000000900, deleted: true,
+      }],
+    });
+    await harness.vaultB.setData({
+      ...structuredClone(harness.vaultB.getData()),
+      items: [{ id: 'offline-record', name: 'Oudere offline wijziging', amount: 150, u: 1800000000800 }],
+    });
+
+    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
+    remoteData = await harness.vaultB.decryptRemote(harness.remote().envelope);
+    const deletionKey = ':offline-record';
+    assert.equal(remoteData.__pwaSync.deletions[deletionKey], 1800000000900,
+      'de remote deletion ledger moet de nieuwere verwijdering bewaren');
+    assert.equal(remoteData.items.some(item => item.id === 'offline-record' && !item.deleted), false,
+      'de oude offline client mag de gewone record niet opnieuw publiceren');
+    assert.ok(remoteData.__pwaSync.devices['s07-remote-device-a'].acknowledged[deletionKey] >= 1800000000900);
+    assert.ok(remoteData.__pwaSync.devices['s07-remote-device-b'].acknowledged[deletionKey] >= 1800000000900,
+      'de terugkerende offline client moet de tombstone hebben bevestigd');
+
+    // A leest de acknowledgement van B; pas dan mag de soft-delete-marker worden opgeruimd.
+    await harness.syncA.syncNow(harness.options);
+    remoteData = await harness.vaultA.decryptRemote(harness.remote().envelope);
+    assert.equal(remoteData.items.some(item => item.id === 'offline-record'), false,
+      'na acknowledgement door alle actieve apparaten mag de tombstone verdwijnen');
+    assert.equal(remoteData.__pwaSync.deletions[deletionKey], 1800000000900,
+      'de compacte verwijderhistorie blijft beschikbaar om oude kopieën te blokkeren');
+  } finally {
+    await harness.dispose();
+    globalThis.fetch = previousFetch;
+  }
+});
