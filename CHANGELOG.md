@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.5.0 — 17 november 2026
+- Nieuw: vanaf het vergrendelscherm kun je terug naar het scherm om een bestaande of nieuwe kluis in te stellen, ook als de wachtwoorden niet werken.
+- Beveiliging: teruggaan naar instellen verwijdert niets. Lokale Core-kluizen vervangen vereist een aparte bevestiging; alleen de lokale kluizen en passkey-koppeling op dit apparaat worden gewist. GitHub-bestanden en gegevens op andere apparaten blijven behouden.
+
 ## 3.4.0 — 17 november 2026
 - Nieuw: een bestaande lokale PWA-Core-kluis kan veilig aan GitHub Sync worden gekoppeld; de versleutelde gegevens en wachtwoorden blijven behouden.
 - Nieuw: op een tweede apparaat kun je rechtstreeks een bestaande PWA-Core-kluis koppelen. De gedeelde kluis wordt opgehaald en alleen de persoonlijke kluis van de gekozen gebruiker wordt geopend of zo nodig leeg aangemaakt.
