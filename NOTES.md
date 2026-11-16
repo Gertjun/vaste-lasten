@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 16 november 2026 · versie **3.2.0 in voorbereiding** (schone start met lege PWA-Core-kluizen, PR #10).
+Laatst bijgewerkt: 16 november 2026 · versie **3.3.0 in voorbereiding** (expliciete kluiskeuze en lokale Core-kluizen zonder GitHub Sync).
 
 ---
 
@@ -68,3 +68,15 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 
 - **16 nov 2026 – fysieke acceptatie PR #9:** gebruiker heeft de afgesproken praktijktest op iPhone Safari en Windows 11 Edge uitgevoerd en teruggekoppeld dat alles goed is gegaan. Vastgelegd als PASS voor de uitgevoerde scope: gedeelde en eigen persoonlijke kluis toegankelijk, persoonlijke kluis van de andere gebruiker afgeschermd, synchronisatie tussen twee fysieke apparaten, offline wijziging tegenover online verwijdering zonder herleving van het verwijderde record, en biometrisch vergrendelen/ontgrendelen op beide apparaten. Dit is gebruikersgerapporteerd bewijs, geen CI-waarneming en geen volledige afvinking van alle S01–S07/V01–V06/CR01–CR09-scenario's. PR #9 blijft open/draft/ongemerged; productie blijft onaangeroerd.
+
+
+## 3.3.0 – Kluiskeuze zonder GitHub Sync (featurebranch)
+
+- Branch: `feat/vault-choice-without-github-sync`.
+- Zonder synchronisatiekoppeling toont de app eerst een expliciete kluiskeuze: een bestaande kluis koppelen via de synchronisatie-instellingen, of een nieuwe lokale kluis aanmaken.
+- De lokale route maakt twee afzonderlijke PWA-Core-kluizen aan (gedeeld + persoonlijk), versleuteld in lokale opslag. Er wordt geen GitHub-client aangeroepen en er wordt niets naar een remote repository geschreven.
+- Een lokale start importeert geen legacygegevens. De bestaande `vastelasten.v2`-gegevens blijven onaangeroerd maar worden niet automatisch in de nieuwe Core-kluizen gemengd.
+- Een bestaande niet-lege Core-kluis wordt geweigerd; bij gedeeltelijk succes blijft de eerder aangemaakte lege kluis behouden zodat opnieuw proberen mogelijk is.
+- Lokale-only kluizen zijn apparaatgebonden; synchronisatie naar andere apparaten is niet beschikbaar totdat een afzonderlijke veilige koppel-/publicatieroute is geïmplementeerd.
+- Geautomatiseerde tests toegevoegd voor lokale aanmaak, heropenen, afwezigheid van remote writes en weigeren van niet-lege lokale kluizen.
+- Nog te verifiëren: volledige CI, inline JavaScript-syntax, fysieke acceptatie op iPhone Safari en Windows 11 Edge. Geen merge of Pages-deployment uitgevoerd.
