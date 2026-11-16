@@ -97,3 +97,30 @@ test('different concurrent choices create a second review task, not last-writer-
   assert.equal(pending(state).length,1);
   assert.equal(pending(state)[0].kind,'concurrent-review');
 });
+
+
+test('example records are removed before merging and never create review tasks', () => {
+  const a=base(),b=base();
+  a.items=[{id:'vbs0',name:'Hypotheek',amount:1145,example:true,u:0}];
+  b.items=[{id:'vbs0',name:'Hypotheek',amount:1145,example:true,u:0,after:'door'}];
+  a.items.push({id:'rent',name:'Test huur',amount:100,u:500});
+  b.items.push({id:'rent',name:'Test huur',amount:125,u:500});
+  const result=merge(a,b);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.items.map(item=>item.id))),['rent']);
+  assert.deepEqual(pending(result).map(item=>item.path),['items:rent']);
+});
+
+test('previously persisted conflicts containing only example records are discarded', () => {
+  const a=base(),b=base();
+  const task=review.createConflict({
+    domain:'shared',path:'items:vbs0',kind:'content',timestamp:0,
+    left:{kind:'record',value:{id:'vbs0',name:'Hypotheek',amount:1145,example:true,u:0}},
+    right:{kind:'record',value:{id:'vbs0',name:'Hypotheek',amount:1145,example:true,u:0,note:''}},
+  });
+  a.__conflicts={version:1,pending:{[task.id]:task},records:{[task.id]:task},decisions:{}};
+  const result=merge(a,b);
+  assert.equal(pending(result).length,0);
+  assert.equal(result.__conflicts.pending[task.id],undefined);
+  assert.equal(result.__conflicts.records[task.id],undefined);
+  assert.equal(result.__conflicts.decisions[task.id],undefined);
+});
