@@ -348,8 +348,8 @@ test('S01/S02 two independent clients retry a real stale-SHA race and preserve r
   };
 
   try {
-    for (const domain of ['shared', 'personal-p1']) {
-      const path = domain === 'shared' ? 'pwa-core-v1/samen.json' : 'pwa-core-v1/eigen-p1.json';
+    for (const domain of ['shared', 'personal-p1', 'personal-p2']) {
+      const path = domain === 'shared' ? 'pwa-core-v1/samen.json' : 'pwa-core-v1/eigen-' + domain.slice('personal-'.length) + '.json';
       const initial = domain === 'shared'
         ? { items: [], del: {}, paid: {}, meta: null, schema: 2, domain }
         : { items: [], del: {}, paid: {}, schema: 2, domain };
@@ -418,17 +418,21 @@ test('S01/S02 two independent clients retry a real stale-SHA race and preserve r
 
     assert.deepEqual(
       [...remoteFiles.keys()].sort(),
-      ['pwa-core-v1/eigen-p1.json', 'pwa-core-v1/samen.json'],
+      ['pwa-core-v1/eigen-p1.json', 'pwa-core-v1/eigen-p2.json', 'pwa-core-v1/samen.json'],
       'gedeelde en persoonlijke clients mogen uitsluitend hun eigen remote bestand schrijven',
     );
     const shared = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'shared')
       .decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
-    const personal = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'personal-p1')
+    const personalP1 = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'personal-p1')
       .decryptRemote(remoteFiles.get('pwa-core-v1/eigen-p1.json').envelope);
+    const personalP2 = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'personal-p2')
+      .decryptRemote(remoteFiles.get('pwa-core-v1/eigen-p2.json').envelope);
     assert.equal(shared.domain, 'shared');
-    assert.equal(personal.domain, 'personal-p1');
+    assert.equal(personalP1.domain, 'personal-p1');
+    assert.equal(personalP2.domain, 'personal-p2');
     assert.ok(shared.items.every(item => item.id.endsWith('-shared')));
-    assert.ok(personal.items.every(item => item.id.endsWith('-personal-p1')));
+    assert.ok(personalP1.items.every(item => item.id.endsWith('-personal-p1')));
+    assert.ok(personalP2.items.every(item => item.id.endsWith('-personal-p2')));
   } finally {
     for (const vault of clients) {
       try { if (vault.isUnlocked()) vault.lock(); } catch { /* cleanup continues */ }
