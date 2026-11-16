@@ -203,6 +203,14 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const publishedA = await clientAVault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
     assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
     assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
+    assert.ok(localB.__conflicts.records[task.id], 'B moet de oorspronkelijke conflictregistratie behouden');
+    assert.ok(publishedA.__conflicts.records[task.id], 'A moet de oorspronkelijke conflictregistratie behouden');
+    const directConflictState = review.mergeConflictState(localB.__conflicts, publishedA.__conflicts);
+    assert.equal(pending(directConflictState).length, 1, JSON.stringify({
+      record: directConflictState.records[task.id],
+      decisions: directConflictState.decisions[task.id],
+      pendingKeys: Object.keys(directConflictState.pending || {}),
+    }));
     assert.equal(canon(publishedA.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[0]), 'A moet werkelijk alternatief 1 hebben gepubliceerd');
     assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
     const directMerge = mergeDomainPayload(localB, publishedA, 'shared', mergeStore);
