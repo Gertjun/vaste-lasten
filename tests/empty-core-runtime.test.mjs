@@ -204,3 +204,48 @@ test('runtime: gedeeltelijk succes blijft behouden en lege start kan veilig word
   assert.ok(shared.has('pwa-core-v1/eigen-p1.json'));
   await first.core.lock();
 });
+
+
+test('runtime: lokale lege Core-kluizen werken zonder GitHub-client of synchronisatie', async () => {
+  const h = runtimeHarness();
+  const result = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  assert.equal(result.complete, true);
+  assert.equal(result.localOnly, true);
+  assert.deepEqual(h.syncCalls, []);
+  assert.equal(h.remoteFiles.size, 0);
+  assert.equal(h.vaults.shared.hasVault(), true);
+  assert.equal(h.vaults['personal-p1'].hasVault(), true);
+  assert.equal(h.vaults['personal-p2'].hasVault(), false);
+  assert.deepEqual(result.state.samen.items, []);
+  assert.deepEqual(result.state.eigen.items, []);
+  await h.core.lock();
+
+  const reopened = await h.core.unlockLocal({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+  });
+  assert.deepEqual(reopened.samen.items, []);
+  assert.deepEqual(reopened.eigen.items, []);
+  await h.core.lock();
+});
+
+test('runtime: lokale lege start weigert niet-lege bestaande kluis en overschrijft niets', async () => {
+  const h = runtimeHarness();
+  await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  await h.core.lock();
+  // Bewijs dat een bestaande lokale kluis niet wordt vervangen door een nieuwe lege.
+  const vault = h.vaults.shared;
+  await vault.unlockWithPassword(passwords.shared);
+  const before = vault.getData();
+  before.items.push({ id: 'keep-me', name: 'Bestaand record' });
+  await vault.setData(before);
+  await vault.flush();
+  await h.core.lock();
+
+  const result = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  assert.equal(result.complete, false);
+  assert.equal(result.failedDomain, 'shared');
+  await vault.unlockWithPassword(passwords.shared);
+  assert.equal(vault.getData().items[0].id, 'keep-me');
+  await h.core.lock();
+});
