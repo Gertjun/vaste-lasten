@@ -35,7 +35,7 @@ De gebruiker voert alle categorieën en lasten daarna handmatig in.
 
 ## Geautomatiseerde tests
 
-De nieuwe testset gebruikt uitsluitend synthetische opslag en mockclients. Ze controleert:
+De nieuwe testset gebruikt uitsluitend synthetische opslag, mockclients en Web Crypto met testwachtwoorden. Ze controleert:
 - eerste apparaat maakt een lege gedeelde kluis aan;
 - tweede apparaat sluit aan op de bestaande lege gedeelde kluis;
 - tweede profiel maakt uitsluitend de eigen persoonlijke kluis aan;
@@ -46,7 +46,6 @@ De nieuwe testset gebruikt uitsluitend synthetische opslag en mockclients. Ze co
 ## Nog te verifiëren
 
 - Volledige GitHub Actions-CI op PR #10.
-- Extra integratietests voor de runtime-coördinator en hervatten na gedeeltelijk succes.
-- Fysieke acceptatie op iPhone Safari en Windows 11 Edge, eerst op het eerste en daarna op het tweede apparaat.
+- - Fysieke acceptatie op iPhone Safari en Windows 11 Edge, eerst op het eerste en daarna op het tweede apparaat.
 
 Geen productiegegevens, echte privé-datarepository, productie-token of passkey gebruikt tijdens de geautomatiseerde tests.
