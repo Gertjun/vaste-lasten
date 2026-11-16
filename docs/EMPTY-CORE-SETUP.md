@@ -2,7 +2,7 @@
 
 ## Status
 
-Ontwerp- en implementatievoorstel. Dit document introduceert nog geen productiebediening en voert geen wijzigingen uit in lokale of remote kluizen.
+Geïmplementeerd in PR #10, versie 3.2.0 in voorbereiding. De PR blijft draft totdat de volledige CI en review van de implementatie zijn afgerond.
 
 ## Doel
 
@@ -14,37 +14,39 @@ Vaste Lasten opnieuw starten met drie onafhankelijke, lege PWA-Core-domeinen:
 
 De gebruiker voert alle categorieën en lasten daarna handmatig in.
 
-## Vereiste startvolgorde
+## Werking
 
-1. Controleer dat de geïnstalleerde app-versie op alle apparaten de nieuwe startprocedure ondersteunt.
-2. Controleer de ingestelde privérepository en de profielidentiteit (`p1` of `p2`) op het huidige apparaat.
-3. Maak alleen de gedeelde kluis en de persoonlijke kluis van het actieve profiel aan, elk met een afzonderlijk wachtwoord en een eigen willekeurige datasleutel.
-4. Synchroniseer en bevestig beide bestanden op GitHub voordat de procedure als geslaagd wordt gemeld.
-5. Op het tweede apparaat: open de reeds aangemaakte gedeelde kluis met hetzelfde gedeelde wachtwoord; maak uitsluitend de persoonlijke kluis van het andere profiel aan.
-6. Bevestig dat de tweede persoonlijke kluis is gesynchroniseerd. De drie remote bestanden moeten nu bestaan en onafhankelijk ontgrendelbaar zijn.
+1. Op het eerste apparaat kiest de gebruiker het nieuwe gezamenlijke wachtwoord en het nieuwe persoonlijke wachtwoord. De app maakt de gedeelde kluis en de persoonlijke kluis van het actieve profiel aan.
+2. Op het tweede apparaat gebruikt de gebruiker hetzelfde gezamenlijke wachtwoord en het eigen nieuwe persoonlijke wachtwoord. De app importeert uitsluitend de bestaande lege gedeelde kluis en maakt de persoonlijke kluis van het tweede profiel aan.
+3. Per domein wordt de remote GitHub-inhoud na synchronisatie opnieuw opgehaald en ontsleuteld gecontroleerd. De app meldt succes alleen na deze bevestiging.
+4. De setup is hervatbaar: een eerder aangemaakte lege lokale/remote kluis wordt gecontroleerd en opnieuw gebruikt. Bij gedeeltelijk succes worden reeds bevestigde kluizen niet gereset.
+5. Een lokale marker voorkomt dat oude lokale legacygegevens bij een volgende ontgrendeling alsnog automatisch in de nieuwe Core-kluizen worden samengevoegd.
 
 ## Fail-closed veiligheidsregels
 
-- Gebruik de legacy-migratiefunctie niet: die importeert oude gegevens en verhoogt de legacy-updatebarrière.
-- Verwijder of wijzig geen legacybestanden (`samen.json`, `eigen-p1.json`, `eigen-p2.json`) als onderdeel van de kluisaanmaak.
-- Verwijder geen lokale opslagprefixen en wis geen bestaande Core-kluizen.
-- Overschrijf nooit een bestaand remote Core-bestand.
-- Een bestaand lokaal of remote Core-bestand mag alleen worden geopend als het juiste profiel, pad en wachtwoord zijn bevestigd; bij een onverwachte inhoud of sleutelconflict stoppen.
-- Maak nooit de persoonlijke kluis van het andere profiel aan op het apparaat van de huidige gebruiker.
-- Bij gedeeltelijk succes: behoud alle aangemaakte kluizen, rapporteer exact welke domeinen bevestigd zijn en bied een veilige hervatting aan. Geen automatische reset.
-- De opruiming van oude gegevens is een afzonderlijke, latere actie met eigen expliciete bevestiging en controle van de drie doelbestanden.
+- De legacy-migratiefunctie wordt niet gebruikt.
+- De oude lokale data (`vastelasten.v2`) en eventuele staging blijven behouden maar worden na de schone start niet automatisch geïmporteerd.
+- Oude remote legacybestanden (`samen.json`, `eigen-p1.json`, `eigen-p2.json`) worden niet gelezen, gewijzigd of verwijderd.
+- Een bestaande Core-kluis met inhoud of onbekende velden wordt geweigerd.
+- Een bestaand lokaal en remote Core-bestand met een sleutelconflict wordt geweigerd; er is geen automatische reset of overschrijving.
+- Alleen de gedeelde kluis en de persoonlijke kluis van het actieve profiel worden geopend.
+- Een synchronisatie- of bevestigingsfout laat de reeds aangemaakte lokale kluis staan zodat veilig opnieuw geprobeerd kan worden.
+- Opruiming van oude gegevens is een afzonderlijke latere stap, nadat beide apparaten en alle drie de nieuwe kluizen zijn gecontroleerd.
 
-## Benodigde geautomatiseerde tests
+## Geautomatiseerde tests
 
-- eerste apparaat maakt shared + personal-p1 aan, zonder legacydata te lezen;
-- tweede apparaat hergebruikt uitsluitend de lege remote shared-kluis en maakt personal-p2 aan;
-- verkeerde repository, profiel of pad wordt geweigerd;
-- bestaand niet-leeg Core-bestand wordt nooit overschreven of leeggemaakt;
-- onverwachte lokale kluis of remote sleutelconflict stopt veilig;
-- fout tijdens upload laat de reeds bevestigde kluis intact en hervatten is idempotent;
-- shared/p1/p2 blijven strikt gescheiden;
-- geen enkele test verwijdert legacybestanden of lokale opslag.
+De nieuwe testset gebruikt uitsluitend synthetische opslag en mockclients. Ze controleert:
+- eerste apparaat maakt een lege gedeelde kluis aan;
+- tweede apparaat sluit aan op de bestaande lege gedeelde kluis;
+- tweede profiel maakt uitsluitend de eigen persoonlijke kluis aan;
+- niet-lege lokale of remote Core-inhoud wordt geweigerd;
+- verkeerd wachtwoord laat remote data onaangeroerd;
+- uploadfout verwijdert of reset de lokale lege kluis niet.
 
-## Acceptatie op echte apparaten
+## Nog te verifiëren
 
-Na geautomatiseerde tests: iPhone Safari en Windows 11 Edge. Controleer op beide apparaten de drie paden, de juiste profielscheiding, afzonderlijke wachtwoorden, heropenen na herstart en synchronisatie. Pas na expliciete controle kan de oude data afzonderlijk worden opgeruimd.
+- Volledige GitHub Actions-CI op PR #10.
+- Extra integratietests voor de runtime-coördinator en hervatten na gedeeltelijk succes.
+- Fysieke acceptatie op iPhone Safari en Windows 11 Edge, eerst op het eerste en daarna op het tweede apparaat.
+
+Geen productiegegevens, echte privé-datarepository, productie-token of passkey gebruikt tijdens de geautomatiseerde tests.
