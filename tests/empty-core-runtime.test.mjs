@@ -374,3 +374,30 @@ test('runtime: koppelen van bestaand Core-bestand met inhoud importeert gegevens
   assert.deepEqual(second.remoteFiles.get('pwa-core-v1/samen.json'), expected);
   await second.core.lock();
 });
+
+
+test('runtime: nieuw apparaat weigert een te kort of gedeeld wachtwoord voor een nieuwe persoonlijke kluis', async () => {
+  const first = runtimeHarness();
+  await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  await first.core.lock();
+
+  const short = runtimeHarness({ remoteFiles: first.remoteFiles });
+  const rejectedShort = await short.core.connectExisting({
+    me: 'p2',
+    passwords: { shared: passwords.shared, 'personal-p2': 'te-kort' },
+    settings: connection,
+  });
+  assert.equal(rejectedShort.complete, false);
+  assert.match(rejectedShort.error.message, /minstens 12 tekens/);
+  assert.equal(short.remoteFiles.has('pwa-core-v1/eigen-p2.json'), false);
+
+  const same = runtimeHarness({ remoteFiles: first.remoteFiles });
+  const rejectedSame = await same.core.connectExisting({
+    me: 'p2',
+    passwords: { shared: passwords.shared, 'personal-p2': passwords.shared },
+    settings: connection,
+  });
+  assert.equal(rejectedSame.complete, false);
+  assert.match(rejectedSame.error.message, /ander wachtwoord/);
+  assert.equal(same.remoteFiles.has('pwa-core-v1/eigen-p2.json'), false);
+});

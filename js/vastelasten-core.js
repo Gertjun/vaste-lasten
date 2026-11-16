@@ -349,6 +349,16 @@ export function createVasteLastenCore({
       if (!remotes.shared) {
         throw new Error('De gedeelde PWA-Core-kluis ontbreekt in deze repository. Controleer de repository; er is niets aangemaakt of overschreven.');
       }
+      const personalId = `personal-${me}`;
+      if (!remotes[personalId]) {
+        const newPersonalPassword = passwords?.[personalId];
+        if (typeof newPersonalPassword !== 'string' || newPersonalPassword.length < 12) {
+          throw new Error('Voor een nieuwe persoonlijke kluis is een wachtwoord van minstens 12 tekens nodig.');
+        }
+        if (newPersonalPassword === passwords?.shared) {
+          throw new Error('Kies voor je persoonlijke kluis een ander wachtwoord dan het gezamenlijke wachtwoord.');
+        }
+      }
       for (const id of ids) {
         activeId = id;
         const vault = registry[id].vault;
