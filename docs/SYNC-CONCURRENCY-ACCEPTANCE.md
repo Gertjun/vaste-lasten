@@ -1,6 +1,6 @@
 # Sync- en concurrencyacceptatie – Vaste Lasten
 
-**Status: NIET UITGEVOERD.** Dit protocol beschrijft de vereiste synthetische acceptatie van de PWA-Core v1.1.0-integratie in Vaste Lasten. Het is geen bewijs dat de tests al zijn uitgevoerd en geeft geen toestemming voor een productiegegevensmigratie.
+**Status: GEDEELTELIJK GEACCEPTEERD – PR #9 blijft draft.** De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
 
 ## Doel en architectuurgrenzen
 
@@ -97,6 +97,124 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 - PWA-Core v1.1.0-integratie: gemerged in Vaste Lasten PR #5.
 - Automatische codevalidatie van de integratie: 47 tests geslaagd op de gedocumenteerde code-/test-head.
 - Pages-workflow: eerder succesvol; dit bewijst niet dat de volledige live runtime handmatig is geaccepteerd.
-- S01–S07 en V01–V06 voor Vaste Lasten: **NOT RUN**.
-- Fysieke browser-/apparaatacceptatie: **NOT RUN**.
+- S01–S07 en V01–V06: zie de afzonderlijke automatische en fysieke bewijsregistraties hieronder; de volledige set is niet integraal afgevinkt.
+- Fysieke acceptatie op iPhone Safari en Windows 11 Edge: **PASS voor de expliciet beschreven praktijkscope**.
 - Productiegegevensmigratie: **NIET UITGEVOERD en afzonderlijk geblokkeerd**.
+
+
+---
+
+## Acceptatieplan conflictbeoordeling – PR #9 (3.1.1)
+
+**Status: VOORBEREID, NIET UITGEVOERD.** Deze aanvullende scenario's testen de nieuwe conflictregistratie en de gebruikerskeuze. Ze vervangen S01–S07 en V01–V06 niet; ze komen erbovenop.
+
+### Voorwaarden vóór een praktijktest
+
+1. Gebruik een tijdelijke preview van exact de PR-head die getest wordt. De normale Pages-site op `main` is hiervoor niet geschikt: die bevat niet noodzakelijk de PR-code.
+2. Gebruik een aparte, lege synthetische GitHub-datarepository met een token dat uitsluitend toegang heeft tot die repository. Gebruik nooit de bestaande productie-datarepository of het productietoken.
+3. Gebruik twee onafhankelijke browserprofielen/apparaten (A en B), met aparte lokale opslag en verschillende synthetische device-ID's. Beide clients melden aan als dezelfde testpersoon wanneer ze dezelfde persoonlijke kluis moeten delen.
+4. Maak uitsluitend herkenbare testrecords, bijvoorbeeld `TEST-HUUR`, `TEST-ENERGIE` en `TEST-PROFIEL`. Geen echte namen, bedragen, contracten of bankgegevens.
+5. Synchroniseer beide clients eerst volledig en controleer dat ze dezelfde uitgangsgegevens hebben. Controleer vóór CR01 dat op beide clients **nul** reviewtaken openstaan en dat geen voorbeeldrecord (`example: true`) in de actieve toestand of remote bestanden aanwezig is. Noteer de commit-SHA, preview-URL, synthetische repository en begin-SHA. Noteer nooit het token of wachtwoord.
+
+### Gelijk-tijdstempel betrouwbaar opwekken
+
+Een handmatige test met normale klokinstellingen kan toevallig twee verschillende milliseconden opleveren en bewijst dan geen gelijk-tijdconflict. Gebruik daarom alleen in de twee geïsoleerde testbrowserprofielen tijdelijk dezelfde testklok:
+
+```js
+window.__realDateNow = Date.now;
+Date.now = () => 1800000000000;
+```
+
+Herstel de klok na het maken van de concurrerende wijzigingen en vóór het beoordelen:
+
+```js
+Date.now = window.__realDateNow;
+delete window.__realDateNow;
+```
+
+Dit is uitsluitend een testhulpmiddel voor de synthetische preview. Gebruik het nooit in de normale app of op productiegegevens. Als de browser de console niet beschikbaar maakt, markeer de gelijk-tijdscenario's als BLOCKED; forceer geen test door de systeemtijd van het apparaat te wijzigen.
+
+### Verplichte praktijkscenario's
+
+| ID | Voorbereiding en handeling | Verwacht resultaat |
+|---|---|---|
+| CR01 – conflict zichtbaar | A en B openen dezelfde synthetische kluis. Zet in beide testprofielen dezelfde testklok. Zet beide offline. Wijzig op A hetzelfde testrecord van €100 naar €125 en op B van €100 naar €140. Herstel de klok; synchroniseer A en daarna B. | Er verschijnt een blijvende melding dat gegevens beoordeling nodig hebben. Beide alternatieven (€125 en €140) zijn zichtbaar. Geen van beide wordt als definitief beoordeeld zonder gebruikerskeuze. |
+| CR02 – keuze synchroniseert | Kies op B expliciet €140. Breng A online en synchroniseer opnieuw. Herstart daarna beide clients en synchroniseer nogmaals. | Op beide clients is €140 de gekozen waarde; het oorspronkelijke conflict blijft gesloten en verschijnt niet opnieuw. |
+| CR03 – offline en heropenen | Laat op A een conflict openstaan. Sluit/vergrendel de app, sluit de browser/PWA volledig en open opnieuw terwijl het apparaat nog offline is. | De reviewtaak en beide alternatieven zijn nog aanwezig. Na online gaan wordt de taak correct gesynchroniseerd. |
+| CR04 – verschillende keuzes tegelijk | Maak op beide clients hetzelfde conflict zichtbaar. Zet de testklok opnieuw gelijk. Kies op A alternatief 1 en op B alternatief 2 voordat een van beide de keuze van de ander heeft gesynchroniseerd. Synchroniseer daarna beide kanten om en om. | De keuzes worden niet stilzwijgend overschreven. Er verschijnt een nieuw reviewconflict waarin beide gemaakte keuzes opnieuw beoordeeld kunnen worden. |
+| CR05 – verwijderen tegenover bewerken | Herstel een schoon testrecord. A en B gaan offline met dezelfde testklok. A verwijdert het record; B wijzigt het. Synchroniseer achtereenvolgens. | Er verschijnt een reviewtaak met zowel de verwijdering als de bewerkte versie. De voorlopige uitkomst is op beide clients gelijk. De taak verdwijnt pas na een expliciete keuze. |
+| CR06 – meerdere gegevenstypen | Genereer via de geautomatiseerde fixtures conflicten voor betaalvinkje, categorie, verrekening, metadata, inkomen, profiel en scenario. Open de preview op beide clients en bekijk de taken. | Elk conflict is herkenbaar gelabeld, toont twee alternatieven en heeft een afzonderlijke keuze. Een keuze bij het ene conflict sluit geen ander conflict. |
+| CR07 – domeinscheiding | Maak één conflict in de gezamenlijke kluis en één in de persoonlijke kluis van testpersoon p1. Open op een p2-client alleen de gezamenlijke en eigen p2-kluis. | p1-conflicten en p1-alternatieven zijn niet zichtbaar op p2. Gezamenlijke conflicten zijn op beide personen zichtbaar. Geen conflictregister wordt naar een verkeerd remote bestand geschreven. |
+| CR08 – oude offline kopie | Laat B offline met een openstaande conflictmelding. Laat A het conflict beoordelen en synchroniseren. Breng daarna B online en laat B synchroniseren. | B heropent het reeds beoordeelde conflict niet en draait de beslissing niet terug. |
+| CR09 – herhaald synchroniseren | Synchroniseer A en B minimaal drie keer na een afgeronde keuze; herstart beide clients tussendoor. | Geen duplicaatmeldingen, geen terugkerend opgelost conflict, geen wijziging van de gekozen waarde en geen eindeloze sync-loop. |
+
+### Uitvoering en bewijs
+
+Voer CR01–CR09 uit op een exact vastgelegde PR-commit. Noteer per scenario:
+
+- resultaat: PASS / FAIL / NOT RUN / BLOCKED;
+- commit-SHA en preview-URL;
+- apparaat/browser en browserprofiel A/B;
+- synthetische device-ID's en domein (shared / personal-p1 / personal-p2);
+- begin-SHA en uiteindelijke remote SHA;
+- welke twee waarden zijn ingevoerd en welke keuze is gemaakt;
+- of de reviewtaak na herstart en herhaalde synchronisatie correct bleef;
+- verwijzing naar schermafbeeldingen of CI-log (zonder secrets of persoonsgegevens).
+
+Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve toestand tonen en de conflictadministratie geen onbedoelde open of opnieuw geopende taak bevat. Een foutmelding, ontbrekend scherm of onduidelijk resultaat is FAIL of BLOCKED, niet PASS.
+
+### Huidige uitvoerbaarheid
+
+- Geautomatiseerde synthetische regressietests in CI: afzonderlijk gerapporteerd bij PR #9.
+- Praktische test op twee apparaten: preview is bijgewerkt naar de gefixte PR-head `12e22a0d2a9f22408e912102cb3adaff31f1f6b9`; hervatten is **BLOCKED totdat beide profielen na herladen nul reviewtaken tonen**.
+- Synthetische remote repository `Gertjun/vaste-lasten-pr9-testdata`: aangemaakt en als privé geverifieerd. Het testtoken is beperkt tot deze repository en heeft een geldigheid van zeven dagen; noteer of deel het token nooit.
+- Productiegegevens, productie-token en bestaande kluizen: buiten scope.
+
+
+### Eerste praktijktest – bevinding 16 november 2026
+
+- Resultaat: **BLOCKED vóór CR01**. Beide geïsoleerde browserprofielen toonden 12 reviewtaken.
+- Inspectie van een taak liet zien dat beide alternatieven hetzelfde voorbeeldrecord `Hypotheek` bevatten met `example: true`.
+- Geen van de taken is beoordeeld; geen bestanden zijn handmatig verwijderd en er zijn geen productiegegevens gebruikt.
+- PR #9 bevat nu een regressiefix: voorbeeldrecords worden vóór samenvoegen gefilterd en eerder opgeslagen voorbeeldconflicten worden opgeschoond. De CI-regressietests zijn groen (63/63). Hervat de acceptatie pas met een nieuwe preview van de gefixte PR-head; de bestaande synthetische repository mag worden hergebruikt nadat de nieuwe code beide profielen heeft opgeschoond en nul reviewtaken toont.
+
+
+### Automatische acceptatiedekking – 16 november 2026 (PR #9)
+
+Laatste geverifieerde PR-head: `686a44ac1e9138836a56ceaf5604ae3df8989839`. GitHub Actions-runs **#469 en #470**: **89 tests geslaagd, 0 mislukt per run**. De onderstaande statussen beschrijven uitsluitend geautomatiseerde synthetische dekking; ze betekenen niet dat de volledige acceptatiecriteria hierboven zijn afgerond.
+
+| ID | Geautomatiseerde dekking | Status en beperking |
+|---|---|---|
+| S01 | Twee onafhankelijke kluizen lezen bewust dezelfde remote SHA; één upload krijgt HTTP 409 en retryt na opnieuw lezen. | **PASS** op de geïsoleerde mock GitHub Contents API. |
+| S02 | Twee verschillende records blijven behouden na retry, afzonderlijk getest voor shared, personal-p1 en personal-p2. | **PASS** voor de drie domeinen in de synthetische syncclienttest. |
+| S03 | Twee onafhankelijke clients wijzigen hetzelfde record met exact gelijke timestamps; beide uploadvolgordes doorlopen de echte syncclient-merge-route. | **PASS** in de synthetische remote-integratietest met mock GitHub Contents API; conflict-ID en canonieke alternatieven zijn in beide volgordes identiek. |
+| S04 | Client A synchroniseert een verwijdering; client B synchroniseert daarna een oudere offline bewerking via de echte syncclient-route. | **PASS** in de synthetische remote-integratietest; record blijft verwijderd en de nieuwere verwijdermarkering blijft behouden. |
+| S05 | Offline wijziging lokaal flushen, vault-instantie volledig sluiten/verwijderen, opnieuw openen en samenvoegen met een online wijziging van client B. | **PASS** in de synthetische Core-vault/syncintegratietest; geen fysieke browserherstart. |
+| S06 | Lokale persist/flush-fout en remote HTTP 500 tijdens upload; de lokale snapshot blijft behouden en dirty, de remote SHA/envelope blijven intact en een expliciete retry uploadt de volledige actuele snapshot. | **PARTIAL**: beide Core-foutpaden zijn synthetisch getest; zichtbaarheid van de fout in de volledige UI en fysieke netwerkuitval zijn niet getest. |
+| S07 | Twee onafhankelijke vault-clients registreren zich in dezelfde remote kluis; A verwijdert, B synchroniseert een oudere offline wijziging en bevestigt de verwijdering; A haalt de acknowledgement op en ruimt de tombstone op. | **PASS** in de synthetische remote-integratietest met echte Core-vaults/syncclient en mock GitHub Contents API; geen fysieke apparaten of live GitHub gebruikt. |
+
+Aanvullende domeincontroles:
+
+| ID | Geautomatiseerde dekking | Status |
+|---|---|---|
+| V01–V02 | Tests controleren dat p1/p2 alleen gedeeld plus de eigen persoonlijke kluis openen; biometrische en wachtwoordpaden zijn afzonderlijk getest. | **PARTIAL**: fysieke runtime en alle combinaties nog niet afgevinkt. |
+| V03 | Legacy-splitsing en payloadvalidatie voorkomen verboden velden in het verkeerde domein. | **PASS** voor de adaptertests. |
+| V04 | Registry en syncclient gebruiken aparte remote paden; de nieuwe concurrencytest controleert alle drie de paden. | **PASS** voor de synthetische tests. |
+| V05 | Verkeerd wachtwoord bij envelope-import, geldig versleutelde payload met verkeerd domein en beschadigde remote ciphertext worden fail-closed geweigerd; lokale gebruikersrecords en bekende remote SHA blijven behouden. | **PASS** voor de synthetische Core-import- en remote-syncroutes; geen fysieke apparaten getest. |
+| V06 | Twee clients synchroniseren ieder persoonlijk domein afzonderlijk; p1 en p2 blijven gescheiden. | **PASS** voor de synthetische domeinsync; fysieke apparaten niet getest. |
+
+**Nog niet volledig afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, alle Safari/iOS/iPadOS- en Windows Hello-combinaties en de volledige passkey-/herinstallatie-/herstelproeven. De uitgevoerde fysieke praktijktest hieronder dekt de gedeelde/persoonlijke kluisscheiding, synchronisatie, offline wijziging tegenover verwijdering en biometrisch vergrendelen/ontgrendelen. De handmatige CR03 offline-herstartvariant is niet afzonderlijk bewezen. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
+
+
+### Fysieke acceptatie – 16 november 2026
+
+**Resultaat: PASS voor de hieronder genoemde scope, op basis van de terugkoppeling van de gebruiker.** De uitvoering is niet onafhankelijk door CI of door deze documentatie geobserveerd.
+
+- Apparaten/browsers: iPhone met Safari en Windows 11 met Microsoft Edge.
+- Beide clients konden de bedoelde gedeelde en eigen persoonlijke kluizen openen; de persoonlijke kluis van de andere gebruiker bleef afgeschermd.
+- Synchronisatie tussen de twee fysieke apparaten verliep zonder gemelde fouten.
+- De offline wijziging op het ene apparaat tegenover de online verwijdering op het andere apparaat leidde niet tot het terugkomen van het verwijderde record na synchronisatie.
+- Vergrendelen en opnieuw biometrisch ontgrendelen werkte op beide apparaten.
+- De gebruiker rapporteerde na uitvoering van de volledige afgesproken praktijktest: “Alles is goed gegaan.”
+
+**Afbakening:** dit PASS-resultaat geldt voor de uitgevoerde praktijkscope en is geen bewijs dat elk scenario S01–S07, V01–V06 of CR01–CR09 fysiek is uitgevoerd. Gelijke-timestampconvergentie en tombstone-acknowledgement zijn aanvullend synthetisch via de echte Core-vault-/syncclientcode en een mock GitHub Contents API getest. De S06 UI-foutzichtbaarheid en fysieke netwerkuitval blijven PARTIAL. De volledige passkey-/herinstallatie-/wachtwoordherstelmatrix en productiegegevensmigratie zijn niet afgevinkt.

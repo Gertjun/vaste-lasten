@@ -19,7 +19,7 @@ jobs:
           node-version: 22
       - name: PWA-Core-modules controleren
         run: |
-          for file in js/core/*.js js/vastelasten-core.js js/bundle-biometric.js; do node --experimental-default-type=module --check "$file"; done
+          for file in js/core/*.js js/vastelasten-core.js js/bundle-biometric.js js/conflict-review.js; do node --experimental-default-type=module --check "$file"; done
       - name: Inline app-JavaScript controleren
         run: |
           node <<'NODE'

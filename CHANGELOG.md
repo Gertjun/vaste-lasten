@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.1.1 — 16 november 2026
+- Opgelost: fictieve voorbeeldlasten worden bij het koppelen en samenvoegen volledig uit de lokale toestand gefilterd en kunnen geen conflictbeoordelingen veroorzaken.
+- Verbeterd: eerder opgeslagen reviewtaken die uitsluitend uit voorbeeldlasten bestaan, worden veilig opgeschoond zonder echte conflicten te verwijderen.
+
+## 3.1.0 — 16 november 2026
+- Nieuw: gelijktijdige wijzigingen met dezelfde wijzigingstijd worden bewaard als reviewconflict; kies zelf welke versie leidend wordt.
+- Nieuw: openstaande conflicten en beslissingen worden per versleutelde kluis gesynchroniseerd en blijven behouden bij offline apparaten.
+- Verbeterd: voorlopige tie-breakers zijn deterministisch; gelijktijdige, verschillende gebruikerskeuzes leiden tot een nieuw reviewconflict.
+
 ## 3.0.0 — 14 november 2026
 - Nieuw: Vaste Lasten gebruikt PWA-Core v1.1.0 met drie onafhankelijke, versleutelde kluizen: gezamenlijk, persoonlijk voor persoon 1 en persoonlijk voor persoon 2.
 - Nieuw: gegevens worden op het apparaat versleuteld opgeslagen en per actieve kluis gesynchroniseerd. Offline ontgrendelen en werken blijft mogelijk.

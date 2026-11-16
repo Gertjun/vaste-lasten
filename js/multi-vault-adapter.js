@@ -47,14 +47,14 @@ export function splitLegacyState(state, me) {
   for (const key of ['meta', 'cats', 'inc', 'settle']) delete personal[key];
 
   return {
-    shared: { ...shared, schema: 1, domain: 'shared' },
-    [`personal-${me}`]: { ...personal, schema: 1, domain: `personal-${me}` },
+    shared: { ...shared, schema: 2, domain: 'shared' },
+    [`personal-${me}`]: { ...personal, schema: 2, domain: `personal-${me}` },
   };
 }
 
 export function validateDomainPayload(payload, id) {
   assertDomainId(id);
-  if (!isRecord(payload) || payload.schema !== 1 || payload.domain !== VAULT_DOMAINS[id].domain) {
+  if (!isRecord(payload) || ![1, 2].includes(payload.schema) || payload.domain !== VAULT_DOMAINS[id].domain) {
     throw new Error(`De inhoud van de kluis hoort niet bij het domein ${id} of heeft een onbekend schema.`);
   }
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
@@ -75,7 +75,7 @@ export function mergeDomainPayload(local, remote, id, mergeStore) {
   // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
-  return validateDomainPayload({ ...merged, schema: 1, domain: VAULT_DOMAINS[id].domain }, id);
+  return validateDomainPayload({ ...merged, schema: 2, domain: VAULT_DOMAINS[id].domain }, id);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
@@ -203,7 +203,7 @@ export async function openAndSyncDomain({
     settings: remoteSettings,
     merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
     migrate: (incoming) => validateDomainPayload(incoming, id),
-    schemaVersion: 1,
+    schemaVersion: 2,
   };
 
   try {
@@ -232,7 +232,8 @@ export async function openAndSyncDomain({
 
 /** Verhoogt alleen de minimumversie in het legacy gedeelde bestand; het envelope-formaat blijft legacy. */
 export async function raiseLegacyUpdateBarrier({
-  readLegacy, openLegacy, writeLegacy, minApp = '3.0.0', attempts = 4, compareVersions,
+  readLegacy, openLegacy, writeLegacy, minApp = '3.0.0',
+  currentAppVersion = minApp, attempts = 4, compareVersions,
 } = {}) {
   for (const name of ['readLegacy', 'openLegacy', 'writeLegacy', 'compareVersions']) {
     if (typeof ({ readLegacy, openLegacy, writeLegacy, compareVersions })[name] !== 'function') {
@@ -244,13 +245,17 @@ export async function raiseLegacyUpdateBarrier({
     if (!remote?.env) throw new Error('Het bestaande gezamenlijke legacybestand ontbreekt; migratie is afgebroken.');
     const data = await openLegacy(remote.env);
     if (!isRecord(data)) throw new Error('Het gezamenlijke legacybestand bevat geen geldig gegevensobject.');
-    if (data.minApp && compareVersions(data.minApp, minApp) > 0) {
+    if (data.minApp && compareVersions(data.minApp, currentAppVersion) > 0) {
       throw new Error(`De legacygegevens vereisen appversie ${data.minApp} of nieuwer.`);
     }
-    if (data.minApp && compareVersions(data.minApp, minApp) === 0) {
+    // Behoud een bestaande, hogere minimumversie; verlaag de barrière nooit.
+    const targetMinApp = data.minApp && compareVersions(data.minApp, minApp) > 0
+      ? data.minApp
+      : minApp;
+    if (data.minApp && compareVersions(data.minApp, targetMinApp) === 0) {
       return { alreadyMarked: true, sha: remote.sha };
     }
-    const next = { ...data, minApp };
+    const next = { ...data, minApp: targetMinApp };
     const sha = await writeLegacy(next, remote.sha);
     if (sha) return { alreadyMarked: false, sha };
   }

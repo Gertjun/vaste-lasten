@@ -39,6 +39,8 @@ test('legacy state is split without crossing shared and private fields', () => {
   };
   const split = splitLegacyState(legacy, 'p1');
   assert.equal(split.shared.domain, 'shared');
+  assert.equal(split.shared.schema, 2);
+  assert.equal(split['personal-p1'].schema, 2);
   assert.equal(split['personal-p1'].domain, 'personal-p1');
   assert.deepEqual(split.shared.items.map((x) => x.id), ['shared']);
   assert.deepEqual(split['personal-p1'].items.map((x) => x.id), ['private-p1']);
@@ -57,7 +59,10 @@ test('each Core payload is bound to exactly one domain', () => {
   assert.throws(() => validateDomainPayload({ ...shared, prof: { income: 1 } }, 'shared'), /buiten het toegestane gegevensdomein/);
   assert.throws(() => validateDomainPayload({ ...personal, cats: {} }, 'personal-p1'), /buiten het toegestane gegevensdomein/);
   assert.throws(() => mergeDomainPayload(shared, shared, 'shared', (a, b) => ({ ...mergeStore(a, b), scen: {} })), /buiten het toegestane gegevensdomein/);
-  assert.equal(mergeDomainPayload(shared, shared, 'shared', mergeStore).domain, 'shared');
+  const next = mergeDomainPayload(shared, shared, 'shared', mergeStore);
+  assert.equal(next.domain, 'shared');
+  assert.equal(next.schema, 2);
+  assert.equal(validateDomainPayload({ ...shared, schema: 2 }, 'shared').schema, 2);
 });
 
 test('real app merge defaults do not reintroduce empty shared metadata into a personal vault', () => {
@@ -344,6 +349,35 @@ test('legacy update barrier preserves encrypted store data and retries a conflic
   assert.equal(stored.minApp, '3.0.0');
   assert.deepEqual(stored.items, [{ id: 'shared' }]);
   assert.deepEqual(stored.inc, { p1: 1 });
+});
+
+test('legacy update barrier accepts data requiring 3.1.0 when current app is 3.1.1 and preserves that minimum', async () => {
+  let stored = { minApp: '3.1.0', items: [{ id: 'shared' }] };
+  let writes = 0;
+  const result = await raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: { marker: true }, sha: 'sha-current' }),
+    openLegacy: async () => structuredClone(stored),
+    writeLegacy: async (next) => { writes++; stored = next; return 'sha-written'; },
+    minApp: '3.0.0',
+    currentAppVersion: '3.1.1',
+    compareVersions: (a, b) => a.localeCompare(b, undefined, { numeric: true }),
+  });
+  assert.equal(result.alreadyMarked, true);
+  assert.equal(result.sha, 'sha-current');
+  assert.equal(writes, 0);
+  assert.equal(stored.minApp, '3.1.0');
+  assert.deepEqual(stored.items, [{ id: 'shared' }]);
+});
+
+test('legacy update barrier still rejects data requiring a newer app version', async () => {
+  await assert.rejects(raiseLegacyUpdateBarrier({
+    readLegacy: async () => ({ env: { marker: true }, sha: 'sha-current' }),
+    openLegacy: async () => ({ minApp: '3.2.0' }),
+    writeLegacy: async () => 'sha-written',
+    minApp: '3.0.0',
+    currentAppVersion: '3.1.1',
+    compareVersions: (a, b) => a.localeCompare(b, undefined, { numeric: true }),
+  }), /legacygegevens vereisen appversie 3.2.0/);
 });
 
 test('legacy update barrier refuses to proceed when the shared file is missing', async () => {

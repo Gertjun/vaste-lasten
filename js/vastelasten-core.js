@@ -20,7 +20,7 @@ const clone = (value) => structuredClone(value);
 const emptyPayload = (id) => ({
   items: [], del: {}, paid: {},
   ...(id === 'shared' ? { meta: null } : {}),
-  schema: 1, domain: VAULT_DOMAINS[id].domain,
+  schema: 2, domain: VAULT_DOMAINS[id].domain,
 });
 
 export function createVasteLastenCore({
@@ -164,7 +164,7 @@ export function createVasteLastenCore({
       settings: { ...settings, path: spec.path },
       merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore),
       migrate: (remote) => validateDomainPayload(remote, id),
-      schemaVersion: 1,
+      schemaVersion: 2,
     };
   }
 

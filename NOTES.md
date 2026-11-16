@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 16 november 2026 · versie **3.0.0 geïntegreerd** (PR #5 gemerged; documentatiestatus bijgewerkt na PR #6).
+Laatst bijgewerkt: 16 november 2026 · versie **3.1.1 in voorbereiding** (bugfix in PR #9).
 
 ---
 
@@ -30,18 +30,19 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde code-/test-head `c59f24ae9df151a427b92b7e6173f3692a00680b`: CI **#300 en #301**, 47 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, exacte releasepin (18 bestanden) en service-worker-precache (29 entries) zijn geslaagd. De passkey-herkoppeling accepteert nu de eigen gedeelde en persoonlijke Core-passkeys en weigert de persoonlijke passkey van de andere gebruiker. `backup/` is uitgesloten van Pages-publicatie. B07 is RETIRED en geen acceptatiegate meer. De vervangende sync-/concurrencytests S01–S07 zijn uitgewerkt voor Vaste Lasten in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`; uitvoering met uitsluitend synthetische data staat nog open.
+Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df8989839`: CI **#469 en #470**, elk 89 tests geslaagd, 0 mislukt. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. S01/S02 en nu ook S03/S04/S07 zijn via de echte Core-vault-/syncclientcode met twee onafhankelijke synthetische clients en een mock GitHub Contents API getest; S03 controleert beide uploadvolgordes, S04 een oudere offline bewerking tegenover een nieuwere verwijdering en S07 device-acknowledgement plus tombstone-opruiming. V05 blijft PASS; S06 blijft PARTIAL (UI-foutzichtbaarheid en fysieke netwerkuitval niet getest). De fysieke acceptatietest op iPhone Safari en Windows 11 Edge is op 16 november 2026 door de gebruiker als geslaagd gemeld voor synchronisatie, scheiding van gedeelde/persoonlijke kluizen, offline wijziging tegenover verwijdering en biometrisch vergrendelen/ontgrendelen. Dit is geen volledige afvinking van alle S01–S07/V01–V06/CR01–CR09-scenario's. Productiegegevensmigratie is NIET UITGEVOERD en blijft afzonderlijk geblokkeerd.
 
 ## 3. Open punten
 
-1. Browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime, waaronder één biometrische actie voor twee actieve kluizen, wachtwoordmigratie, herstel en twee apparaten.
-2. S01–S07 sync-/concurrencyacceptatie met twee onafhankelijke synthetische clients, inclusief gedeelde en persoonlijke domeinen.
-3. Fysieke browser-/apparaatacceptatie van de echte WebAuthn PRF-integratie; de statische diff-/beveiligingsreview is uitgevoerd en een race bij vergrendelen is opgelost.
-4. Geïsoleerde synthetische acceptatie uitvoeren vóór enige echte data-cutover. De integratie is al gemerged en de Pages-deploymentworkflow is geslaagd; een echte productiegegevensmigratie blijft afzonderlijk geblokkeerd. Geen test gebruikt de echte privé-datarepository, tokens, passkeys of productiegegevens.
+1. Aanvullende browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime: wachtwoordmigratie, herstel, herinstallatie/herkoppeling en de resterende passkey-/PRF-combinaties. De fysieke praktijkscope op iPhone Safari en Windows 11 Edge is op 16 november 2026 door de gebruiker als geslaagd gemeld.
+2. De resterende S01–S07- en V01–V06-acceptatiepunten integraal afvinken; S06 blijft PARTIAL voor UI-foutzichtbaarheid en fysieke netwerkuitval.
+3. Geïsoleerde synthetische acceptatie afronden vóór enige echte data-cutover. De integratie is al gemerged en de Pages-deploymentworkflow is geslaagd; een echte productiegegevensmigratie blijft afzonderlijk geblokkeerd. Geen test gebruikt de echte privé-datarepository, tokens, passkeys of productiegegevens.
 
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. V05 (verkeerd wachtwoord, verkeerd domein en beschadigde remote ciphertext) en S06 (remote HTTP 500 en expliciete retry) toegevoegd. Vervolgens S03, S04 en S07 uitgebreid van losse merge-/ledgerproeven naar de echte Core-vault-/syncclientroute met twee onafhankelijke synthetische clients en mock GitHub Contents API. S03 slaagt in beide uploadvolgordes met identieke conflict-ID; S04 voorkomt herleving van een ouder offline record; S07 controleert device-acknowledgement en tombstone-opruiming. CI #467 op head `7a9f6766`: 89/89 geslaagd. S03/S04/S07 en V05 zijn PASS voor synthetische tests; S06 blijft PARTIAL omdat UI-foutzichtbaarheid en fysieke netwerkuitval niet zijn getest. Geen productiegegevens of productietokens gebruikt.
 
 - **14 nov 2026:**
   - PWA-Core v1.1.0 lokaal vastgepind en geprecachet.
@@ -60,3 +61,6 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 - Extra reviewronde: handmatig vergrendelen wacht nu op alle reeds gestarte `persistState`-bewerkingen. Een niet-herstelde opslagfout blokkeert ook `flushLocal()` en `lock()`; een latere volledige succesvolle opslag heft de fout op. Twee regressietests toegevoegd; CI #300/#301: 47/47 geslaagd.
 - Handmatige acceptatiechecklist toegevoegd aan `docs/PWA-CORE-MIGRATION.md`; deze is nog niet uitgevoerd. De migratie staat inmiddels op `main` en de Pages-deploymentworkflow is geslaagd, maar fysieke acceptatie en een geïsoleerde testdeploy moeten nog plaatsvinden.
+
+
+- **16 nov 2026 – fysieke acceptatie PR #9:** gebruiker heeft de afgesproken praktijktest op iPhone Safari en Windows 11 Edge uitgevoerd en teruggekoppeld dat alles goed is gegaan. Vastgelegd als PASS voor de uitgevoerde scope: gedeelde en eigen persoonlijke kluis toegankelijk, persoonlijke kluis van de andere gebruiker afgeschermd, synchronisatie tussen twee fysieke apparaten, offline wijziging tegenover online verwijdering zonder herleving van het verwijderde record, en biometrisch vergrendelen/ontgrendelen op beide apparaten. Dit is gebruikersgerapporteerd bewijs, geen CI-waarneming en geen volledige afvinking van alle S01–S07/V01–V06/CR01–CR09-scenario's. PR #9 blijft open/draft/ongemerged; productie blijft onaangeroerd.
