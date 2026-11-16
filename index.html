@@ -2198,7 +2198,7 @@ function renderSetState(){
   let t='',s='';
   if(IS_PWA){
     if(coreMode){
-      if(!cfg){t='Core-koppeling ontbreekt';s='warn';}
+      if(!cfg){t=coreProfile?.localOnly?'Lokale kluis actief':'Core-koppeling ontbreekt';s=coreProfile?.localOnly?'ok':'warn';}
       else if(!coreReady){t='Core vergrendeld';s='warn';}
       else if(syncError||corePersistError){t='Niet gelukt';s='warn';}
       else {t='PWA-Core actief';s='ok';}
@@ -2232,13 +2232,14 @@ $('themePanel').addEventListener('change',e=>{
   saveUi(); applyTheme(); themeState();
 });
 function coreEmptySetupHtml(){
-  if(!cfg||coreMode) return '';
-  return '<div class="hist" id="coreEmptySetup"><h4>Opnieuw beginnen met lege kluizen</h4>'+
-    '<p class="note">Dit maakt een volledig nieuwe, lege PWA-Core-start. Op dit apparaat worden de gedeelde kluis en jouw persoonlijke kluis aangemaakt of wordt aangesloten op een bestaande lege kluis. Op het tweede apparaat gebruik je hetzelfde gezamenlijke wachtwoord en het nieuwe persoonlijke wachtwoord van die gebruiker. De oude gegevens worden niet geïmporteerd of verwijderd. Bestaande Core-kluizen met gegevens worden geweigerd en nooit overschreven.</p>'+
+  if(coreMode) return '';
+  const localOnly=!cfg;
+  return '<div class="hist" id="coreEmptySetup"><h4>'+(localOnly?'Nieuwe lokale kluis aanmaken':'Opnieuw beginnen met lege kluizen')+'</h4>'+
+    '<p class="note">'+(localOnly?'Je kunt Vaste Lasten ook zonder GitHub Sync starten. Er worden twee afzonderlijk versleutelde Core-kluizen op dit apparaat aangemaakt: gezamenlijk en persoonlijk. Deze gegevens zijn niet beschikbaar op je andere apparaten zolang je geen synchronisatie instelt.':'Dit maakt een volledig nieuwe, lege PWA-Core-start. De oude gegevens worden niet geïmporteerd of verwijderd. Bestaande Core-kluizen met gegevens worden geweigerd en nooit overschreven.')+'</p>'+
     '<div class="two">'+fieldHtml('core-empty-s','Nieuw gezamenlijk Core-wachtwoord','type="password" autocomplete="new-password"')+
     fieldHtml('core-empty-e','Nieuw persoonlijk Core-wachtwoord','type="password" autocomplete="new-password"')+'</div>'+
-    '<div class="hint">Gebruik op beide apparaten hetzelfde gezamenlijke wachtwoord. Kies per persoon een eigen persoonlijk wachtwoord. Gebruik voor beide minstens 12 tekens, bijvoorbeeld een wachtzin van vier losse woorden. Deel of plak wachtwoorden niet in ChatGPT.</div>'+
-    '<div class="err" id="core-empty-err"></div><div class="btns"><button class="btn primary" id="core-empty-setup">Lege kluizen aanmaken / aansluiten</button></div></div>';
+    '<div class="hint">Gebruik minstens 12 tekens per wachtwoord. Het gezamenlijke wachtwoord is hetzelfde voor beide gebruikers; het persoonlijke wachtwoord is alleen voor jou. Deel of plak wachtwoorden niet in ChatGPT.</div>'+
+    '<div class="err" id="core-empty-err"></div><div class="btns"><button class="btn primary" id="core-empty-setup">'+(localOnly?'Nieuwe lokale kluis aanmaken':'Lege kluizen aanmaken / aansluiten')+'</button></div></div>';
 }
 function coreMigrationHtml(){
   if(!cfg||coreMode) return '';
@@ -2254,7 +2255,13 @@ function renderSyncPanel(){
   const h='<h4>Synchroniseren via GitHub</h4>';
   if(!IS_PWA){el.innerHTML=h+'<div class="note">Synchroniseren tussen apparaten en met je partner werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
   if(coreMode){
-    if(!cfg){el.innerHTML=h+'<div class="err">De Core-kluizen zijn lokaal aanwezig, maar de GitHub-koppeling ontbreekt. Herstel eerst de koppeling met dezelfde privé-repository.</div>';renderCoreGate();return;}
+    if(!cfg){
+      if(coreProfile?.localOnly){
+        el.innerHTML=h+'<div class="ok-line">Lokale PWA-Core-kluis · actief als <b>'+esc(nameOf(coreProfile.me))+'</b>.</div><div class="note">Je gegevens zijn versleuteld op dit apparaat opgeslagen. Zonder GitHub Sync worden wijzigingen niet naar andere apparaten gekopieerd.</div><div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div><div class="btns"><button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>';
+        renderCoreGate(); return;
+      }
+      el.innerHTML=h+'<div class="err">De Core-kluizen zijn lokaal aanwezig, maar de GitHub-koppeling ontbreekt. Herstel eerst de koppeling met dezelfde privé-repository.</div>';renderCoreGate();return;
+    }
     if(!coreReady){
       el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 is actief. De kluizen zijn vergrendeld.</div><div class="note">Ontgrendel beide kluizen om je gegevens te openen. De gezamenlijke kluis en jouw persoonlijke kluis blijven onafhankelijk versleuteld.</div>';
       renderCoreGate(); return;
@@ -2546,40 +2553,45 @@ async function migrateToCore(){
 }
 async function initializeEmptyCore(){
   if(!IS_PWA) throw new SyncError('De lege start werkt alleen in de geïnstalleerde PWA.');
-  if(!cfg) throw new SyncError('Koppel eerst de juiste privé-repository.');
-  if(!navigator.onLine) throw new SyncError('De eerste lege start vereist internet om de drie kluizen op GitHub te bevestigen.');
   const sharedPassword=$('core-empty-s')?.value||'';
   const personalPassword=$('core-empty-e')?.value||'';
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het nieuwe gezamenlijke en persoonlijke wachtwoord in.');
   await ensureCoreRuntime();
-  const result=await coreRuntime.initializeEmpty({
-    me:cfg.me,
-    passwords:{shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword},
-    settings:await coreSettings(),
-  });
-  if(!result.complete){
-    const domain=result.failedDomain||'een van de kluizen';
-    throw new SyncError('De lege start is gestopt bij '+domain+'. Eerder bevestigde lege kluizen zijn behouden. Controleer de melding en probeer opnieuw; er is niets uit de oude opslag verwijderd. '+(result.error?.message||''));
+  const me=cfg?.me||ui.me||'p1';
+  const passwords={shared:sharedPassword,[`personal-${me}`]:personalPassword};
+  if(cfg){
+    if(!navigator.onLine) throw new SyncError('Een nieuwe gesynchroniseerde kluis vereist internet. Kies anders voor een lokale start zonder GitHub Sync.');
+    const result=await coreRuntime.initializeEmpty({me,passwords,settings:await coreSettings()});
+    if(!result.complete) throw new SyncError('De lege start is gestopt bij '+(result.failedDomain||'een van de kluizen')+'. Eerder bevestigde lege kluizen zijn behouden. '+(result.error?.message||''));
+    state=result.state;
+    coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me,coreRelease:'v1.1.0',emptySetup:true};
+    coreConnected=true; lastSync=new Date();
+    toast('De twee actieve lege Core-kluizen zijn op GitHub bevestigd. Herhaal dit op het andere apparaat.');
+  }else{
+    const result=await coreRuntime.initializeEmptyLocal({me,passwords});
+    if(!result.complete) throw new SyncError('De lokale lege start is gestopt bij '+(result.failedDomain||'een van de kluizen')+'. Eerder aangemaakte lege kluizen zijn behouden. '+(result.error?.message||''));
+    state=result.state;
+    coreProfile={version:1,me,coreRelease:'v1.1.0',localOnly:true,emptySetup:true};
+    coreConnected=false; lastSync=null;
+    toast('Je nieuwe lokale kluis is aangemaakt. Zonder GitHub Sync blijven de gegevens op dit apparaat.');
   }
-  state=result.state;
   localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0',emptySetup:true};
   localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
-  coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
+  coreMode=true; coreReady=true; corePersistError=''; syncError='';
   if(timer){clearTimeout(timer);timer=null;}
   render(); renderSyncPanel(); pillIdle();
-  toast('De twee actieve lege Core-kluizen zijn op GitHub bevestigd. Herhaal dit op het andere apparaat.');
 }
 async function unlockCoreLocal(){
   if(!coreRuntime) await ensureCoreRuntime();
   const sharedPassword=$('core-u-s')?.value||'';
   const personalPassword=$('core-u-e')?.value||'';
-  const passwords={shared:sharedPassword,[`personal-${cfg.me}`]:personalPassword};
+  const me=cfg?.me||coreProfile?.me||ui.me||'p1';
+  const passwords={shared:sharedPassword,[`personal-${me}`]:personalPassword};
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
   syncError='';
   try{
-    let next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
-    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    let next=await coreRuntime.unlockLocal({me,passwords});
+    if(!coreProfile?.localOnly) next=await mergeStagedLegacyState(next,{connectIfOnline:false});
     state=next; coreReady=true; coreConnected=false; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
@@ -2697,19 +2709,18 @@ function renderCoreGate(){
     gate.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg,#fff);display:grid;place-items:center;padding:24px;overflow:auto;';
     document.body.appendChild(gate);
   }
-  const passkeyEnrolled=!!(coreRuntime&&cfg&&cfg.me&&coreRuntime.isBiometricEnrolled(cfg.me));
+  const me=cfg?.me||coreProfile?.me||ui.me||'p1';
+  const passkeyEnrolled=!!(coreRuntime&&coreRuntime.isBiometricEnrolled(me));
   const biometricControls=passkeyEnrolled
     ?'<div class="field"><span class="flabel">Of ontgrendel beide kluizen met één Face ID / passkey</span><div class="btns"><button class="btn primary" id="core-biometric">Ontgrendel beide kluizen</button></div></div>':'';
   gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px"><h2>Vaste Lasten is vergrendeld</h2>'+
-    (cfg?'<p class="note">Je gegevens staan in twee afzonderlijke, versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.</p>'+
+    ((cfg||coreProfile?.localOnly)?'<p class="note">Je gegevens staan in twee afzonderlijk versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.'+(coreProfile?.localOnly?' Deze kluizen zijn alleen op dit apparaat beschikbaar.':'')+'</p>'+
       '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
-      '<div class="err" id="core-gate-err"></div><div class="btns"><button class="btn primary" id="core-unlock">Online ontgrendelen</button><button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
+      '<div class="err" id="core-gate-err"></div><div class="btns">'+(cfg?'<button class="btn primary" id="core-unlock">Online ontgrendelen</button>':'')+'<button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
       biometricControls+
-      '<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>'+
-      '<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p>'+
-      '<div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div>'+
-      '<div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>'
+      (cfg?'<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>':'<p class="hint">Deze lokale kluis synchroniseert niet met andere apparaten. Je kunt later GitHub Sync instellen.</p>')+
+      (cfg?'<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p><div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div><div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>':'')
       :'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>')+
     '</section>';
   document.querySelectorAll('body > *').forEach(node=>{if(node!==gate)node.inert=true;});
