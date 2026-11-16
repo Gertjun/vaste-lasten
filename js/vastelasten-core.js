@@ -262,9 +262,10 @@ export function createVasteLastenCore({
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
     settings = resolved;
+    const ids = activeIds();
     const results = {};
     try {
-      for (const id of activeIds()) {
+      for (const id of ids) {
         results[id] = await initializeEmptyDomain({
           id,
           password: passwords?.[id],
@@ -279,7 +280,7 @@ export function createVasteLastenCore({
       try { await release(); } catch (releaseError) {
         throw new AggregateError([error, releaseError], 'De lege start is gestopt en de sessie kon niet veilig worden vrijgegeven.');
       }
-      return { complete: false, results, failedDomain: activeIdsFor(me)[Object.keys(results).length], error };
+      return { complete: false, results, failedDomain: ids[Object.keys(results).length], error };
     }
   }
 
