@@ -248,8 +248,8 @@ test('category review UI renders both the renamed and deleted alternatives with 
   render();
   assert.equal(host.hidden,false);
   assert.match(host.innerHTML,/Vervoer CR06? gewijzigd|Vervoer CR05 gewijzigd/);
-  assert.match(host.innerHTML,/"del": true/);
-  assert.match(host.innerHTML,/"del": false/);
+  assert.match(host.innerHTML,/&quot;del&quot;: true/);
+  assert.match(host.innerHTML,/&quot;del&quot;: false/);
   assert.equal((host.innerHTML.match(/data-conflict-choice=/g)||[]).length,2);
   assert.match(host.innerHTML,/Kies deze versie/);
 });
