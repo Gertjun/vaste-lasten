@@ -196,6 +196,11 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       staleB.samen.items.push({ ...selectedB.value, u: 1700 });
     }
     await core.persistState(staleB);
+    const localB = core.getRegistry().shared.vault.getData();
+    assert.equal(localB.__conflicts.decisions[task.id]?.length, 1, 'persistState moet B\'s beslissing duurzaam bewaren');
+    assert.equal(core.getRegistry().shared.vault.getSyncMeta().dirty, true, 'B\'s beslissing moet de kluis dirty maken');
+    const publishedA = await clientAVault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
+    assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
     const resultB = await core.sync();
     const afterB = pending(resultB.state.samen.__conflicts);
     assert.equal(afterB.length, 1);
