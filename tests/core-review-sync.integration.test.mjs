@@ -65,7 +65,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
   const remoteFiles = new Map();
   let remoteRevision = 0;
   let core;
-  let clientAVault;
+  let coreA;
   let seedVaults = [];
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(input);
@@ -107,8 +107,11 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
         try { await entry.vault.dispose(); } catch { /* cleanup continues */ }
       }
     }
-    if (clientAVault) {
-      try { await clientAVault.dispose(); } catch { /* cleanup continues */ }
+    if (coreA) {
+      try { await coreA.lock(); } catch { /* cleanup continues */ }
+      for (const entry of Object.values(coreA.getRegistry())) {
+        try { await entry.vault.dispose(); } catch { /* cleanup continues */ }
+      }
     }
     for (const vault of seedVaults) {
       try { await vault.dispose(); } catch { /* cleanup continues */ }
@@ -168,11 +171,27 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     });
     const staleB = core.getState();
 
-    // A opent dezelfde gepubliceerde kluis, kiest alternatief 1 en publiceert dat eerst.
-    const currentRemote = remoteFiles.get('pwa-core-v1/samen.json');
-    clientAVault = createVault({ storagePrefix: 'pr9-client-a-shared', kdfIterations: 1000, storage: storage() });
-    await clientAVault.importEnvelope(structuredClone(currentRemote.envelope), 'synthetic-password');
-    clientAVault.setSyncMeta({ sha: currentRemote.sha, dirty: false });
+    // A en B zijn twee afzonderlijke Core-instanties met eigen lokale opslag.
+    coreA = createVasteLastenCore({
+      storage: storage(),
+      kdfIterations: 1000,
+      mergeStore,
+      factories: {
+        createSessionLock: () => ({ acquireSessionLock: async () => ({ release: async () => {} }) }),
+        createBiometric: () => ({
+          isEnrolled: () => false,
+          async unlock() { throw new Error('not used in this test'); },
+          async enroll() {},
+          async enrollExisting() {},
+        }),
+      },
+    });
+    await coreA.unlock({
+      me: 'p1',
+      passwords: { shared: 'synthetic-password', 'personal-p1': 'synthetic-password' },
+      settings: connection,
+    });
+    const staleA = coreA.getState();
     const choose = (snapshot, index, at) => {
       const next = structuredClone(snapshot);
       for (const currentTask of [task, categoryTask]) {
@@ -189,15 +208,8 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       }
       return next;
     };
-    await clientAVault.setData(choose(clientAVault.getData(), 0, 1600));
-    const syncA = createSync({ vault: clientAVault, appName: 'Vaste Lasten test A' });
-    const optionsA = {
-      settings: { ...connection, branch: 'main', path: 'pwa-core-v1/samen.json' },
-      schemaVersion: 2,
-      migrate: value => validateDomainPayload(value, 'shared'),
-      merge: (local, remote) => mergeDomainPayload(local, remote, 'shared', mergeStore),
-    };
-    await syncA.syncNow(optionsA);
+    await coreA.persistState(choose(staleA, 0, 1600));
+    await coreA.sync();
 
     // B maakt daarna zijn afwijkende keuze vanuit de verouderde UI-snapshot.
     for (const currentTask of [task, categoryTask]) {
@@ -217,7 +229,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.equal(localB.__conflicts.decisions[task.id]?.length, 1, 'persistState moet B\'s beslissing duurzaam bewaren');
     assert.equal(canon(localB.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[1]), 'B moet werkelijk alternatief 2 hebben vastgelegd');
     assert.equal(core.getRegistry().shared.vault.getSyncMeta().dirty, true, 'B\'s beslissing moet de kluis dirty maken');
-    const publishedA = await clientAVault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
+    const publishedA = await coreA.getRegistry().shared.vault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
     assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
     assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
     assert.ok(localB.__conflicts.records[task.id], 'B moet de oorspronkelijke conflictregistratie behouden');
@@ -258,9 +270,9 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     );
 
     // A en B halen elkaars vervolgtaak op en eindigen met dezelfde review-identiteit.
-    await syncA.syncNow(optionsA);
+    await coreA.sync();
     const resultFinal = await core.sync();
-    const tasksA = pending(clientAVault.getData().__conflicts);
+    const tasksA = pending(coreA.getRegistry().shared.vault.getData().__conflicts);
     const tasksB = pending(resultFinal.state.samen.__conflicts);
     assert.equal(tasksA.length, 2);
     assert.equal(tasksB.length, 2);
