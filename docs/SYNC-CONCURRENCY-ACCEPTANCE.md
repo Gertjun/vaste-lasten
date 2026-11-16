@@ -104,7 +104,7 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 
 ---
 
-## Acceptatieplan conflictbeoordeling – PR #9 (3.1.0)
+## Acceptatieplan conflictbeoordeling – PR #9 (3.1.1)
 
 **Status: VOORBEREID, NIET UITGEVOERD.** Deze aanvullende scenario's testen de nieuwe conflictregistratie en de gebruikerskeuze. Ze vervangen S01–S07 en V01–V06 niet; ze komen erbovenop.
 
@@ -166,8 +166,8 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 ### Huidige uitvoerbaarheid
 
 - Geautomatiseerde synthetische regressietests in CI: afzonderlijk gerapporteerd bij PR #9.
-- Praktische test op twee apparaten: **BLOCKED totdat een geïsoleerde preview van de PR-head beschikbaar is**.
-- Synthetische remote repository en testtoken: nog aan te maken door de tester, uitsluitend voor de acceptatie.
+- Praktische test op twee apparaten: **BLOCKED totdat de preview is bijgewerkt naar de gefixte PR-head en beide profielen schoon zijn gecontroleerd**.
+- Synthetische remote repository `Gertjun/vaste-lasten-pr9-testdata`: aangemaakt en als privé geverifieerd. Het testtoken is beperkt tot deze repository en heeft een geldigheid van zeven dagen; noteer of deel het token nooit.
 - Productiegegevens, productie-token en bestaande kluizen: buiten scope.
 
 
@@ -176,4 +176,4 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 - Resultaat: **BLOCKED vóór CR01**. Beide geïsoleerde browserprofielen toonden 12 reviewtaken.
 - Inspectie van een taak liet zien dat beide alternatieven hetzelfde voorbeeldrecord `Hypotheek` bevatten met `example: true`.
 - Geen van de taken is beoordeeld; geen bestanden zijn handmatig verwijderd en er zijn geen productiegegevens gebruikt.
-- PR #9 krijgt een regressiefix: voorbeeldrecords worden vóór samenvoegen gefilterd en eerder opgeslagen voorbeeldconflicten worden opgeschoond. Hervat de acceptatie pas met een nieuwe preview van de gefixte PR-head en een schone synthetische repository.
+- PR #9 bevat nu een regressiefix: voorbeeldrecords worden vóór samenvoegen gefilterd en eerder opgeslagen voorbeeldconflicten worden opgeschoond. De CI-regressietests zijn groen (63/63). Hervat de acceptatie pas met een nieuwe preview van de gefixte PR-head; de bestaande synthetische repository mag worden hergebruikt nadat de nieuwe code beide profielen heeft opgeschoond en nul reviewtaken toont.
