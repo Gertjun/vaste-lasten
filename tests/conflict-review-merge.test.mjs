@@ -107,7 +107,7 @@ test('example records are removed before merging and never create review tasks',
   b.items.push({id:'rent',name:'Test huur',amount:125,u:500});
   const result=merge(a,b);
   assert.deepEqual(JSON.parse(JSON.stringify(result.items.map(item=>item.id))),['rent']);
-  assert.deepEqual(pending(result).map(item=>item.path),['items:rent']);
+  assert.deepEqual(JSON.parse(JSON.stringify(pending(result).map(item=>item.path))),['items:rent']);
 });
 
 test('previously persisted conflicts containing only example records are discarded', () => {
