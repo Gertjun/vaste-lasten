@@ -1,4 +1,5 @@
 // App-adapter voor de drie onafhankelijke Vaste Lasten-domeinen.
+import * as coreCrypto from './core/crypto.js';
 // De Core-factories worden geïnjecteerd zodat de domeinregels afzonderlijk testbaar blijven.
 
 export const VAULT_DOMAINS = Object.freeze({
@@ -259,8 +260,19 @@ export function assertEmptyDomainPayload(payload, id) {
  * Maakt een lege kluis aan of sluit aan op een bestaande lege remote kluis.
  * De legacybestanden en legacy-state worden bewust nergens gelezen.
  */
+async function decryptEnvelopeWithPassword(vault, envelope, password) {
+  vault.validateEnvelope(envelope);
+  const kek = await coreCrypto.passwordKey(password, coreCrypto.b64ToBytes(envelope.kdf.salt), envelope.kdf.iterations);
+  let key;
+  try { key = await coreCrypto.unwrapDataKey(envelope.wrappedKey, kek); }
+  catch { throw new Error('Het wachtwoord voor de bestaande Core-kluis klopt niet. Er is niets gewijzigd.'); }
+  try { return await coreCrypto.decryptJSON(envelope.payload, key); }
+  catch { throw new Error('De bestaande Core-kluis kan niet veilig worden ontsleuteld. Er is niets gewijzigd.'); }
+}
+
 export async function initializeEmptyDomain({
   id, password, registry, settings, createClient, mergeStore,
+  openEnvelope = decryptEnvelopeWithPassword,
 } = {}) {
   assertDomainId(id);
   if (typeof password !== 'string' || !password) throw new Error(`Het nieuwe wachtwoord voor ${id} ontbreekt.`);
@@ -287,6 +299,8 @@ export async function initializeEmptyDomain({
       void remoteData;
     }
   } else if (remote) {
+    // Inspecteer vóór import: een bestaande niet-lege kluis komt niet in lokale opslag terecht.
+    assertEmptyDomainPayload(await openEnvelope(entry.vault, remote.envelope, password), id);
     await entry.vault.importEnvelope(remote.envelope, password);
     assertEmptyDomainPayload(entry.vault.getData(), id);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
