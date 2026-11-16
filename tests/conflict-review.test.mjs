@@ -35,7 +35,7 @@ test('pending conflicts survive repeated merges and remain visible in determinis
   const first = conflict({ amount: 100 }, { amount: 200 });
   const state = { version: 1, pending: { [first.id]: first }, decisions: {} };
   const merged = review.mergeConflictState(state, state);
-  assert.deepEqual(JSON.parse(JSON.stringify(review.pendingConflicts(merged))), [first]);
+  assert.deepEqual(JSON.parse(JSON.stringify(review.pendingConflicts(merged))), JSON.parse(JSON.stringify([first])));
 });
 
 test('one device decision suppresses a stale pending copy after later synchronization', () => {
