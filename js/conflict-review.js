@@ -50,9 +50,13 @@
     const a = normalize(first), b = normalize(second);
     const out = empty();
     for (const source of [a, b]) {
+      for (const [id, conflict] of Object.entries(source.records)) {
+        if (!out.records[id] || conflict.createdAt < out.records[id].createdAt) out.records[id] = clone(conflict);
+      }
       for (const [id, conflict] of Object.entries(source.pending)) {
         const current = out.pending[id];
         if (!current || conflict.createdAt < current.createdAt) out.pending[id] = clone(conflict);
+        out.records[id] = clone(conflict);
       }
       for (const [id, decisions] of Object.entries(source.decisions)) {
         const byId = new Map((out.decisions[id] || []).map((d) => [d.id, d]));
@@ -72,7 +76,7 @@
       if (!original) continue;
       const alternatives = [...selected.values()].sort((x, y) => compare(canonical(x), canonical(y)));
       const nextId = conflictId(original.domain, original.path, 'concurrent-review', alternatives);
-      out.pending[nextId] = {
+      const concurrent = {
         id: nextId,
         domain: original.domain,
         path: original.path,
@@ -81,6 +85,8 @@
         createdAt: Math.max(...decisions.map((d) => Number(d.at) || 0)),
         alternatives: clone(alternatives),
       };
+      out.records[nextId] = clone(concurrent);
+      out.pending[nextId] = clone(concurrent);
       delete out.pending[id];
     }
 
