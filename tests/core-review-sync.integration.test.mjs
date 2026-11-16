@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { createVault } from '../js/core/vault-factory.js';
 import { createSync } from '../js/core/sync-factory.js';
+import { encryptJSON } from '../js/core/crypto.js';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { mergeDomainPayload, validateDomainPayload } from '../js/multi-vault-adapter.js';
 
@@ -543,6 +544,227 @@ test('S05 an offline edit survives a full local restart and merges with another 
       if (!vault) continue;
       try { if (vault.isUnlocked()) vault.lock(); } catch { /* cleanup continues */ }
       try { await vault.dispose(); } catch { /* cleanup continues */ }
+    }
+    globalThis.fetch = previousFetch;
+  }
+});
+
+
+test('V05 wrong-key import is rejected without replacing the current local vault', async () => {
+  const seed = createVault({ storagePrefix: 'v05-wrong-key-seed', kdfIterations: 1000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-wrong-key-local', kdfIterations: 1000, storage: storage() });
+  try {
+    await seed.create('remote-synthetic-password', base());
+    await seed.flush();
+    const remoteEnvelope = structuredClone(seed.getEnvelope());
+
+    await local.create('local-synthetic-password', {
+      ...base(), items: [{ id: 'local-kept', name: 'Lokale kluis blijft behouden', amount: 77, u: 1800000000100 }],
+    });
+    await local.flush();
+    const beforeEnvelope = structuredClone(local.getEnvelope());
+    const beforeData = structuredClone(local.getData());
+    const beforeRevision = local.getRevision();
+
+    await assert.rejects(
+      local.importEnvelope(remoteEnvelope, 'deliberately-wrong-password'),
+      error => error?.name === 'WrongPasswordError',
+    );
+
+    assert.deepEqual(local.getData(), beforeData, 'verkeerde sleutel mag de ontsleutelde lokale data niet vervangen');
+    assert.deepEqual(local.getEnvelope(), beforeEnvelope, 'verkeerde sleutel mag de lokale envelope niet vervangen');
+    assert.equal(local.getRevision(), beforeRevision, 'verkeerde sleutel mag geen lokale revisie installeren');
+    assert.equal(local.getSyncMeta().dirty, true, 'bestaande lokale wijzigingen blijven dirty');
+  } finally {
+    for (const vault of [seed, local]) {
+      try { if (vault.isUnlocked()) vault.lock(); } catch {}
+      try { await vault.dispose(); } catch {}
+    }
+  }
+});
+
+test('V05 a validly encrypted payload for the wrong domain is rejected before local adoption', async () => {
+  const previousFetch = globalThis.fetch;
+  const path = 'pwa-core-v1/samen.json';
+  const remote = { sha: 'v05-domain-initial', envelope: null };
+  const seed = createVault({ storagePrefix: 'v05-domain-seed', kdfIterations: 1000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-domain-local', kdfIterations: 1000, storage: storage() });
+  try {
+    await seed.create('synthetic-password', base());
+    await seed.flush();
+    const initialEnvelope = structuredClone(seed.getEnvelope());
+    remote.envelope = initialEnvelope;
+
+    await local.importEnvelope(structuredClone(initialEnvelope), 'synthetic-password');
+    local.setSyncMeta({ sha: remote.sha, dirty: false });
+    const localBefore = structuredClone(local.getData());
+
+    const wrongDomainPayload = {
+      items: [], del: {}, paid: {}, meta: null, schema: 2, domain: 'personal-p1',
+    };
+    remote.envelope = {
+      ...initialEnvelope,
+      payload: await encryptJSON(wrongDomainPayload, seed.getDataKey()),
+    };
+    remote.sha = 'v05-domain-replaced';
+
+    globalThis.fetch = async (input, init = {}) => {
+      const url = new URL(input);
+      if (!url.pathname.endsWith('/contents/' + path)) return new Response(null, { status: 404 });
+      if ((init.method || 'GET') === 'GET') return new Response(JSON.stringify({
+        sha: remote.sha, encoding: 'base64',
+        content: Buffer.from(JSON.stringify(remote.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+      throw new Error('PUT mag niet plaatsvinden voor een ongeldig domein');
+    };
+
+    const sync = createSync({ vault: local, appName: 'Vaste Lasten V05 domein' });
+    await assert.rejects(sync.syncNow({
+      settings: { owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main', path, token: 'synthetic-token' },
+      migrate: payload => validateDomainPayload(payload, 'shared'),
+      schemaVersion: 2,
+    }), /hoort niet bij het domein/);
+
+    assert.deepEqual(local.getData(), localBefore, 'verkeerd domein mag lokale data niet vervangen');
+    assert.equal(local.getSyncMeta().sha, 'v05-domain-initial', 'ongeldige remote inhoud mag de bekende SHA niet bevestigen');
+    assert.equal(local.getSyncMeta().dirty, false, 'een afgewezen remote payload mag geen lokale dirty-state verzinnen');
+  } finally {
+    try { if (seed.isUnlocked()) seed.lock(); } catch {}
+    try { await seed.dispose(); } catch {}
+    try { if (local.isUnlocked()) local.lock(); } catch {}
+    try { await local.dispose(); } catch {}
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('V05 a corrupted remote ciphertext is rejected without adopting or uploading it', async () => {
+  const previousFetch = globalThis.fetch;
+  const path = 'pwa-core-v1/samen.json';
+  const seed = createVault({ storagePrefix: 'v05-corrupt-seed', kdfIterations: 1000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-corrupt-local', kdfIterations: 1000, storage: storage() });
+  let remote;
+  let putCount = 0;
+  try {
+    await seed.create('synthetic-password', base());
+    await seed.flush();
+    const initialEnvelope = structuredClone(seed.getEnvelope());
+    remote = { sha: 'v05-corrupt-initial', envelope: initialEnvelope };
+
+    await local.importEnvelope(structuredClone(initialEnvelope), 'synthetic-password');
+    local.setSyncMeta({ sha: remote.sha, dirty: false });
+    const localBefore = structuredClone(local.getData());
+
+    remote = {
+      sha: 'v05-corrupt-replaced',
+      envelope: { ...initialEnvelope, payload: { iv: 'not-base64!', data: 'also-invalid!' } },
+    };
+    globalThis.fetch = async (input, init = {}) => {
+      const url = new URL(input);
+      if (!url.pathname.endsWith('/contents/' + path)) return new Response(null, { status: 404 });
+      if ((init.method || 'GET') === 'GET') return new Response(JSON.stringify({
+        sha: remote.sha, encoding: 'base64',
+        content: Buffer.from(JSON.stringify(remote.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+      putCount++;
+      throw new Error('PUT mag niet plaatsvinden na decryptiefout');
+    };
+
+    const sync = createSync({ vault: local, appName: 'Vaste Lasten V05 corrupt' });
+    await assert.rejects(sync.syncNow({
+      settings: { owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main', path, token: 'synthetic-token' },
+      migrate: payload => validateDomainPayload(payload, 'shared'),
+      schemaVersion: 2,
+    }), /andere sleutel versleuteld/);
+
+    assert.deepEqual(local.getData(), localBefore, 'corrupt remote ciphertext mag lokale data niet vervangen');
+    assert.equal(local.getSyncMeta().sha, 'v05-corrupt-initial', 'corrupt remote bestand mag de bekende SHA niet bevestigen');
+    assert.equal(putCount, 0, 'er mag geen lege of vervangende envelope naar remote worden geüpload');
+  } finally {
+    for (const vault of [seed, local]) {
+      try { if (vault.isUnlocked()) vault.lock(); } catch {}
+      try { await vault.dispose(); } catch {}
+    }
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('S06 a failed remote upload keeps local data dirty and an explicit retry recovers', async () => {
+  const previousFetch = globalThis.fetch;
+  const path = 'pwa-core-v1/samen.json';
+  const seed = createVault({ storagePrefix: 's06-seed', kdfIterations: 1000, storage: storage() });
+  const local = createVault({ storagePrefix: 's06-local', kdfIterations: 1000, storage: storage() });
+  let remote;
+  let failNextPut = true;
+  let putCount = 0;
+  try {
+    await seed.create('synthetic-password', base());
+    await seed.flush();
+    remote = { sha: 's06-initial-sha', envelope: structuredClone(seed.getEnvelope()) };
+
+    await local.importEnvelope(structuredClone(remote.envelope), 'synthetic-password');
+    local.setSyncMeta({ sha: remote.sha, dirty: false });
+    await local.setData({
+      ...structuredClone(local.getData()),
+      items: [{ id: 's06-local-change', name: 'Lokale wijziging blijft behouden', amount: 321, u: 1800000000500 }],
+    });
+    await local.flush();
+    const localEnvelopeBefore = structuredClone(local.getEnvelope());
+    const localDataBefore = structuredClone(local.getData());
+
+    globalThis.fetch = async (input, init = {}) => {
+      const url = new URL(input);
+      if (!url.pathname.endsWith('/contents/' + path)) return new Response(null, { status: 404 });
+      if ((init.method || 'GET') === 'GET') return new Response(JSON.stringify({
+        sha: remote.sha, encoding: 'base64',
+        content: Buffer.from(JSON.stringify(remote.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+      if (init.method === 'PUT') {
+        putCount++;
+        if (failNextPut) {
+          failNextPut = false;
+          return new Response(JSON.stringify({ message: 'synthetic server failure' }), {
+            status: 500, headers: { 'content-type': 'application/json' },
+          });
+        }
+        const body = JSON.parse(init.body);
+        assert.equal(body.sha, remote.sha, 'retry moet de nog actuele remote SHA gebruiken');
+        remote = {
+          sha: 's06-recovered-sha',
+          envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
+        };
+        return new Response(JSON.stringify({ content: { sha: remote.sha } }), {
+          status: 200, headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(null, { status: 405 });
+    };
+
+    const sync = createSync({ vault: local, appName: 'Vaste Lasten S06' });
+    const options = {
+      settings: { owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main', path, token: 'synthetic-token' },
+      migrate: payload => validateDomainPayload(payload, 'shared'),
+      schemaVersion: 2,
+    };
+
+    await assert.rejects(sync.syncNow(options), error => error?.status === 500);
+    assert.equal(remote.sha, 's06-initial-sha', 'mislukte upload mag de remote SHA niet wijzigen');
+    assert.deepEqual(remote.envelope, structuredClone(seed.getEnvelope()), 'remote envelope blijft intact na HTTP 500');
+    assert.deepEqual(local.getData(), localDataBefore, 'lokale wijzigingen blijven behouden na remote fout');
+    assert.deepEqual(local.getEnvelope(), localEnvelopeBefore, 'lokale bevestigde envelope blijft intact');
+    assert.equal(local.getSyncMeta().sha, 's06-initial-sha', 'lokale sync-SHA wordt niet vooruitgeschoven');
+    assert.equal(local.getSyncMeta().dirty, true, 'lokale wijziging blijft pending voor expliciete retry');
+
+    assert.equal(await sync.syncNow(options), 'uploaded', 'een expliciete nieuwe sync moet kunnen herstellen');
+    assert.equal(putCount, 2, 'eerste fout en expliciete retry moeten twee uploads opleveren');
+    assert.equal(remote.sha, 's06-recovered-sha');
+    const finalData = await local.decryptRemote(remote.envelope);
+    assert.deepEqual(finalData.items.map(item => item.id), ['s06-local-change']);
+    assert.equal(local.getSyncMeta().sha, 's06-recovered-sha');
+    assert.equal(local.getSyncMeta().dirty, false, 'na bevestigde retry is de kluis niet langer dirty');
+  } finally {
+    for (const vault of [seed, local]) {
+      try { if (vault.isUnlocked()) vault.lock(); } catch {}
+      try { await vault.dispose(); } catch {}
     }
     globalThis.fetch = previousFetch;
   }
