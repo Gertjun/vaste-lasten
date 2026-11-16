@@ -15,6 +15,7 @@ function setup({ id = 'shared', remoteData = null, localData = null, password = 
   let localPassword = local ? password : null;
   let createCalls = 0, importCalls = 0, syncCalls = 0;
   const vault = {
+    validateEnvelope(envelope) { if (!envelope?.key || !envelope?.payload) throw new Error('invalid envelope'); },
     hasVault: () => !!local,
     async unlockWithPassword(value) {
       if (!local || value !== localPassword) throw new Error('wrong local password');
@@ -69,6 +70,10 @@ const run = (h, id = 'shared', password = 'new-password') => initializeEmptyDoma
   id, password, registry: h.registry,
   settings: { owner: 'synthetic', repo: 'private-test', branch: 'main', token: 'not-a-real-token' },
   createClient: h.createClient,
+  openEnvelope: async (_vault, envelope, value) => {
+    if (value !== password) throw new Error('wrong password');
+    return clone(envelope.payload);
+  },
   mergeStore: (a, b) => ({ ...a, ...b }),
 });
 
@@ -104,6 +109,7 @@ test('niet-lege remote Core-kluis wordt geweigerd en nooit overschreven', async 
   const h = setup({ remoteData: existing });
   await assert.rejects(run(h), /niet leeg|bestaande of onbekende gegevens/);
   assert.deepEqual(h.state().remote.envelope.payload, existing);
+  assert.equal(h.state().importCalls, 0);
   assert.equal(h.state().syncCalls, 0);
 });
 
