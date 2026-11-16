@@ -119,11 +119,16 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const left = base(), right = base();
     left.items = [{ id: 'rent', name: 'PR9 TEST', amount: 125, u: 1500 }];
     right.items = [{ id: 'rent', name: 'PR9 TEST', amount: 140, u: 1500 }];
+    left.cats = { 'cr06-category': { id: 'cr06-category', name: 'CR06 categorie A', c: 'c1', u: 1500 } };
+    right.cats = { 'cr06-category': { id: 'cr06-category', name: 'CR06 categorie B', c: 'c2', u: 1500 } };
     const initial = mergeStore(left, right);
     initial.schema = 2;
     initial.domain = 'shared';
-    const task = pending(initial.__conflicts)[0];
-    assert.ok(task, 'de twee oorspronkelijke versies moeten een reviewtaak opleveren');
+    const tasks = pending(initial.__conflicts);
+    const task = tasks.find(item => item.path === 'items:rent');
+    const categoryTask = tasks.find(item => item.path === 'cats:cr06-category');
+    assert.ok(task, 'de twee oorspronkelijke lastversies moeten een reviewtaak opleveren');
+    assert.ok(categoryTask, 'de twee oorspronkelijke categorieversies moeten een reviewtaak opleveren');
 
     const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 1000, storage: storage() });
     const seedPersonal = createVault({ storagePrefix: 'pr9-seed-personal', kdfIterations: 1000, storage: storage() });
@@ -170,11 +175,17 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     clientAVault.setSyncMeta({ sha: currentRemote.sha, dirty: false });
     const choose = (snapshot, index, at) => {
       const next = structuredClone(snapshot);
-      const selected = task.alternatives[index];
-      next.__conflicts = review.resolveConflictState(next.__conflicts, task.id, index, { at, deviceId: 'p1' });
-      if (selected.kind === 'record') {
-        next.items = next.items.filter(item => item.id !== selected.value.id);
-        next.items.push({ ...selected.value, u: at });
+      for (const currentTask of [task, categoryTask]) {
+        const selected = currentTask.alternatives[index];
+        next.__conflicts = review.resolveConflictState(next.__conflicts, currentTask.id, index, { at, deviceId: 'p1' });
+        if (currentTask.path.startsWith('items:') && selected.kind === 'record') {
+          next.items = next.items.filter(item => item.id !== selected.value.id);
+          next.items.push({ ...selected.value, u: at });
+        } else if (currentTask.path.startsWith('cats:')) {
+          const id = currentTask.path.slice('cats:'.length);
+          next.cats = next.cats || {};
+          next.cats[id] = { ...selected, u: at };
+        }
       }
       return next;
     };
@@ -189,11 +200,17 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     await syncA.syncNow(optionsA);
 
     // B maakt daarna zijn afwijkende keuze vanuit de verouderde UI-snapshot.
-    const selectedB = task.alternatives[1];
-    staleB.samen.__conflicts = review.resolveConflictState(staleB.samen.__conflicts, task.id, 1, { at: 1700, deviceId: 'p1' });
-    if (selectedB.kind === 'record') {
-      staleB.samen.items = staleB.samen.items.filter(item => item.id !== selectedB.value.id);
-      staleB.samen.items.push({ ...selectedB.value, u: 1700 });
+    for (const currentTask of [task, categoryTask]) {
+      const selectedB = currentTask.alternatives[1];
+      staleB.samen.__conflicts = review.resolveConflictState(staleB.samen.__conflicts, currentTask.id, 1, { at: 1700, deviceId: 'p1' });
+      if (currentTask.path.startsWith('items:') && selectedB.kind === 'record') {
+        staleB.samen.items = staleB.samen.items.filter(item => item.id !== selectedB.value.id);
+        staleB.samen.items.push({ ...selectedB.value, u: 1700 });
+      } else if (currentTask.path.startsWith('cats:')) {
+        const id = currentTask.path.slice('cats:'.length);
+        staleB.samen.cats = staleB.samen.cats || {};
+        staleB.samen.cats[id] = { ...selectedB, u: 1700 };
+      }
     }
     await core.persistState(staleB);
     const localB = core.getRegistry().shared.vault.getData();
@@ -206,16 +223,19 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.ok(localB.__conflicts.records[task.id], 'B moet de oorspronkelijke conflictregistratie behouden');
     assert.ok(publishedA.__conflicts.records[task.id], 'A moet de oorspronkelijke conflictregistratie behouden');
     const directConflictState = review.mergeConflictState(localB.__conflicts, publishedA.__conflicts);
-    assert.equal(review.pendingConflicts(directConflictState).length, 1, JSON.stringify({
+    assert.equal(review.pendingConflicts(directConflictState).length, 2, JSON.stringify({
       record: directConflictState.records[task.id],
       decisions: directConflictState.decisions[task.id],
+      categoryRecord: directConflictState.records[categoryTask.id],
+      categoryDecisions: directConflictState.decisions[categoryTask.id],
       pendingKeys: Object.keys(directConflictState.pending || {}),
     }));
+    assert.equal(directConflictState.decisions[categoryTask.id]?.length, 2, 'beide categoriebeoordelingen moeten worden verenigd');
     assert.equal(canon(publishedA.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[0]), 'A moet werkelijk alternatief 1 hebben gepubliceerd');
     assert.notEqual(localB.__conflicts.decisions[task.id][0].id, publishedA.__conflicts.decisions[task.id][0].id, 'de twee keuze-ID’s moeten uniek zijn');
     const directMerge = mergeDomainPayload(localB, publishedA, 'shared', mergeStore);
     assert.equal(directMerge.__conflicts.decisions[task.id]?.length, 2, 'de directe app-merge moet beide keuzes verenigen');
-    assert.equal(pending(directMerge.__conflicts).length, 1, 'de directe app-merge moet een vervolgtaak opleveren');
+    assert.equal(pending(directMerge.__conflicts).length, 2, 'de directe app-merge moet voor zowel last als categorie een vervolgtaak opleveren');
     const resultB = await core.sync();
     assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
     assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, JSON.stringify({ decisionKeys: Object.keys(resultB.state.samen.__conflicts.decisions || {}), decisions: resultB.state.samen.__conflicts.decisions[task.id], pendingKeys: Object.keys(resultB.state.samen.__conflicts.pending || {}), recordPresent: !!resultB.state.samen.__conflicts.records?.[task.id] }));
@@ -223,11 +243,18 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.notEqual(canon(mergedDecisions[0].selected), canon(mergedDecisions[1].selected), 'de twee samengevoegde keuzes moeten verschillend zijn');
     assert.ok(resultB.state.samen.__conflicts.records[task.id], 'de oorspronkelijke conflictregistratie moet behouden blijven');
     const afterB = pending(resultB.state.samen.__conflicts);
-    assert.equal(afterB.length, 1);
-    assert.equal(afterB[0].kind, 'concurrent-review');
+    assert.equal(afterB.length, 2);
+    const recordReview = afterB.find(item => item.path === 'items:rent');
+    const categoryReview = afterB.find(item => item.path === 'cats:cr06-category');
+    assert.equal(recordReview?.kind, 'concurrent-review');
+    assert.equal(categoryReview?.kind, 'concurrent-review');
     assert.deepEqual(
-      JSON.parse(JSON.stringify(afterB[0].alternatives.map(value => value.value?.amount ?? value.amount).sort((x, y) => x - y))),
+      JSON.parse(JSON.stringify(recordReview.alternatives.map(value => value.value?.amount ?? value.amount).sort((x, y) => x - y))),
       [125, 140],
+    );
+    assert.deepEqual(
+      JSON.parse(JSON.stringify(categoryReview.alternatives.map(value => value.name).sort())),
+      ['CR06 categorie A', 'CR06 categorie B'],
     );
 
     // A en B halen elkaars vervolgtaak op en eindigen met dezelfde review-identiteit.
@@ -235,11 +262,15 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const resultFinal = await core.sync();
     const tasksA = pending(clientAVault.getData().__conflicts);
     const tasksB = pending(resultFinal.state.samen.__conflicts);
-    assert.equal(tasksA.length, 1);
-    assert.equal(tasksB.length, 1);
-    assert.equal(tasksA[0].kind, 'concurrent-review');
-    assert.equal(tasksB[0].kind, 'concurrent-review');
-    assert.equal(tasksA[0].id, tasksB[0].id);
+    assert.equal(tasksA.length, 2);
+    assert.equal(tasksB.length, 2);
+    for (const path of ['items:rent', 'cats:cr06-category']) {
+      const taskA = tasksA.find(item => item.path === path);
+      const taskB = tasksB.find(item => item.path === path);
+      assert.equal(taskA?.kind, 'concurrent-review', path + ': A moet een vervolgtaak hebben');
+      assert.equal(taskB?.kind, 'concurrent-review', path + ': B moet een vervolgtaak hebben');
+      assert.equal(taskA.id, taskB.id, path + ': beide clients moeten dezelfde review-identiteit hebben');
+    }
   } finally {
     await disposeVaults();
     globalThis.fetch = previousFetch;
