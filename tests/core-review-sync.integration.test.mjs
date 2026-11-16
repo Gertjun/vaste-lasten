@@ -177,6 +177,10 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       kdfIterations: 1000,
       mergeStore,
       factories: {
+        createVault: options => createVault({
+          ...options,
+          storagePrefix: 'pr9-client-a-' + options.storagePrefix,
+        }),
         createSessionLock: () => ({ acquireSessionLock: async () => ({ release: async () => {} }) }),
         createBiometric: () => ({
           isEnrolled: () => false,
