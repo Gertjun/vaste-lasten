@@ -231,17 +231,11 @@ test('runtime: lokale lege Core-kluizen werken zonder GitHub-client of synchroni
 
 test('runtime: lokale lege start weigert niet-lege bestaande kluis en overschrijft niets', async () => {
   const h = runtimeHarness();
-  await h.core.initializeEmptyLocal({ me: 'p1', passwords });
-  await h.core.lock();
-  // Bewijs dat een bestaande lokale kluis niet wordt vervangen door een nieuwe lege.
   const vault = h.vaults.shared;
-  await vault.unlockWithPassword(passwords.shared);
-  const before = vault.getData();
-  before.items.push({ id: 'keep-me', name: 'Bestaand record' });
-  await vault.setData(before);
-  await vault.flush();
-  await h.core.lock();
-
+  await vault.create(passwords.shared, {
+    items: [{ id: 'keep-me', name: 'Bestaand record' }],
+    del: {}, paid: {}, meta: null, schema: 2, domain: 'vastelasten.shared.v1',
+  });
   const result = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
   assert.equal(result.complete, false);
   assert.equal(result.failedDomain, 'shared');
