@@ -40,3 +40,10 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** zonder actieve GitHub Sync toont Vaste Lasten eerst een kluiskeuze: een bestaande kluis koppelen via synchronisatie-instellingen of een nieuwe lokale PWA-Core-kluis aanmaken.
 - **Besluit:** een lokale-only kluis bestaat uit een afzonderlijke gedeelde en persoonlijke Core-kluis, beide versleuteld op dit apparaat. Ze synchroniseren niet automatisch naar andere apparaten.
 - **Veiligheid:** een lege start leest of importeert geen oude legacygegevens en weigert bestaande niet-lege Core-kluizen; gedeeltelijk aangemaakte lege kluizen blijven hervatbaar.
+
+
+### D9 – Lokale Core-kluis veilig aan GitHub koppelen (17 nov 2026, 3.4.0)
+- Besluit: een lokale-only kluis wordt niet opnieuw aangemaakt bij koppelen. De bestaande versleutelde kluisbestanden worden met hun bestaande datasleutels gepubliceerd.
+- Veiligheid: een remote Core-bestand mag alleen worden hergebruikt als de SHA al lokaal als eigen publicatie is bevestigd en het bestand met de lokale datasleutel kan worden ontsleuteld. Onbekende of afwijkende remote bestanden worden geweigerd; ze worden niet samengevoegd of overschreven.
+- Hervatten: na een gedeeltelijke upload mag de gebruiker opnieuw proberen; reeds bevestigde bestanden worden gecontroleerd en ontbrekende bestanden gepubliceerd.
+- Tweede apparaat: de gedeelde remote kluis is verplicht; alleen de gekozen persoonlijke kluis wordt geïmporteerd of, als die nog niet bestaat, leeg aangemaakt. Legacybestanden blijven onaangeraakt.

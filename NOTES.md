@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 16 november 2026 · versie **3.3.0 in voorbereiding** (expliciete kluiskeuze en lokale Core-kluizen zonder GitHub Sync).
+Laatst bijgewerkt: 17 november 2026 · versie **3.4.0 in voorbereiding** (lokale Core-kluizen veilig koppelen aan GitHub Sync).
 
 ---
 
@@ -80,3 +80,15 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 - Lokale-only kluizen zijn apparaatgebonden; synchronisatie naar andere apparaten is niet beschikbaar totdat een afzonderlijke veilige koppel-/publicatieroute is geïmplementeerd.
 - Geautomatiseerde tests toegevoegd voor lokale aanmaak, heropenen, afwezigheid van remote writes en weigeren van niet-lege lokale kluizen.
 - Nog te verifiëren: volledige CI, inline JavaScript-syntax, fysieke acceptatie op iPhone Safari en Windows 11 Edge. Geen merge of Pages-deployment uitgevoerd.
+
+
+## 3.4.0 – lokale kluis koppelen aan GitHub Sync (featurebranch)
+
+- Branch: `feat/connect-local-core-to-github-sync`.
+- Nieuwe runtime-route publiceert de bestaande lokale shared + actieve persoonlijke Core-kluis naar een privérepository zonder de kluizen opnieuw aan te maken of gegevens te overschrijven.
+- Remote Core-bestanden worden vóór de eerste upload allemaal gecontroleerd. Een bestaand bestand is alleen toegestaan als de SHA lokaal al bevestigd is en de inhoud met de bestaande lokale datasleutel kan worden ontsleuteld. Onbekende of afwijkende bestanden stoppen de koppeling.
+- Een mislukte gedeeltelijke publicatie kan worden hervat: reeds gepubliceerde bestanden worden aan de hand van hun bevestigde SHA gecontroleerd; ontbrekende bestanden worden daarna gepubliceerd.
+- Een nieuwe installatie kan rechtstreeks een bestaande PWA-Core-kluis koppelen. De gedeelde kluis moet bestaan; de persoonlijke kluis van de gekozen gebruiker wordt geïmporteerd of, als die nog niet bestaat, leeg aangemaakt. Legacybestanden in de root worden niet gelezen of gewijzigd.
+- De GitHub-token blijft via de bestaande versleutelde IndexedDB-opslag bewaard. Alleen private repositories worden geaccepteerd.
+- Toegevoegd aan de synthetische runtime-tests: publiceren met behoud van gegevens, weigeren van onbekende remote bestanden, verkeerd wachtwoord, hervatten na gedeeltelijke upload, tweede apparaat met ontbrekende persoonlijke kluis en import van bestaande niet-lege gedeelde gegevens.
+- Nog te verifiëren: volledige CI, browser-/UI-syntax en fysieke acceptatie op iPhone Safari en Windows 11 Edge. Geen merge, Pages-deployment of wijziging van productiegegevens uitgevoerd.

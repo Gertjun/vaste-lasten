@@ -259,6 +259,157 @@ export function createVasteLastenCore({
    * Veilige schone start: maakt alleen de actieve shared + persoonlijke kluis aan.
    * Deze route leest of migreert nooit legacygegevens en behoudt gedeeltelijk succes.
    */
+
+  /**
+   * Publiceert bestaande lokale-only kluizen veilig naar een nieuwe GitHub-repository.
+   * Bestaande remote bestanden zijn alleen toegestaan als hun SHA al lokaal is bevestigd
+   * (hervatten na een gedeeltelijke upload). Onbekende remote bestanden worden nooit samengevoegd of overschreven.
+   */
+  async function publishLocal({ me: meValue, passwords, settings: inputSettings } = {}) {
+    const resolved = await resolveSettings(inputSettings);
+    if (session) await release();
+    await acquire(meValue);
+    settings = resolved;
+    const ids = activeIds();
+    const results = {};
+    let activeId = ids[0];
+    try {
+      const remotes = {};
+      // Eerst alle remote bestanden lezen; vóór deze volledige preflight wordt niets gepubliceerd.
+      for (const id of ids) {
+        activeId = id;
+        const options = { ...settings, path: VAULT_DOMAINS[id].path };
+        remotes[id] = await clientFactory(options).getFile();
+      }
+      for (const id of ids) {
+        activeId = id;
+        const vault = registry[id].vault;
+        if (!vault.hasVault()) throw new Error(`De lokale kluis ${id} ontbreekt. Er is niets naar GitHub geschreven.`);
+        await vault.unlockWithPassword(passwords?.[id]);
+        validateDomainPayload(vault.getData(), id);
+        await vault.flush();
+        const remote = remotes[id];
+        if (remote) {
+          const meta = vault.getSyncMeta();
+          if (!meta.sha || meta.sha !== remote.sha) {
+            throw new Error(`Het GitHub-bestand voor ${id} bestaat al, maar hoort niet aantoonbaar bij deze lokale kluis. Er is niets overschreven. Controleer de repository.`);
+          }
+          // De SHA moet niet alleen bekend zijn; de inhoud moet ook met deze lokale datasleutel ontsleutelen.
+          validateDomainPayload(await vault.decryptRemote(remote.envelope), id);
+        }
+      }
+      for (const id of ids) {
+        activeId = id;
+        const vault = registry[id].vault;
+        const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+        const rejectUnexpectedRemote = () => {
+          throw new Error(`Tijdens het koppelen verscheen onverwacht een ander GitHub-bestand voor ${id}. De lokale kluis is behouden; controleer de repository voordat je opnieuw probeert.`);
+        };
+        results[id] = await registry[id].sync.syncNow({
+          settings: remoteSettings,
+          merge: rejectUnexpectedRemote,
+          migrate: rejectUnexpectedRemote,
+          schemaVersion: 2,
+        });
+        await vault.flush();
+        const confirmed = await clientFactory(remoteSettings).getFile();
+        if (!confirmed || confirmed.sha !== vault.getSyncMeta().sha) {
+          throw new Error(`GitHub heeft de publicatie van ${id} niet bevestigd. De lokale kluis is behouden; je kunt veilig opnieuw proberen.`);
+        }
+        validateDomainPayload(await vault.decryptRemote(confirmed.envelope), id);
+      }
+      return { complete: true, results, state: getState() };
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'Het koppelen is mislukt en de lokale kluizen konden niet veilig worden vergrendeld.');
+      }
+      return { complete: false, results, failedDomain: activeId, error };
+    }
+  }
+
+  /**
+   * Koppelt een nieuw apparaat aan bestaande PWA-Core-kluizen.
+   * De gedeelde remote kluis moet bestaan; een ontbrekende persoonlijke kluis
+   * wordt voor deze gebruiker leeg aangemaakt. Legacybestanden worden niet gelezen.
+   */
+  async function connectExisting({ me: meValue, passwords, settings: inputSettings } = {}) {
+    const resolved = await resolveSettings(inputSettings);
+    if (session) await release();
+    await acquire(meValue);
+    settings = resolved;
+    const ids = activeIds();
+    const results = {};
+    let activeId = ids[0];
+    try {
+      const remotes = {};
+      for (const id of ids) {
+        activeId = id;
+        remotes[id] = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+      }
+      if (!remotes.shared) {
+        throw new Error('De gedeelde PWA-Core-kluis ontbreekt in deze repository. Controleer de repository; er is niets aangemaakt of overschreven.');
+      }
+      const personalId = `personal-${me}`;
+      if (!remotes[personalId]) {
+        const newPersonalPassword = passwords?.[personalId];
+        if (typeof newPersonalPassword !== 'string' || newPersonalPassword.length < 12) {
+          throw new Error('Voor een nieuwe persoonlijke kluis is een wachtwoord van minstens 12 tekens nodig.');
+        }
+        if (newPersonalPassword === passwords?.shared) {
+          throw new Error('Kies voor je persoonlijke kluis een ander wachtwoord dan het gezamenlijke wachtwoord.');
+        }
+      }
+      for (const id of ids) {
+        activeId = id;
+        const vault = registry[id].vault;
+        const password = passwords?.[id];
+        if (typeof password !== 'string' || !password) {
+          throw new Error(`Vul het wachtwoord voor ${id} in.`);
+        }
+        const remote = remotes[id];
+        if (vault.hasVault()) {
+          await vault.unlockWithPassword(password);
+          validateDomainPayload(vault.getData(), id);
+          const meta = vault.getSyncMeta();
+          if (remote) {
+            if (!meta.sha || meta.sha !== remote.sha) {
+              throw new Error(`De lokale kluis ${id} en het GitHub-bestand verschillen. Er is niets overschreven; herstel eerst de juiste koppeling.`);
+            }
+            validateDomainPayload(await vault.decryptRemote(remote.envelope), id);
+          } else if (id === 'shared' || meta.sha) {
+            throw new Error(`Het eerder gekoppelde GitHub-bestand voor ${id} ontbreekt. De lokale kluis is behouden en wordt niet opnieuw gepubliceerd.`);
+          }
+        } else if (remote) {
+          await vault.importEnvelope(remote.envelope, password);
+          validateDomainPayload(vault.getData(), id);
+          vault.setSyncMeta({ ...vault.getSyncMeta(), sha: remote.sha, dirty: false });
+        } else {
+          if (id === 'shared') throw new Error('De gedeelde PWA-Core-kluis ontbreekt. Er is niets aangemaakt.');
+          await vault.create(password, emptyPayload(id));
+          validateDomainPayload(vault.getData(), id);
+        }
+        await vault.flush();
+      }
+      for (const id of ids) {
+        activeId = id;
+        const options = syncOptions(id);
+        results[id] = await registry[id].sync.syncNow(options);
+        await registry[id].vault.flush();
+        const confirmed = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+        if (!confirmed || confirmed.sha !== registry[id].vault.getSyncMeta().sha) {
+          throw new Error(`GitHub heeft de koppeling van ${id} niet bevestigd. Probeer opnieuw; bestaande gegevens blijven behouden.`);
+        }
+        validateDomainPayload(await registry[id].vault.decryptRemote(confirmed.envelope), id);
+      }
+      return { complete: true, results, state: getState() };
+    } catch (error) {
+      try { await release(); } catch (releaseError) {
+        throw new AggregateError([error, releaseError], 'Het koppelen is mislukt en de lokale kluizen konden niet veilig worden vergrendeld.');
+      }
+      return { complete: false, results, failedDomain: activeId, error };
+    }
+  }
+
   async function initializeEmpty({ me: meValue, passwords, settings: inputSettings } = {}) {
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
@@ -512,6 +663,8 @@ export function createVasteLastenCore({
 
 
     connect,
+    publishLocal,
+    connectExisting,
     initializeEmpty,
     initializeEmptyLocal,
     migrate,

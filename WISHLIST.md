@@ -12,6 +12,7 @@ Laatst bijgewerkt: versie 3.3.0 in voorbereiding, 16 november 2026
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Gerealiseerd
+- **Lokale PWA-Core-kluis koppelen aan GitHub Sync** — versie 3.4.0; bestaande versleutelde kluizen veilig publiceren en op een tweede apparaat koppelen, zonder legacy-import.
 - #40 **Veilige lege start met PWA-Core** — versie 3.2.0; drie onafhankelijke lege kluizen aanmaken of aansluiten zonder oude gegevens te importeren of bestaande kluizen te overschrijven.
 - **Kluiskeuze zonder GitHub Sync** — versie 3.3.0; bij een niet-gekoppelde installatie eerst expliciet een bestaande kluis koppelen of een nieuwe lokale versleutelde kluis aanmaken.
 - **Looptijd en contractgegevens** — versie 2.5.0

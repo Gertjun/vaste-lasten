@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0 — 17 november 2026
+- Nieuw: een bestaande lokale PWA-Core-kluis kan veilig aan GitHub Sync worden gekoppeld; de versleutelde gegevens en wachtwoorden blijven behouden.
+- Nieuw: op een tweede apparaat kun je rechtstreeks een bestaande PWA-Core-kluis koppelen. De gedeelde kluis wordt opgehaald en alleen de persoonlijke kluis van de gekozen gebruiker wordt geopend of zo nodig leeg aangemaakt.
+- Beveiliging: bestaande onbekende GitHub-bestanden worden nooit overschreven. Een gedeeltelijke eerste publicatie kan na SHA-controle veilig worden hervat; oude legacybestanden worden niet gelezen of gewijzigd.
+
+
 ## 3.3.0 — 16 november 2026
 - Nieuw: de app vraagt bij een niet-gekoppelde installatie eerst om een bewuste kluiskeuze: een bestaande kluis koppelen via GitHub Sync of een nieuwe lokale kluis aanmaken.
 - Nieuw: een volledig nieuwe lokale PWA-Core-start werkt zonder GitHub Sync; gedeelde en persoonlijke gegevens blijven afzonderlijk versleuteld op dit apparaat.
