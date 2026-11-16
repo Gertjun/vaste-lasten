@@ -13,6 +13,10 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const match = html.match(/function merge\(a,b\)\s*\{[\s\S]*?\n\}/);
 assert.ok(match, 'de app-mergefunctie moet aanwezig zijn');
+const applyChoiceMatch = html.match(/function applyConflictChoice\(store,item,value\)\s*\{[\s\S]*?\n\}/);
+const resolveChoiceMatch = html.match(/function resolveAppConflict\(store,id,choice\)\s*\{[\s\S]*?\n\}/);
+assert.ok(applyChoiceMatch && resolveChoiceMatch, 'de echte app-functies voor conflictkeuze moeten aanwezig zijn');
+const appChoiceSource = [applyChoiceMatch[0], resolveChoiceMatch[0]].join('\n');
 const reviewSource = await readFile(new URL('../js/conflict-review.js', import.meta.url), 'utf8');
 const reviewContext = { globalThis: {} };
 vm.runInNewContext(reviewSource, reviewContext);
@@ -195,41 +199,37 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       passwords: { shared: 'synthetic-password', 'personal-p1': 'synthetic-password' },
       settings: connection,
     });
-    const staleA = coreA.getState();
-    const choose = (snapshot, index, at) => {
-      const next = structuredClone(snapshot);
-      const data = next.samen;
-      for (const currentTask of [task, categoryTask]) {
-        const selected = currentTask.alternatives[index];
-        data.__conflicts = review.resolveConflictState(data.__conflicts, currentTask.id, index, { at, deviceId: 'p1' });
-        if (currentTask.path.startsWith('items:') && selected.kind === 'record') {
-          data.items = data.items.filter(item => item.id !== selected.value.id);
-          data.items.push({ ...selected.value, u: at });
-        } else if (currentTask.path.startsWith('cats:')) {
-          const id = currentTask.path.slice('cats:'.length);
-          data.cats = data.cats || {};
-          data.cats[id] = { ...selected, u: at };
-        }
-      }
-      return next;
+    const makeAppClient = (runtime, snapshot, at) => {
+      const context = {
+        state: structuredClone(snapshot),
+        cfg: { me: 'p1' },
+        VasteLastenConflictReview: review,
+        Date: { now: () => at },
+        saveLocal() {
+          const saved = structuredClone(context.state);
+          runtime.persistState(saved).catch(error => { context.persistError = error.message; });
+        },
+        render() {},
+        scheduleSync() {},
+      };
+      vm.createContext(context);
+      vm.runInContext(appChoiceSource, context);
+      return {
+        choose(store, id, index) { context.resolveAppConflict(store, id, index); },
+        get state() { return context.state; },
+      };
     };
-    await coreA.persistState(choose(staleA, 0, 1600));
-    await coreA.sync();
 
-    // B maakt daarna zijn afwijkende keuze vanuit de verouderde UI-snapshot.
-    for (const currentTask of [task, categoryTask]) {
-      const selectedB = currentTask.alternatives[1];
-      staleB.samen.__conflicts = review.resolveConflictState(staleB.samen.__conflicts, currentTask.id, 1, { at: 1700, deviceId: 'p1' });
-      if (currentTask.path.startsWith('items:') && selectedB.kind === 'record') {
-        staleB.samen.items = staleB.samen.items.filter(item => item.id !== selectedB.value.id);
-        staleB.samen.items.push({ ...selectedB.value, u: 1700 });
-      } else if (currentTask.path.startsWith('cats:')) {
-        const id = currentTask.path.slice('cats:'.length);
-        staleB.samen.cats = staleB.samen.cats || {};
-        staleB.samen.cats[id] = { ...selectedB, u: 1700 };
-      }
-    }
-    await core.persistState(staleB);
+    // A gebruikt exact de conflictkeuzefuncties uit index.html en slaat offline op.
+    const appA = makeAppClient(coreA, coreA.getState(), 1600);
+    for (const currentTask of [task, categoryTask]) appA.choose('samen', currentTask.id, 0);
+    await coreA.flushLocal();
+    await coreA.connect(connection);
+
+    // B kiest vanuit zijn eerder geopende UI-snapshot, ook via de echte app-functies.
+    const appB = makeAppClient(core, staleB, 1700);
+    for (const currentTask of [task, categoryTask]) appB.choose('samen', currentTask.id, 1);
+    await core.flushLocal();
     const localB = core.getRegistry().shared.vault.getData();
     assert.equal(localB.__conflicts.decisions[task.id]?.length, 1, 'persistState moet B\'s beslissing duurzaam bewaren');
     assert.equal(canon(localB.__conflicts.decisions[task.id][0].selected), canon(task.alternatives[1]), 'B moet werkelijk alternatief 2 hebben vastgelegd');
@@ -253,7 +253,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const directMerge = mergeDomainPayload(localB, publishedA, 'shared', mergeStore);
     assert.equal(directMerge.__conflicts.decisions[task.id]?.length, 2, 'de directe app-merge moet beide keuzes verenigen');
     assert.equal(pending(directMerge.__conflicts).length, 2, 'de directe app-merge moet voor zowel last als categorie een vervolgtaak opleveren');
-    const resultB = await core.sync();
+    const resultB = await core.connect(connection);
     assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
     assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, JSON.stringify({ decisionKeys: Object.keys(resultB.state.samen.__conflicts.decisions || {}), decisions: resultB.state.samen.__conflicts.decisions[task.id], pendingKeys: Object.keys(resultB.state.samen.__conflicts.pending || {}), recordPresent: !!resultB.state.samen.__conflicts.records?.[task.id] }));
     const mergedDecisions = resultB.state.samen.__conflicts.decisions[task.id];
