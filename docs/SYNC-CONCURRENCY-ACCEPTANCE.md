@@ -166,7 +166,7 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 ### Huidige uitvoerbaarheid
 
 - Geautomatiseerde synthetische regressietests in CI: afzonderlijk gerapporteerd bij PR #9.
-- Praktische test op twee apparaten: **BLOCKED totdat de preview is bijgewerkt naar de gefixte PR-head en beide profielen schoon zijn gecontroleerd**.
+- Praktische test op twee apparaten: preview is bijgewerkt naar de gefixte PR-head `12e22a0d2a9f22408e912102cb3adaff31f1f6b9`; hervatten is **BLOCKED totdat beide profielen na herladen nul reviewtaken tonen**.
 - Synthetische remote repository `Gertjun/vaste-lasten-pr9-testdata`: aangemaakt en als privé geverifieerd. Het testtoken is beperkt tot deze repository en heeft een geldigheid van zeven dagen; noteer of deel het token nooit.
 - Productiegegevens, productie-token en bestaande kluizen: buiten scope.
 
