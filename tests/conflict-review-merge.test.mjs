@@ -146,8 +146,8 @@ test('a later choice on a stale client becomes a concurrent review after the fir
 
   // A resolves and publishes first. B still has the original open task and makes
   // a different choice locally before incorporating A's published state.
-  const publishedA=choose(initial,0,1600,'client-a');
-  const localB=choose(initial,1,1700,'client-b');
+  const publishedA=choose(initial,0,1600,'p1');
+  const localB=choose(initial,1,1700,'p1');
   const afterBSync=merge(localB,publishedA);
   const tasks=pending(afterBSync);
   assert.equal(tasks.length,1);
