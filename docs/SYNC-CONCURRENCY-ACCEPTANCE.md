@@ -177,3 +177,30 @@ Een scenario is alleen PASS als beide clients na herstart dezelfde definitieve t
 - Inspectie van een taak liet zien dat beide alternatieven hetzelfde voorbeeldrecord `Hypotheek` bevatten met `example: true`.
 - Geen van de taken is beoordeeld; geen bestanden zijn handmatig verwijderd en er zijn geen productiegegevens gebruikt.
 - PR #9 bevat nu een regressiefix: voorbeeldrecords worden vóór samenvoegen gefilterd en eerder opgeslagen voorbeeldconflicten worden opgeschoond. De CI-regressietests zijn groen (63/63). Hervat de acceptatie pas met een nieuwe preview van de gefixte PR-head; de bestaande synthetische repository mag worden hergebruikt nadat de nieuwe code beide profielen heeft opgeschoond en nul reviewtaken toont.
+
+
+### Automatische acceptatiedekking – 16 november 2026 (PR #9)
+
+Laatste geverifieerde PR-head: `29404ca2c3b7e0870a8362adb1f5321bc2abf8a3`. GitHub Actions-run **#448**: **82 tests geslaagd, 0 mislukt**. De onderstaande statussen beschrijven uitsluitend geautomatiseerde synthetische dekking; ze betekenen niet dat de volledige acceptatiecriteria hierboven zijn afgerond.
+
+| ID | Geautomatiseerde dekking | Status en beperking |
+|---|---|---|
+| S01 | Twee onafhankelijke kluizen lezen bewust dezelfde remote SHA; één upload krijgt HTTP 409 en retryt na opnieuw lezen. | **PASS** op de geïsoleerde mock GitHub Contents API. |
+| S02 | Twee verschillende records blijven behouden na retry, afzonderlijk getest voor shared, personal-p1 en personal-p2. | **PASS** voor de drie domeinen in de synthetische syncclienttest. |
+| S03 | Gelijke timestamps leveren deterministische reviewtaken voor de ondersteunde gegevenstypen. | **PARTIAL**: app-merge getest; geen afzonderlijke remote race met gelijke timestamps. |
+| S04 | Een oudere offline wijziging kan een nieuwere verwijdering niet terugdraaien; beide mergevolgordes getest. | **PARTIAL**: mergegedrag getest, niet de volledige twee-client runtime. |
+| S05 | Offline wijziging lokaal flushen, vault-instantie volledig sluiten/verwijderen, opnieuw openen en samenvoegen met een online wijziging van client B. | **PASS** in de synthetische Core-vault/syncintegratietest; geen fysieke browserherstart. |
+| S06 | Lokale opslagfout blokkeert flush en lock; een latere volledige opslag kan herstellen. | **PARTIAL**: lokale Core-opslagfout getest; geen volledige UI-/remote-syncfoutinjectie. |
+| S07 | Twee synthetische apparaten, verwijderledger, oude offline kopie, acknowledgement en tombstone-opruiming. | **PARTIAL**: Core-ledgerfuncties getest; geen volledige remote sync-run met echte device-instanties. |
+
+Aanvullende domeincontroles:
+
+| ID | Geautomatiseerde dekking | Status |
+|---|---|---|
+| V01–V02 | Tests controleren dat p1/p2 alleen gedeeld plus de eigen persoonlijke kluis openen; biometrische en wachtwoordpaden zijn afzonderlijk getest. | **PARTIAL**: fysieke runtime en alle combinaties nog niet afgevinkt. |
+| V03 | Legacy-splitsing en payloadvalidatie voorkomen verboden velden in het verkeerde domein. | **PASS** voor de adaptertests. |
+| V04 | Registry en syncclient gebruiken aparte remote paden; de nieuwe concurrencytest controleert alle drie de paden. | **PASS** voor de synthetische tests. |
+| V05 | Verkeerde domeinen en ontoegestane persoonlijke passkey-identiteiten worden geweigerd. | **PARTIAL**: een volledige verkeerde-sleutel-/beschadigde-envelopeproef op de remote syncroute ontbreekt nog. |
+| V06 | Twee clients synchroniseren ieder persoonlijk domein afzonderlijk; p1 en p2 blijven gescheiden. | **PASS** voor de synthetische domeinsync; fysieke apparaten niet getest. |
+
+**Nog niet afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, Safari/iOS/iPadOS, Windows Hello en de volledige passkey-/herinstallatie-/herstelproeven. De handmatige CR03 offline-herstartvariant blijft BLOCKED door de twee Edge-profielen op hetzelfde fysieke apparaat. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
