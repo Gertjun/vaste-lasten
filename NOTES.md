@@ -30,7 +30,7 @@ De branch bevat:
 - herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
 - CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
 
-Laatste geverifieerde PR #9-code-/test-head `29404ca2c3b7e0870a8362adb1f5321bc2abf8a3`: CI **#448**, 82 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. De automatische synthetische acceptatie dekt nu onder meer een echte SHA-409/retry-race voor alle drie de kluisdomeinen (S01/S02), oudere wijziging tegenover nieuwere verwijdering (S04), offline opslag en volledige vault-herstart met latere merge (S05), en Core-verwijderledger/acknowledgement (S07). S03, S04, S06 en S07 zijn nog gedeeltelijk gedekt; de exacte grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De volledige browser-/apparaatacceptatie en productiegegevensmigratie zijn NIET UITGEVOERD.
+Laatste geverifieerde PR #9-code-/test-head `2d9def1eff82860baa7acd70b8cbf2922f2c41e7`: CI **#457**, 86 tests geslaagd, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. De automatische synthetische acceptatie dekt onder meer SHA-409/retry-races voor alle drie de kluisdomeinen (S01/S02), offline opslag en volledige vault-herstart met latere merge (S05), verkeerde sleutel/domein/beschadigde remote ciphertext fail-closed (V05) en remote HTTP 500-fout plus expliciet herstel na retry (S06). S03, S04, S06 en S07 blijven gedeeltelijk gedekt; de exacte grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De volledige browser-/apparaatacceptatie en productiegegevensmigratie zijn NIET UITGEVOERD.
 
 ## 3. Open punten
 
@@ -43,7 +43,7 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 ## 4. Sessielog
 
-- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. S01/S02, S04, S05 en S07 zijn gedeeltelijk of volledig synthetisch afgedekt; CI #448 op head `29404ca2`: 82/82 geslaagd. De resterende beperkingen en PASS/PARTIAL-statussen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. De eerdere CR06-voorbeeldconflicten zijn met de PR-fix afgevangen; geen productiegegevens of productietokens gebruikt.
+- **16 nov 2026 – PR #9 acceptatie:** CR05 en aanvullende conflictkeuze-/UI-tests zijn geautomatiseerd. Daarna zijn V05 (verkeerd wachtwoord, verkeerd domein en beschadigde remote ciphertext) en S06 (remote HTTP 500, behoud van lokale pending-data en expliciete succesvolle retry) toegevoegd. CI #457 op head `2d9def1e`: 86/86 geslaagd. V05 is PASS op synthetische Core-routes; S06 blijft PARTIAL omdat UI-foutzichtbaarheid en fysieke netwerkuitval niet zijn getest. De resterende grenzen staan in `docs/SYNC-CONCURRENCY-ACCEPTANCE.md`. Geen productiegegevens of productietokens gebruikt.
 
 - **14 nov 2026:**
   - PWA-Core v1.1.0 lokaal vastgepind en geprecachet.
