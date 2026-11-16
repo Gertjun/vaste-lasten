@@ -234,7 +234,7 @@ test('runtime: lokale lege start weigert niet-lege bestaande kluis en overschrij
   const vault = h.vaults.shared;
   await vault.create(passwords.shared, {
     items: [{ id: 'keep-me', name: 'Bestaand record' }],
-    del: {}, paid: {}, meta: null, schema: 2, domain: 'vastelasten.shared.v1',
+    del: {}, paid: {}, meta: null, schema: 2, domain: 'shared',
   });
   const result = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
   assert.equal(result.complete, false);
