@@ -18,14 +18,14 @@
     return run(2166136261) + run(2246822519);
   };
   const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-  const empty = () => ({ version: 1, pending: {}, decisions: {} });
+  const empty = () => ({ version: 1, pending: {}, decisions: {}, records: {} });
   const normalize = (input) => {
     const out = empty();
     if (!input || input.version !== 1) return out;
     for (const [id, item] of Object.entries(input.pending || {})) {
-      if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) out.pending[id] = clone(item);
+      if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) { out.pending[id] = clone(item); out.records[id] = clone(item); }
     }
-    for (const [id, decisions] of Object.entries(input.decisions || {})) {
+    for (const [id, item] of Object.entries(input.records || {})) {\n      if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) out.records[id] = clone(item);\n    }\n    for (const [id, decisions] of Object.entries(input.decisions || {})) {
       if (!Array.isArray(decisions)) continue;
       out.decisions[id] = decisions.filter((d) => d && typeof d.id === 'string' && d.conflictId === id && Object.hasOwn(d, 'selected')).map(clone);
     }
@@ -65,7 +65,7 @@
         delete out.pending[id];
         continue;
       }
-      const original = a.pending[id] || b.pending[id] || out.pending[id];
+      const original = out.records[id] || a.pending[id] || b.pending[id] || out.pending[id];
       if (!original) continue;
       const alternatives = [...selected.values()].sort((x, y) => compare(canonical(x), canonical(y)));
       const nextId = conflictId(original.domain, original.path, 'concurrent-review', alternatives);
