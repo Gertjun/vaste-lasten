@@ -202,6 +202,8 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const publishedA = await clientAVault.decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
     assert.equal(publishedA.__conflicts.decisions[task.id]?.length, 1, 'A\'s keuze moet remote gepubliceerd zijn');
     const resultB = await core.sync();
+    assert.equal(resultB.results.shared, 'merged', 'B moet de afwijkende remote revisie via de merge-route verwerken');
+    assert.equal(resultB.state.samen.__conflicts.decisions[task.id]?.length, 2, 'de twee onafhankelijke beslissingen moeten beide in de payload staan');
     const afterB = pending(resultB.state.samen.__conflicts);
     assert.equal(afterB.length, 1);
     assert.equal(afterB[0].kind, 'concurrent-review');
