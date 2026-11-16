@@ -28,3 +28,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 ### D7 – GitHub-token lokaal versleuteld bewaren (12 nov 2026, 2.29.2)
 - **Besluit:** de GitHub-token staat niet in de leesbare configuratie in `localStorage`, maar wordt met AES-GCM versleuteld in IndexedDB bewaard. De encryptiesleutel is niet-exporteerbaar en staat apart in IndexedDB. Bestaande koppelingen migreren automatisch; ontkoppelen wist beide records.
 - **Waarom:** voorkomen dat de token bij gewone inspectie van `localStorage` direct zichtbaar is. Dit beschermt niet tegen kwaadaardige scripts die binnen dezelfde oorsprong draaien; IndexedDB en de sleutel zijn dan via de app-context te gebruiken.
+
+
+### D8 – Schone start zonder legacy-import (16 nov 2026, 3.2.0 in voorbereiding)
+- **Besluit:** Vaste Lasten wordt voor de nieuwe start opgebouwd uit drie lege PWA-Core-kluizen. Het eerste apparaat maakt shared + eigen aan; het tweede apparaat sluit aan op shared en maakt alleen de eigen persoonlijke kluis aan.
+- **Waarom:** de gebruiker voert de lasten opnieuw handmatig in. Oude lokale en remote legacygegevens worden niet gemigreerd. Ze blijven behouden tot beide apparaten en de drie nieuwe kluizen zijn gecontroleerd; opruiming gebeurt daarna afzonderlijk.
+- **Veiligheidsgrens:** bestaande niet-lege Core-kluizen worden geweigerd. Geen automatische reset, overschrijving of legacy-import.
