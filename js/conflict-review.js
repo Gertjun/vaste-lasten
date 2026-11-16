@@ -25,7 +25,10 @@
     for (const [id, item] of Object.entries(input.pending || {})) {
       if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) { out.pending[id] = clone(item); out.records[id] = clone(item); }
     }
-    for (const [id, item] of Object.entries(input.records || {})) {\n      if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) out.records[id] = clone(item);\n    }\n    for (const [id, decisions] of Object.entries(input.decisions || {})) {
+    for (const [id, item] of Object.entries(input.records || {})) {
+      if (item && item.id === id && Array.isArray(item.alternatives) && item.alternatives.length >= 2) out.records[id] = clone(item);
+    }
+    for (const [id, decisions] of Object.entries(input.decisions || {})) {
       if (!Array.isArray(decisions)) continue;
       out.decisions[id] = decisions.filter((d) => d && typeof d.id === 'string' && d.conflictId === id && Object.hasOwn(d, 'selected')).map(clone);
     }
