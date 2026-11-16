@@ -253,3 +253,18 @@ test('category review UI renders both the renamed and deleted alternatives with 
   assert.equal((host.innerHTML.match(/data-conflict-choice=/g)||[]).length,2);
   assert.match(host.innerHTML,/Kies deze versie/);
 });
+
+
+test('S04 an older offline edit cannot resurrect a record after a newer deletion', () => {
+  const edited = base(), deleted = base();
+  edited.items = [{ id: 'offline-record', name: 'Oude offline wijziging', amount: 90, u: 1800000000100 }];
+  deleted.del = { 'offline-record': 1800000000200 };
+
+  const editThenDelete = merge(edited, deleted);
+  const deleteThenEdit = merge(deleted, edited);
+  for (const result of [editThenDelete, deleteThenEdit]) {
+    assert.equal(result.items.some(item => item.id === 'offline-record'), false);
+    assert.equal(result.del['offline-record'], 1800000000200);
+    assert.equal(pending(result).length, 0, 'een oudere wijziging mag geen onnodig gelijk-tijdconflict openen');
+  }
+});
