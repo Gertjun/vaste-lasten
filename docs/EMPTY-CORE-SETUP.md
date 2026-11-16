@@ -41,11 +41,14 @@ De nieuwe testset gebruikt uitsluitend synthetische opslag, mockclients en Web C
 - tweede profiel maakt uitsluitend de eigen persoonlijke kluis aan;
 - niet-lege lokale of remote Core-inhoud wordt geweigerd;
 - verkeerd wachtwoord laat remote data onaangeroerd;
-- uploadfout verwijdert of reset de lokale lege kluis niet.
+- uploadfout verwijdert of reset de lokale lege kluis niet;
+- runtime-coördinatie op twee gescheiden apparaten, inclusief profielscheiding en hervatten na gedeeltelijk succes;
+- een niet-lege remote wijziging die na de eerste preflight verschijnt, wordt ook door de synchronisatie geweigerd;
+- wachtwoorden korter dan 12 tekens worden geweigerd voordat opslag wordt aangeraakt.
 
 ## Nog te verifiëren
 
-- Volledige GitHub Actions-CI op PR #10.
-- - Fysieke acceptatie op iPhone Safari en Windows 11 Edge, eerst op het eerste en daarna op het tweede apparaat.
+- Volledige GitHub Actions-CI op de nieuwste PR-head.
+- Fysieke acceptatie op iPhone Safari en Windows 11 Edge, eerst op het eerste en daarna op het tweede apparaat.
 
 Geen productiegegevens, echte privé-datarepository, productie-token of passkey gebruikt tijdens de geautomatiseerde tests.
