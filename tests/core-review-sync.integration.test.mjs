@@ -138,16 +138,20 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.ok(categoryTask, 'de twee oorspronkelijke categorieversies moeten een reviewtaak opleveren');
 
     const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 1000, storage: storage() });
-    const seedPersonal = createVault({ storagePrefix: 'pr9-seed-personal', kdfIterations: 1000, storage: storage() });
-    seedVaults.push(seedShared, seedPersonal);
+    const seedPersonalA = createVault({ storagePrefix: 'pr9-seed-personal-a', kdfIterations: 1000, storage: storage() });
+    const seedPersonalB = createVault({ storagePrefix: 'pr9-seed-personal-b', kdfIterations: 1000, storage: storage() });
+    seedVaults.push(seedShared, seedPersonalA, seedPersonalB);
     await seedShared.create('synthetic-password', initial);
-    await seedPersonal.create('synthetic-password', {
+    await seedPersonalA.create('synthetic-password', {
       items: [], del: {}, paid: {}, schema: 2, domain: 'personal-p1',
     });
-    await seedShared.flush();
-    await seedPersonal.flush();
+    await seedPersonalB.create('synthetic-password', {
+      items: [], del: {}, paid: {}, schema: 2, domain: 'personal-p2',
+    });
+    await Promise.all(seedVaults.map(vault => vault.flush()));
     remoteFiles.set('pwa-core-v1/samen.json', { sha: 'seed-shared', envelope: structuredClone(seedShared.getEnvelope()) });
-    remoteFiles.set('pwa-core-v1/eigen-p1.json', { sha: 'seed-personal', envelope: structuredClone(seedPersonal.getEnvelope()) });
+    remoteFiles.set('pwa-core-v1/eigen-p1.json', { sha: 'seed-personal-a', envelope: structuredClone(seedPersonalA.getEnvelope()) });
+    remoteFiles.set('pwa-core-v1/eigen-p2.json', { sha: 'seed-personal-b', envelope: structuredClone(seedPersonalB.getEnvelope()) });
     await Promise.all(seedVaults.map(vault => vault.dispose()));
     seedVaults = [];
 
@@ -169,8 +173,8 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
 
     // B opent eerst de oorspronkelijke taak en houdt die lokaal open.
     await core.unlock({
-      me: 'p1',
-      passwords: { shared: 'synthetic-password', 'personal-p1': 'synthetic-password' },
+      me: 'p2',
+      passwords: { shared: 'synthetic-password', 'personal-p2': 'synthetic-password' },
       settings: connection,
     });
     const staleB = core.getState();
@@ -199,10 +203,10 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       passwords: { shared: 'synthetic-password', 'personal-p1': 'synthetic-password' },
       settings: connection,
     });
-    const makeAppClient = (runtime, snapshot, at) => {
+    const makeAppClient = (runtime, snapshot, at, person) => {
       const context = {
         state: structuredClone(snapshot),
-        cfg: { me: 'p1' },
+        cfg: { me: person },
         VasteLastenConflictReview: review,
         Date: { now: () => at },
         saveLocal() {
@@ -221,13 +225,13 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     };
 
     // A gebruikt exact de conflictkeuzefuncties uit index.html en slaat offline op.
-    const appA = makeAppClient(coreA, coreA.getState(), 1600);
+    const appA = makeAppClient(coreA, coreA.getState(), 1600, 'p1');
     for (const currentTask of [task, categoryTask]) appA.choose('samen', currentTask.id, 0);
     await coreA.flushLocal();
     await coreA.connect(connection);
 
     // B kiest vanuit zijn eerder geopende UI-snapshot, ook via de echte app-functies.
-    const appB = makeAppClient(core, staleB, 1700);
+    const appB = makeAppClient(core, staleB, 1700, 'p2');
     for (const currentTask of [task, categoryTask]) appB.choose('samen', currentTask.id, 1);
 
     // Net als in de browser wordt saveLocal() niet afgewacht. De eerste online
