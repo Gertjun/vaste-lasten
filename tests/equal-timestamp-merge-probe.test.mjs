@@ -6,7 +6,7 @@ import vm from 'node:vm';
 // Characterize the exact merge() implementation embedded in index.html.
 // Synthetic records only: no browser, credentials, network, or real vaults.
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-const match = html.match(/function merge\\(a,b\\)\\s*\\{[\\s\\S]*?\\n\\}/);
+const match = html.match(/function merge\(a,b\)\s*\{[\s\S]*?\n\}/);
 assert.ok(match, 'merge(a,b) moet in index.html aanwezig zijn');
 
 const mergeById = (x, y) => {
