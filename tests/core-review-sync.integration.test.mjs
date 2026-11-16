@@ -278,3 +278,162 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     globalThis.fetch = previousFetch;
   }
 });
+
+
+test('S01/S02 two independent clients retry a real stale-SHA race and preserve records per vault domain', async () => {
+  const previousFetch = globalThis.fetch;
+  const remoteFiles = new Map();
+  const readCounts = new Map();
+  const barriers = new Map();
+  const conflicts = new Map();
+  let revision = 0;
+  const clients = [];
+
+  const barrierFor = path => {
+    if (!barriers.has(path)) {
+      let release;
+      const promise = new Promise(resolve => { release = resolve; });
+      barriers.set(path, { promise, release });
+    }
+    return barriers.get(path);
+  };
+
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(input);
+    const method = init.method || 'GET';
+    if (method === 'GET' && url.pathname === '/repos/synthetic-owner/synthetic-repo') {
+      return new Response(JSON.stringify({ private: true, default_branch: 'main' }), { status: 200 });
+    }
+    const marker = '/contents/';
+    const index = url.pathname.indexOf(marker);
+    if (index < 0) return new Response(null, { status: 404 });
+    const path = decodeURIComponent(url.pathname.slice(index + marker.length));
+
+    if (method === 'GET') {
+      // Beide clients lezen bewust dezelfde oude SHA vóórdat één van hen schrijft.
+      const snapshot = remoteFiles.get(path);
+      const count = (readCounts.get(path) || 0) + 1;
+      readCounts.set(path, count);
+      if (count <= 2) {
+        const barrier = barrierFor(path);
+        if (count === 2) barrier.release();
+        await barrier.promise;
+      }
+      if (!snapshot) return new Response(null, { status: 404 });
+      return new Response(JSON.stringify({
+        sha: snapshot.sha,
+        encoding: 'base64',
+        content: Buffer.from(JSON.stringify(snapshot.envelope)).toString('base64'),
+      }), { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+
+    if (method === 'PUT') {
+      const body = JSON.parse(init.body);
+      const current = remoteFiles.get(path);
+      if (current && body.sha !== current.sha) {
+        conflicts.set(path, (conflicts.get(path) || 0) + 1);
+        return new Response(JSON.stringify({ message: 'sha does not match' }), { status: 409 });
+      }
+      if (!current && body.sha) return new Response(null, { status: 409 });
+      const file = {
+        sha: 'sha-' + (++revision),
+        envelope: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')),
+      };
+      remoteFiles.set(path, file);
+      return new Response(JSON.stringify({ content: { sha: file.sha } }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response(null, { status: 405 });
+  };
+
+  try {
+    for (const domain of ['shared', 'personal-p1']) {
+      const path = domain === 'shared' ? 'pwa-core-v1/samen.json' : 'pwa-core-v1/eigen-p1.json';
+      const initial = domain === 'shared'
+        ? { items: [], del: {}, paid: {}, meta: null, schema: 2, domain }
+        : { items: [], del: {}, paid: {}, schema: 2, domain };
+      const seed = createVault({
+        storagePrefix: 's01-seed-' + domain,
+        kdfIterations: 1000,
+        storage: storage(),
+      });
+      clients.push(seed);
+      await seed.create('synthetic-password', initial);
+      await seed.flush();
+      remoteFiles.set(path, { sha: 'initial-' + domain, envelope: structuredClone(seed.getEnvelope()) });
+
+      const makeClient = async suffix => {
+        const vault = createVault({
+          storagePrefix: 's01-' + suffix + '-' + domain,
+          kdfIterations: 1000,
+          storage: storage(),
+        });
+        clients.push(vault);
+        await vault.importEnvelope(structuredClone(remoteFiles.get(path).envelope), 'synthetic-password');
+        vault.setSyncMeta({ sha: 'initial-' + domain, dirty: false });
+        await vault.setData({
+          ...structuredClone(vault.getData()),
+          items: [{
+            id: suffix + '-' + domain,
+            name: 'Synthetisch ' + suffix,
+            amount: suffix === 'client-a' ? 111 : 222,
+            u: 1800000000000,
+          }],
+        });
+        return vault;
+      };
+
+      const vaultA = await makeClient('client-a');
+      const vaultB = await makeClient('client-b');
+      const syncA = createSync({ vault: vaultA, appName: 'Vaste Lasten S01 A' });
+      const syncB = createSync({ vault: vaultB, appName: 'Vaste Lasten S01 B' });
+      const options = {
+        settings: {
+          owner: 'synthetic-owner', repo: 'synthetic-repo', branch: 'main',
+          path, token: 'synthetic-token',
+        },
+        merge: (local, remote) => mergeDomainPayload(local, remote, domain, mergeStore),
+        migrate: remote => validateDomainPayload(remote, domain),
+        schemaVersion: 2,
+      };
+
+      const results = await Promise.all([syncA.syncNow(options), syncB.syncNow(options)]);
+      assert.ok(results.includes('uploaded'), domain + ': precies één eerste upload moet winnen');
+      assert.ok(results.includes('merged'), domain + ': de verliezende client moet opnieuw lezen en samenvoegen');
+      assert.equal(conflicts.get(path), 1, domain + ': de mock remote moet exact één echte SHA-conflictrespons geven');
+      assert.ok(readCounts.get(path) >= 3, domain + ': de verliezende client moet na 409 opnieuw lezen');
+
+      // Laat beide clients de definitieve remote envelope ophalen en bevestig convergentie.
+      await syncA.syncNow(options);
+      await syncB.syncNow(options);
+      const finalData = await vaultA.decryptRemote(remoteFiles.get(path).envelope);
+      assert.equal(finalData.domain, domain);
+      assert.deepEqual(
+        JSON.parse(JSON.stringify(finalData.items.map(item => item.id).sort())),
+        ['client-a-' + domain, 'client-b-' + domain].sort(),
+        domain + ': beide onafhankelijke wijzigingen moeten behouden blijven',
+      );
+    }
+
+    assert.deepEqual(
+      [...remoteFiles.keys()].sort(),
+      ['pwa-core-v1/eigen-p1.json', 'pwa-core-v1/samen.json'],
+      'gedeelde en persoonlijke clients mogen uitsluitend hun eigen remote bestand schrijven',
+    );
+    const shared = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'shared')
+      .decryptRemote(remoteFiles.get('pwa-core-v1/samen.json').envelope);
+    const personal = await clients.find(vault => vault.isUnlocked() && vault.getData().domain === 'personal-p1')
+      .decryptRemote(remoteFiles.get('pwa-core-v1/eigen-p1.json').envelope);
+    assert.equal(shared.domain, 'shared');
+    assert.equal(personal.domain, 'personal-p1');
+    assert.ok(shared.items.every(item => item.id.endsWith('-shared')));
+    assert.ok(personal.items.every(item => item.id.endsWith('-personal-p1')));
+  } finally {
+    for (const vault of clients) {
+      try { if (vault.isUnlocked()) vault.lock(); } catch { /* cleanup continues */ }
+      try { await vault.dispose(); } catch { /* cleanup continues */ }
+    }
+    globalThis.fetch = previousFetch;
+  }
+});
