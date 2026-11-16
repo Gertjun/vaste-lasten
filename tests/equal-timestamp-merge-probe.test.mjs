@@ -21,6 +21,13 @@ const mergeById = (x, y) => {
 };
 const newest = (x, y) => !x ? (y ? { ...y } : undefined)
   : !y ? { ...x } : ((+y.u || 0) > (+x.u || 0) ? { ...y } : { ...x });
+const canon = (value) => {
+  if (Array.isArray(value)) return '[' + value.map(canon).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + canon(value[key])).join(',') + '}';
+  }
+  return JSON.stringify(value === undefined ? null : value);
+};
 
 const context = {
   EMPTY: () => ({ items: [], del: {}, paid: {}, meta: null }),
