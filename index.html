@@ -770,7 +770,7 @@ const CORE_MODE_KEY=BASE+'.v3.core';
 const CORE_STAGING_KEY=BASE+'.v3.legacy-staging';
 const CORE_EMPTY_SETUP_KEY=BASE+'.v3.empty-setup';
 let coreStagingMerged=false;
-let coreProfile=null, coreMode=false;
+let coreProfile=null, coreMode=false, coreSetupMode=false;
 try{const raw=localStorage.getItem(CORE_MODE_KEY); coreProfile=raw&&raw!=='1'?JSON.parse(raw):null; coreMode=raw==='1'||!!(coreProfile&&coreProfile.version===1);}catch(e){}
 let coreRuntime=null, coreReady=false, coreConnected=false, corePersistError='';
 let vaultChoiceDismissed=false;
@@ -2795,9 +2795,24 @@ async function lockCore(){
   coreReady=false; coreConnected=false; state={samen:EMPTY(),eigen:EMPTY()};
   render(); renderSyncPanel();
 }
+
+async function resetLocalCoreForSetup(){
+  if(!window.confirm('Alleen de drie lokale PWA-Core-kluizen op dit apparaat worden verwijderd, inclusief de lokale passkey-koppeling. Bestanden op GitHub en gegevens op andere apparaten blijven staan. Je kunt daarna een bestaande kluis koppelen of een nieuwe lege kluis aanmaken. Doorgaan?')) return;
+  await ensureCoreRuntime();
+  await coreRuntime.resetLocalVaults();
+  await idb('readwrite',store=>{store.delete('githubToken');store.delete('githubTokenKey');});
+  localStorage.removeItem(CORE_MODE_KEY);
+  localStorage.removeItem(CORE_EMPTY_SETUP_KEY);
+  localStorage.removeItem(CORE_STAGING_KEY);
+  localStorage.removeItem(CFGKEY);
+  coreProfile=null; coreMode=false; coreSetupMode=true; cfg=null;
+  coreReady=false; coreConnected=false; corePersistError=''; syncError='';
+  state={samen:EMPTY(),eigen:EMPTY()};
+  renderCoreGate(); renderSyncPanel();
+}
 function renderCoreGate(){
-  const firstStart=!coreMode&&!cfg;
-  if((coreMode&&coreReady)||(!coreMode&&cfg)||(firstStart&&vaultChoiceDismissed)){
+  const firstStart=coreSetupMode||(!coreMode&&!cfg);
+  if(!coreSetupMode&&((coreMode&&coreReady)||(!coreMode&&cfg)||(firstStart&&vaultChoiceDismissed))){
     document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
     $('coreGate')?.remove(); return;
   }
@@ -2812,12 +2827,13 @@ function renderCoreGate(){
   const biometricControls=passkeyEnrolled
     ?'<div class="field"><span class="flabel">Of ontgrendel beide kluizen met één Face ID / passkey</span><div class="btns"><button class="btn primary" id="core-biometric">Ontgrendel beide kluizen</button></div></div>':'';
   gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px">'+
-    (firstStart?'<h2>Kies je gegevenskluis</h2><p class="note">Koppel een bestaande PWA-Core-kluis op GitHub, of maak op dit apparaat een nieuwe lokale kluis aan. Een lokale kluis kun je later veilig publiceren naar GitHub Sync.</p>'+coreFirstStartConnectHtml()+coreEmptySetupHtml()+'<div class="btns"><button class="btn" id="core-vault-existing">Oude synchronisatie-instellingen openen</button></div>' : '<h2>Vaste Lasten is vergrendeld</h2>')+
+    (firstStart?'<h2>Kies je gegevenskluis</h2><p class="note">Koppel een bestaande PWA-Core-kluis op GitHub, of maak op dit apparaat een nieuwe lokale kluis aan. Een lokale kluis kun je later veilig publiceren naar GitHub Sync.</p>'+coreFirstStartConnectHtml()+coreEmptySetupHtml()+'<div class="btns"><button class="btn" id="core-vault-existing">Oude synchronisatie-instellingen openen</button>'+(coreSetupMode?'<button class="btn danger" id="core-reset-local">Lokale kluizen op dit apparaat vervangen</button>':'')+'</div>' : '<h2>Vaste Lasten is vergrendeld</h2>')+
     ((cfg||coreProfile?.localOnly)?'<p class="note">Je gegevens staan in twee afzonderlijk versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.'+(coreProfile?.localOnly?' Deze kluizen zijn alleen op dit apparaat beschikbaar.':'')+'</p>'+
       '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
       '<div class="err" id="core-gate-err"></div><div class="btns">'+(cfg&&!coreProfile?.localOnly?'<button class="btn primary" id="core-unlock">Online ontgrendelen</button>':'')+'<button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
       biometricControls+
+      '<div class="btns"><button class="btn" id="core-vault-setup">Terug naar kluis instellen</button></div>'+
       (cfg&&!coreProfile?.localOnly?'<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>':'<p class="hint">Deze lokale kluis synchroniseert nog niet met andere apparaten. Stel GitHub Sync in via het synchronisatiepaneel nadat je lokaal hebt ontgrendeld.</p>')+
       (cfg&&!coreProfile?.localOnly?'<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p><div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div><div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>':'')
       :(firstStart?'':'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>'))+
@@ -3082,6 +3098,11 @@ document.addEventListener('click',e=>{
   if(id==='core-empty-setup') busy(id,'Kluizen controleren…',initializeEmptyCore,'core-empty-err');
   if(id==='core-existing-connect') busy(id,'PWA-Core koppelen…',connectExistingCore,'core-existing-err');
   if(id==='core-local-connect') busy(id,'GitHub Sync koppelen…',connectLocalCore,'core-local-err');
+  if(id==='core-vault-setup'){
+    coreSetupMode=true;
+    renderCoreGate();
+  }
+  if(id==='core-reset-local') busy(id,'Lokale kluizen wissen…',resetLocalCoreForSetup);
   if(id==='core-vault-existing'){
     vaultChoiceDismissed=true;
     document.querySelectorAll('body > *').forEach(node=>{node.inert=false;});
