@@ -306,7 +306,7 @@ export function createVasteLastenCore({
       for (const id of ids) {
         activeId = id;
         const vault = registry[id].vault;
-        const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+        const remoteSettings = { ...settings, path: domains[id].path };
         const rejectUnexpectedRemote = () => {
           throw new Error(`Tijdens het koppelen verscheen onverwacht een ander GitHub-bestand voor ${id}. De lokale kluis is behouden; controleer de repository voordat je opnieuw probeert.`);
         };
@@ -349,7 +349,7 @@ export function createVasteLastenCore({
       const remotes = {};
       for (const id of ids) {
         activeId = id;
-        remotes[id] = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+        remotes[id] = await clientFactory({ ...settings, path: domains[id].path }).getFile();
       }
       if (!remotes.shared) {
         throw new Error('De gedeelde PWA-Core-kluis ontbreekt in deze repository. Controleer de repository; er is niets aangemaakt of overschreven.');
@@ -400,7 +400,7 @@ export function createVasteLastenCore({
         const options = syncOptions(id);
         results[id] = await registry[id].sync.syncNow(options);
         await registry[id].vault.flush();
-        const confirmed = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+        const confirmed = await clientFactory({ ...settings, path: domains[id].path }).getFile();
         if (!confirmed || confirmed.sha !== registry[id].vault.getSyncMeta().sha) {
           throw new Error(`GitHub heeft de koppeling van ${id} niet bevestigd. Probeer opnieuw; bestaande gegevens blijven behouden.`);
         }
