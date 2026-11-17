@@ -829,7 +829,7 @@ function newWorkspaceId(){
 function coreWorkspaceChooserHtml(){
   if(!coreSetupMode||!coreProfiles.length) return '';
   return '<div class="hist"><h4>Bestaande gegevenskluizen</h4><p class="note">Kies een administratie om te openen. De gegevens blijven gescheiden; teruggaan naar dit scherm wist niets.</p>'+
-    coreProfiles.map(p=>'<div class="row" style="grid-template-columns:1fr auto"><div><b>'+esc(p.name||'Mijn administratie')+'</b><div class="meta"><span class="chip info">'+(p.localOnly?'Lokaal op dit apparaat':'Online · privérepository')+'</span>'+(p.repo?'<span>'+esc(p.owner+'/'+p.repo)+'</span>':'')+'</div></div><button class="btn primary" data-workspace-select="'+esc(p.id)+'">Kies kluis</button></div>').join('')+'</div>';
+    coreProfiles.map(p=>'<div class="row" style="grid-template-columns:1fr auto"><div><b>'+esc(p.name||'Mijn administratie')+'</b><div class="meta"><span class="chip info">'+(p.localOnly?'Lokaal op dit apparaat':'Online · privérepository')+'</span>'+(p.repo?'<span>'+esc(p.owner+'/'+p.repo)+'</span>':'')+(p.workspaceId&&p.workspaceId!=='default'?'<span>Kluiscode: <code>'+esc(p.workspaceId)+'</code></span>':'')+'</div></div><button class="btn primary" data-workspace-select="'+esc(p.id)+'">Kies kluis</button></div>').join('')+'</div>';
 }
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 const IS_CR06_PREVIEW=location.hostname==='gertjun.github.io'&&location.pathname.startsWith('/vaste-lasten-pr9-preview/');
@@ -2299,6 +2299,7 @@ $('themePanel').addEventListener('change',e=>{
 function coreFirstStartConnectHtml(){
   return '<div class="hist" id="coreExistingConnect"><h4>Bestaande PWA-Core-kluis koppelen</h4>'+
     fieldHtml('core-existing-name','Naam van deze administratie','autocomplete="off" placeholder="Bijvoorbeeld: Gezamenlijke administratie"')+
+    fieldHtml('core-existing-workspace-id','Kluiscode (alleen bij een benoemde administratie)','autocomplete="off" spellcheck="false" placeholder="Leeg laten voor de bestaande standaardkluis"')+
     '<p class="note">Gebruik dit op een tweede apparaat om de bestaande gedeelde kluis te openen. Je eigen persoonlijke kluis wordt gekoppeld als die al bestaat; anders wordt alleen jouw lege persoonlijke kluis aangemaakt. Oude bestanden in de repository worden niet gelezen of gewijzigd.</p>'+
     '<div class="two">'+fieldHtml('core-existing-owner','GitHub-gebruikersnaam (eigenaar)','autocapitalize="off" spellcheck="false" autocomplete="off"',cfg?.owner||'')+fieldHtml('core-existing-repo','Privé-repository','autocapitalize="off" spellcheck="false"',cfg?.repo||'vaste-lasten-data')+'</div>'+
     fieldHtml('core-existing-token','GitHub-token','type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"')+
@@ -2554,7 +2555,9 @@ async function persistCoreConnection(owner,repo,me,token){
 async function connectExistingCore(){
   if(!IS_PWA) throw new SyncError('PWA-Core koppelen werkt alleen in de geïnstalleerde app.');
   if(!navigator.onLine) throw new SyncError('Koppelen vereist internet.');
-  if(coreProfiles.some(p=>p.id==='default')) throw new SyncError('De bestaande standaardkluis staat al in de lijst. Kies die kluis in plaats van hem opnieuw toe te voegen.');
+  const workspaceId=$('core-existing-workspace-id')?.value.trim()||'default';
+  if(workspaceId!=='default'&&!/^[a-f0-9-]{8,64}$/i.test(workspaceId)) throw new SyncError('De kluiscode heeft geen geldig formaat. Gebruik de volledige code van de andere installatie.');
+  if(coreProfiles.some(p=>p.id===workspaceId)) throw new SyncError('Deze administratie staat al in de lijst. Kies haar in plaats van opnieuw te koppelen.');
   const owner=$('core-existing-owner')?.value.trim().replace(/^@/,'')||cfg?.owner||'';
   const repo=$('core-existing-repo')?.value.trim()||cfg?.repo||'';
   let token=$('core-existing-token')?.value.trim()||'';
@@ -2566,14 +2569,14 @@ async function connectExistingCore(){
   if(!token) throw new SyncError('Vul je GitHub-token in.');
   if(!shared||!personal) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
   await checkPrivateDataRepository(owner,repo,token);
-  pendingWorkspaceId='default';
+  pendingWorkspaceId=workspaceId;
   await ensureCoreRuntime();
   const result=await coreRuntime.connectExisting({me,passwords:{shared,[`personal-${me}`]:personal},settings:{owner,repo,token}});
   if(!result.complete) throw new SyncError(result.error?.message||'De bestaande PWA-Core-kluis kon niet volledig worden gekoppeld. Je kunt veilig opnieuw proberen.');
   await persistCoreConnection(owner,repo,me,token);
   ui.me=me; saveUi();
   state=result.state;
-  coreProfile={version:1,id:'default',workspaceId:'default',name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
+  coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
   saveCoreProfile(); pendingWorkspaceId=null;
   localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
