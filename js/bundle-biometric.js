@@ -1,6 +1,6 @@
 // App-eigen biometrische sleutelbundel voor de twee actieve Vaste Lasten-kluizen.
-// PWA-Core blijft ongewijzigd: deze wrapper geeft de bundelsleutel expliciet
-// wrapKey/unwrapKey-rechten, terwijl de afzonderlijke vault-DEK's encrypt/decrypt houden.
+// De bundel blijft app-eigen; Core levert de gedeelde userHandle-functies.
+// De bundelsleutel heeft wrapKey/unwrapKey-rechten; vault-DEK's houden encrypt/decrypt.
 import { randomBytes, secretKey, wrapDataKey, bytesToB64, b64ToBytes } from './core/crypto.js';
 import { createUserHandle as createCoreUserHandle, isForeignUserHandle as isCoreForeignUserHandle } from './core/biometric-factory.js';
 
