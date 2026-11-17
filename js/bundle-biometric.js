@@ -42,20 +42,6 @@ export function unwrapBundleKey(wrapped, passkeyKek) {
   );
 }
 
-/** Herkent app-eigen, gestructureerde WebAuthn userHandles bij opnieuw koppelen. */
-export function isForeignUserHandle(userHandle, allowedPrefixes = []) {
-  if (!userHandle || userHandle.byteLength === 0) return false;
-  const id = new Uint8Array(userHandle);
-  const colon = id.indexOf(0x3a);
-  // Oude credentials gebruikten een willekeurige userHandle; die blijven koppelbaar.
-  if (colon < 1 || colon > 40) return false;
-  return !allowedPrefixes.some((prefix) => {
-    if (typeof prefix !== 'string' || !prefix) return false;
-    const tag = encoder.encode(`${prefix}:`);
-    return id.length >= tag.length && tag.every((byte, index) => id[index] === byte);
-  });
-}
-
 export function createBundleBiometric({
   storagePrefix,
   appName = 'Vaste Lasten',
