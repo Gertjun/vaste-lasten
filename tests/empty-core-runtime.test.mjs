@@ -55,6 +55,7 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null, worksp
   const vaults = {};
   const syncCalls = [];
   const events = [];
+  const deviceBiometricCalls = [];
   let nextSha = 0;
   let failPath = failUploadPath;
 
@@ -168,13 +169,17 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null, worksp
       async enrollExisting() {},
       isEnrolled: () => false,
     }),
+    createDeviceBiometric: (options) => {
+      deviceBiometricCalls.push(options);
+      return { isEnrolled: () => false, disable() {} };
+    },
   };
   const clientFactory = (settings) => ({
     async checkRepo() { return { private: true, defaultBranch: 'main' }; },
     async getFile() { return clone(remoteFiles.get(settings.path) || null); },
   });
   const core = createVasteLastenCore({ storage: localStorage, mergeStore, clientFactory, factories, workspaceId });
-  return { core, remoteFiles, vaults, syncCalls, events };
+  return { core, remoteFiles, vaults, syncCalls, events, deviceBiometricCalls };
 }
 
 const connection = { owner: 'synthetic-owner', repo: 'synthetic-private-repo', token: 'synthetic-token' };
@@ -490,4 +495,23 @@ test('workspaces: een verkeerde kluiscode kan geen andere online administratie o
   assert.match(result.error.message, /gedeelde PWA-Core-kluis ontbreekt/);
   assert.deepEqual([...remoteFiles.entries()], before);
   await owner.core.lock();
+});
+
+
+test('workspaces: standaardadministratie behoudt bestaande passkey-identificaties en extra administraties krijgen eigen identificaties', () => {
+  const legacy = runtimeHarness();
+  const workspaceId = '33333333-3333-4333-8333-333333333333';
+  const named = runtimeHarness({ workspaceId });
+
+  legacy.core.isBiometricEnrolled('p1');
+  named.core.isBiometricEnrolled('p1');
+
+  assert.equal(legacy.deviceBiometricCalls[0].storagePrefix, 'vaste-lasten-device-p1');
+  assert.deepEqual(legacy.deviceBiometricCalls[0].allowedUserHandlePrefixes, [
+    'vaste-lasten-shared', 'vaste-lasten-personal-p1',
+  ]);
+  assert.equal(named.deviceBiometricCalls[0].storagePrefix, `vaste-lasten-${workspaceId}-device-p1`);
+  assert.deepEqual(named.deviceBiometricCalls[0].allowedUserHandlePrefixes, [
+    `vaste-lasten-${workspaceId}-shared`, `vaste-lasten-${workspaceId}-personal-p1`,
+  ]);
 });
