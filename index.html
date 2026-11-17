@@ -790,9 +790,17 @@ try{
     coreProfiles=[coreProfile];
     localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   }
-  const active=localStorage.getItem(CORE_ACTIVE_KEY)||coreProfile?.id||coreProfiles[0]?.id||null;
-  coreProfile=active==='__chooser__'?null:(coreProfiles.find(p=>p.id===active)||coreProfiles[0]||null);
-  coreMode=!!coreProfile;
+  // Toon bij iedere nieuwe app-start eerst de administratiekeuze.
+  // De laatst gekozen administratie blijft bewaard, maar wordt pas geopend na een expliciete keuze.
+  if(coreProfiles.length){
+    coreProfile=null;
+    coreMode=false;
+    coreSetupMode=true;
+    localStorage.setItem(CORE_ACTIVE_KEY,'__chooser__');
+  }else{
+    coreProfile=null;
+    coreMode=false;
+  }
 }catch(e){coreProfiles=[];coreProfile=null;coreMode=false;}
 let coreRuntime=null, coreRuntimeWorkspaceId=null, pendingWorkspaceId=null;
 try{const draft=localStorage.getItem(CORE_DRAFT_KEY);if(!coreProfile&&draft&&/^[a-f0-9-]{8,64}$/i.test(draft))pendingWorkspaceId=draft;}catch(e){}
@@ -2589,7 +2597,7 @@ async function connectExistingCore(){
   coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
   saveCoreProfile(); pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
+  coreMode=true; coreSetupMode=false; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
   toast('Bestaande PWA-Core-kluis gekoppeld als '+nameOf(me));
 }
@@ -2777,7 +2785,7 @@ async function initializeEmptyCore(){
   }
   saveCoreProfile(); pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(coreProfile.workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  coreMode=true; coreReady=true; corePersistError=''; syncError='';
+  coreMode=true; coreSetupMode=false; coreReady=true; corePersistError=''; syncError='';
   if(timer){clearTimeout(timer);timer=null;}
   render(); renderSyncPanel(); pillIdle();
 }
