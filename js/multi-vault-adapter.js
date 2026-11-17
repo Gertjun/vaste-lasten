@@ -48,11 +48,13 @@ function assertDomainId(id, domains = VAULT_DOMAINS) {
 }
 
 /** Splitst de oude lokale {samen,eigen}-state zonder privévelden te kopiëren. */
-export function splitLegacyState(state, me) {
+export function splitLegacyState(state, me, domains = VAULT_DOMAINS) {
   if (!['p1', 'p2'].includes(me)) throw new TypeError('Persoon moet p1 of p2 zijn.');
   if (!isRecord(state) || !isRecord(state.samen) || !isRecord(state.eigen)) {
     throw new TypeError('De bestaande lokale gegevens hebben geen herkenbare {samen,eigen}-structuur.');
   }
+  assertDomainId('shared', domains);
+  assertDomainId(`personal-${me}`, domains);
 
   const shared = clone(state.samen);
   for (const key of ['prof', 'scen']) delete shared[key];
@@ -60,9 +62,19 @@ export function splitLegacyState(state, me) {
   const personal = clone(state.eigen);
   for (const key of ['meta', 'cats', 'inc', 'settle']) delete personal[key];
 
+  // Een benoemde administratie heeft een eigen workspace-identiteit. Neem die
+  // expliciet mee bij het omzetten van app-state naar Core-payloads; zonder deze
+  // waarde wijst validateDomainPayload de legitieme restore als vreemde kluis af.
+  const workspaceFields = (id) => domains[id].workspaceId
+    ? { workspaceId: domains[id].workspaceId }
+    : {};
+
   return {
-    shared: { ...shared, schema: 2, domain: 'shared' },
-    [`personal-${me}`]: { ...personal, schema: 2, domain: `personal-${me}` },
+    shared: { ...shared, ...workspaceFields('shared'), schema: 2, domain: 'shared' },
+    [`personal-${me}`]: {
+      ...personal, ...workspaceFields(`personal-${me}`),
+      schema: 2, domain: `personal-${me}`,
+    },
   };
 }
 
@@ -410,7 +422,7 @@ export async function migrateActiveDomains({
   await raiseBarrier();
 
   const latestState = typeof getState === 'function' ? getState() : state;
-  const split = splitLegacyState(latestState, me);
+  const split = splitLegacyState(latestState, me, domains);
   const active = ['shared', `personal-${me}`];
   const results = {};
   for (const id of active) {
