@@ -2549,25 +2549,28 @@ async function persistCoreConnection(owner,repo,me,token){
 async function connectExistingCore(){
   if(!IS_PWA) throw new SyncError('PWA-Core koppelen werkt alleen in de geïnstalleerde app.');
   if(!navigator.onLine) throw new SyncError('Koppelen vereist internet.');
+  if(coreProfiles.some(p=>p.id==='default')) throw new SyncError('De bestaande standaardkluis staat al in de lijst. Kies die kluis in plaats van hem opnieuw toe te voegen.');
   const owner=$('core-existing-owner')?.value.trim().replace(/^@/,'')||cfg?.owner||'';
   const repo=$('core-existing-repo')?.value.trim()||cfg?.repo||'';
   let token=$('core-existing-token')?.value.trim()||'';
   if(!token&&cfg) token=await tokenFor(cfg);
   const me=$('core-existing-me')?.value==='p2'?'p2':'p1';
+  const name=$('core-existing-name')?.value.trim()||'Mijn administratie';
   const shared=$('core-existing-s')?.value||'', personal=$('core-existing-e')?.value||'';
   if(!owner||!repo) throw new SyncError('Vul de GitHub-gebruikersnaam en repository in.');
   if(!token) throw new SyncError('Vul je GitHub-token in.');
   if(!shared||!personal) throw new SyncError('Vul het gezamenlijke en je eigen Core-wachtwoord in.');
   await checkPrivateDataRepository(owner,repo,token);
+  pendingWorkspaceId='default';
   await ensureCoreRuntime();
   const result=await coreRuntime.connectExisting({me,passwords:{shared,[`personal-${me}`]:personal},settings:{owner,repo,token}});
   if(!result.complete) throw new SyncError(result.error?.message||'De bestaande PWA-Core-kluis kon niet volledig worden gekoppeld. Je kunt veilig opnieuw proberen.');
   await persistCoreConnection(owner,repo,me,token);
   ui.me=me; saveUi();
   state=result.state;
-  coreProfile={version:1,owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
+  coreProfile={version:1,id:'default',workspaceId:'default',name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
+  saveCoreProfile(); pendingWorkspaceId=null;
   localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
   toast('Bestaande PWA-Core-kluis gekoppeld als '+nameOf(me));
@@ -2604,9 +2607,12 @@ async function connectLocalCore(){
 }
 
 async function ensureCoreRuntime(){
-  if(coreRuntime) return coreRuntime;
+  const workspaceId=pendingWorkspaceId||coreProfile?.workspaceId||'default';
+  if(coreRuntime&&coreRuntimeWorkspaceId===workspaceId) return coreRuntime;
+  if(coreRuntime&&coreReady) await coreRuntime.lock();
   const mod=await import('./js/vastelasten-core.js');
-  coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge});
+  coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge,workspaceId});
+  coreRuntimeWorkspaceId=workspaceId;
   return coreRuntime;
 }
 async function coreSettings(){
@@ -2712,31 +2718,42 @@ async function migrateToCore(){
   toast('PWA-Core is actief. Beide kluizen zijn gemigreerd.');
 }
 async function initializeEmptyCore(){
-  if(!IS_PWA) throw new SyncError('De lege start werkt alleen in de geïnstalleerde PWA.');
+  if(!IS_PWA) throw new SyncError('Een nieuwe administratie aanmaken werkt alleen in de geïnstalleerde PWA.');
+  const name=$('core-empty-name')?.value.trim()||'Mijn administratie';
+  const storageType=$('core-empty-storage')?.value==='online'?'online':'local';
+  const me=$('core-empty-me')?.value==='p2'?'p2':'p1';
   const sharedPassword=$('core-empty-s')?.value||'';
   const personalPassword=$('core-empty-e')?.value||'';
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het nieuwe gezamenlijke en persoonlijke wachtwoord in.');
-  await ensureCoreRuntime();
-  const me=cfg?.me||ui.me||'p1';
   const passwords={shared:sharedPassword,[`personal-${me}`]:personalPassword};
-  if(cfg){
-    if(!navigator.onLine) throw new SyncError('Een nieuwe gesynchroniseerde kluis vereist internet. Kies anders voor een lokale start zonder GitHub Sync.');
-    const result=await coreRuntime.initializeEmpty({me,passwords,settings:await coreSettings()});
-    if(!result.complete) throw new SyncError('De lege start is gestopt bij '+(result.failedDomain||'een van de kluizen')+'. Eerder bevestigde lege kluizen zijn behouden. '+(result.error?.message||''));
-    state=result.state;
-    coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me,coreRelease:'v1.1.0',emptySetup:true};
+  const workspaceId=newWorkspaceId();
+  pendingWorkspaceId=workspaceId;
+  if(storageType==='online'){
+    if(!navigator.onLine) throw new SyncError('Een online administratie aanmaken vereist internet.');
+    const owner=$('core-empty-owner')?.value.trim().replace(/^@/,'')||'';
+    const repo=$('core-empty-repo')?.value.trim()||'';
+    const token=$('core-empty-token')?.value.trim()||'';
+    if(!owner||!repo) throw new SyncError('Vul de GitHub-gebruikersnaam en privé-repository in.');
+    if(!token) throw new SyncError('Vul je GitHub-token in.');
+    await checkPrivateDataRepository(owner,repo,token);
+    await persistCoreConnection(owner,repo,me,token);
+    const result=await (await ensureCoreRuntime()).initializeEmpty({me,passwords,settings:{owner,repo,token}});
+    if(!result.complete) throw new SyncError('De online lege start is gestopt bij '+(result.failedDomain||'een van de kluizen')+'. Eerder bevestigde lege kluizen zijn behouden. '+(result.error?.message||''));
+    state=result.state; cfg={owner,repo,me,salt:{},iter:{}};
+    coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
     coreConnected=true; lastSync=new Date();
-    toast('De twee actieve lege Core-kluizen zijn op GitHub bevestigd. Herhaal dit op het andere apparaat.');
+    toast('De nieuwe administratie is online aangemaakt en door GitHub bevestigd.');
   }else{
-    const result=await coreRuntime.initializeEmptyLocal({me,passwords});
+    cfg=null; localStorage.removeItem(CFGKEY);
+    const result=await (await ensureCoreRuntime()).initializeEmptyLocal({me,passwords});
     if(!result.complete) throw new SyncError('De lokale lege start is gestopt bij '+(result.failedDomain||'een van de kluizen')+'. Eerder aangemaakte lege kluizen zijn behouden. '+(result.error?.message||''));
     state=result.state;
-    coreProfile={version:1,me,coreRelease:'v1.1.0',localOnly:true,emptySetup:true};
+    coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'local',me,coreRelease:'v1.1.0',localOnly:true,emptySetup:true};
     coreConnected=false; lastSync=null;
-    toast('Je nieuwe lokale kluis is aangemaakt. Zonder GitHub Sync blijven de gegevens op dit apparaat.');
+    toast('De nieuwe lokale administratie is aangemaakt. De gegevens staan alleen op dit apparaat.');
   }
+  saveCoreProfile(); pendingWorkspaceId=null;
   localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
   coreMode=true; coreReady=true; corePersistError=''; syncError='';
   if(timer){clearTimeout(timer);timer=null;}
   render(); renderSyncPanel(); pillIdle();
