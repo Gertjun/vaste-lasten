@@ -210,7 +210,7 @@ export function createVasteLastenCore({
     requireSession();
     const snapshot = clone(nextState);
     const work = async () => {
-      const split = splitLegacyState(snapshot, me);
+      const split = splitLegacyState(snapshot, me, domains);
       for (const id of activeIds()) {
         const vault = registry[id].vault;
         const current = vault.getData();
