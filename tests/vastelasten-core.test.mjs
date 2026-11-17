@@ -2,28 +2,51 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { webcrypto } from 'node:crypto';
-import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
+import { generateDataKey, encryptJSON, decryptJSON, b64ToBytes } from '../js/core/crypto.js';
 import {
   createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey,
-  isForeignUserHandle,
 } from '../js/bundle-biometric.js';
+import { createUserHandle as createCoreUserHandle, isForeignUserHandle as isCoreForeignUserHandle } from '../js/core/biometric-factory.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
-test('existing passkey relinking accepts only the shared and matching personal vault userHandles', () => {
-  const encode = (value) => new TextEncoder().encode(value).buffer;
-  const allowed = [
-    'vaste-lasten-device-p1',
-    'vaste-lasten-shared',
-    'vaste-lasten-personal-p1',
-  ];
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-shared:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-device-p1:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p2:credential'), allowed), true);
-  assert.equal(isForeignUserHandle(encode('cryptotracker:credential'), allowed), true);
+
+test('Core bundle userHandles are compact, scope-bound and accept only explicit legacy formats', async () => {
+  const storagePrefix = `vaste-lasten-${'very-long-workspace-name-'.repeat(5)}device-p1`;
+  const userHandle = await createCoreUserHandle({ storagePrefix, scope: 'bundle' });
+  assert.ok(userHandle.byteLength <= 64);
+  assert.match(new TextDecoder().decode(userHandle), /^pwc1:bundle:[a-f0-9]{24}:/);
+  assert.equal(await isCoreForeignUserHandle(userHandle, { storagePrefix, scope: 'bundle' }), false);
+  assert.equal(await isCoreForeignUserHandle(userHandle, { storagePrefix, scope: 'vault' }), true);
+
+  const legacyPrefixHandle = new TextEncoder().encode(`${storagePrefix}:legacy`);
+  assert.equal(await isCoreForeignUserHandle(legacyPrefixHandle, { storagePrefix, scope: 'bundle' }), false);
+
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(storagePrefix)));
+  const oldHash = [...digest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const legacyCompactHandle = new TextEncoder().encode(`vl1-${oldHash}:legacy`);
+  assert.equal(await isCoreForeignUserHandle(legacyCompactHandle, {
+    storagePrefix, scope: 'bundle', legacyTags: [`vl1-${oldHash}:`],
+  }), false);
+
+  const foreignWorkspaceHandle = await createCoreUserHandle({ storagePrefix: 'cryptotracker-device-p1', scope: 'bundle' });
+  assert.equal(await isCoreForeignUserHandle(foreignWorkspaceHandle, { storagePrefix, scope: 'bundle' }), true);
+});
+
+test('Core relinking accepts only the active vault domains and legacy random handles', async () => {
+  const encode = (value) => new TextEncoder().encode(value);
+  const options = {
+    storagePrefix: 'vaste-lasten-device-p1',
+    scope: 'bundle',
+    legacyPrefixes: ['vaste-lasten-device-p1', 'vaste-lasten-shared', 'vaste-lasten-personal-p1'],
+  };
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-shared:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-device-p1:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-personal-p2:credential'), options), true);
+  assert.equal(await isCoreForeignUserHandle(encode('cryptotracker:credential'), options), true);
   // Legacy passkeys used random user handles without an app prefix.
-  assert.equal(isForeignUserHandle(encode('legacy-random-user-handle'), allowed), false);
+  assert.equal(await isCoreForeignUserHandle(encode('legacy-random-user-handle'), options), false);
 });
 
 
@@ -60,7 +83,20 @@ test('bundle passkey relinking accepts an active vault credential and rejects th
     const bundleKey = await generateBundleKey();
     await biometric.enrollExisting(bundleKey);
     assert.equal(biometric.isEnrolled(), true);
+
+    // The compact vl1 format introduced by app PR #20 remains linkable.
+    const legacyDigest = new Uint8Array(await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode('vaste-lasten-device-p1'),
+    ));
+    const legacyHash = [...legacyDigest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    userHandle = new TextEncoder().encode(`vl1-${legacyHash}:legacy-credential`);
+    await biometric.enrollExisting(bundleKey);
     const previous = storage.getItem('vaste-lasten-device-p1:biometric-bundle');
+
+    // A vault-scoped Core passkey must not be mistaken for the bundle passkey.
+    userHandle = await createCoreUserHandle({ storagePrefix: 'vaste-lasten-device-p1', scope: 'vault' });
+    await assert.rejects(biometric.enrollExisting(bundleKey), /andere app/);
 
     userHandle = new TextEncoder().encode('vaste-lasten-personal-p2:other-person').buffer;
     await assert.rejects(biometric.enrollExisting(bundleKey), /andere app/);
@@ -129,6 +165,13 @@ test('app passkey adapter stores and restores a wrapping-capable bundle key with
     await biometric.enroll(bundleKey);
     assert.equal(biometric.isEnrolled(), true);
     assert.equal(createOptions.publicKey.extensions.prf.eval.first instanceof Uint8Array, true);
+    const expectedPrfSalt = new Uint8Array(await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`vaste-lasten-device-p1:biometric-bundle-prf:v1`),
+    ));
+    assert.deepEqual([...createOptions.publicKey.extensions.prf.eval.first], [...expectedPrfSalt]);
+    const storedBundle = JSON.parse(values.get('vaste-lasten-device-p1:biometric-bundle'));
+    assert.deepEqual([...b64ToBytes(storedBundle.prfSalt)], [...expectedPrfSalt]);
     const unlocked = await biometric.unlock();
     assert.deepEqual([...unlocked.usages].sort(), ['unwrapKey', 'wrapKey']);
     assert.equal(getOptions.publicKey.userVerification, 'required');
@@ -181,9 +224,19 @@ test('new passkeys use a compact userHandle tag for long workspace prefixes and 
     const bundleKey = await generateBundleKey();
     await biometric.enroll(bundleKey);
 
+    const expectedPrfSalt = new Uint8Array(await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`${longPrefix}:biometric-bundle-prf:v1`),
+    ));
+    assert.deepEqual([...createOptions.publicKey.extensions.prf.eval.first], [...expectedPrfSalt]);
+    const storedBundle = JSON.parse(values.get(`${longPrefix}:biometric-bundle`));
+    assert.deepEqual([...b64ToBytes(storedBundle.prfSalt)], [...expectedPrfSalt]);
+
     const userId = new Uint8Array(createOptions.publicKey.user.id);
     assert.ok(userId.byteLength <= 64, `WebAuthn user.id was ${userId.byteLength} bytes`);
-    assert.match(new TextDecoder().decode(userId), /^vl1-[0-9a-f]{24}:/);
+    assert.match(new TextDecoder().decode(userId), /^pwc1:bundle:[0-9a-f]{24}:/);
+    assert.equal(await isCoreForeignUserHandle(userId, { storagePrefix: longPrefix, scope: 'bundle' }), false);
+    assert.equal(await isCoreForeignUserHandle(userId, { storagePrefix: longPrefix, scope: 'vault' }), true);
     assert.equal(biometric.isEnrolled(), true);
 
     // A newly-created compact tag must also be recognized by the relinking flow.

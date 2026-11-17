@@ -1,7 +1,8 @@
 // App-eigen biometrische sleutelbundel voor de twee actieve Vaste Lasten-kluizen.
-// PWA-Core blijft ongewijzigd: deze wrapper geeft de bundelsleutel expliciet
-// wrapKey/unwrapKey-rechten, terwijl de afzonderlijke vault-DEK's encrypt/decrypt houden.
+// De bundel blijft app-eigen; Core levert de gedeelde userHandle-functies.
+// De bundelsleutel heeft wrapKey/unwrapKey-rechten; vault-DEK's houden encrypt/decrypt.
 import { randomBytes, secretKey, wrapDataKey, bytesToB64, b64ToBytes } from './core/crypto.js';
+import { createUserHandle as createCoreUserHandle, isForeignUserHandle as isCoreForeignUserHandle } from './core/biometric-factory.js';
 
 const encoder = new TextEncoder();
 
@@ -41,20 +42,6 @@ export function unwrapBundleKey(wrapped, passkeyKek) {
   );
 }
 
-/** Herkent app-eigen, gestructureerde WebAuthn userHandles bij opnieuw koppelen. */
-export function isForeignUserHandle(userHandle, allowedPrefixes = []) {
-  if (!userHandle || userHandle.byteLength === 0) return false;
-  const id = new Uint8Array(userHandle);
-  const colon = id.indexOf(0x3a);
-  // Oude credentials gebruikten een willekeurige userHandle; die blijven koppelbaar.
-  if (colon < 1 || colon > 40) return false;
-  return !allowedPrefixes.some((prefix) => {
-    if (typeof prefix !== 'string' || !prefix) return false;
-    const tag = encoder.encode(`${prefix}:`);
-    return id.length >= tag.length && tag.every((byte, index) => id[index] === byte);
-  });
-}
-
 export function createBundleBiometric({
   storagePrefix,
   appName = 'Vaste Lasten',
@@ -75,7 +62,7 @@ export function createBundleBiometric({
 
   // WebAuthn limits user.id to 64 bytes. Hash the full device/workspace prefix
   // into a compact, stable tag so even long named workspaces remain supported.
-  async function compactUserHandlePrefix() {
+  async function legacyCompactUserHandlePrefix() {
     const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(storagePrefix)));
     const shortHash = [...digest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
     return `vl1-${shortHash}`;
@@ -124,10 +111,7 @@ export function createBundleBiometric({
 
   async function enroll(bundleKey) {
     const salt = await prfSalt();
-    const userTag = encoder.encode(`${await compactUserHandlePrefix()}:`);
-    const userId = new Uint8Array(userTag.length + 16);
-    userId.set(userTag);
-    userId.set(randomBytes(16), userTag.length);
+    const userId = await createCoreUserHandle({ storagePrefix, scope: 'bundle' });
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge: randomBytes(32),
@@ -160,8 +144,13 @@ export function createBundleBiometric({
         extensions: { prf: { eval: { first: salt } } },
       },
     });
-    const compactPrefix = await compactUserHandlePrefix();
-    if (isForeignUserHandle(assertion.response?.userHandle, [...acceptedUserHandlePrefixes, compactPrefix])) {
+    const legacyTag = await legacyCompactUserHandlePrefix();
+    if (await isCoreForeignUserHandle(assertion.response?.userHandle, {
+      storagePrefix,
+      scope: 'bundle',
+      legacyPrefixes: acceptedUserHandlePrefixes,
+      legacyTags: [`${legacyTag}:`],
+    })) {
       throw new Error(`Deze passkey hoort bij een andere app. Kies een passkey voor ${appName}.`);
     }
     const secret = readSecret(assertion.getClientExtensionResults().prf?.results?.first);
