@@ -30,6 +30,7 @@ const canon = (value) => {
 };
 
 const context = {
+  canon,
   EMPTY: () => ({ items: [], del: {}, paid: {}, meta: null }),
   MERGE: {
     cats: mergeById,
