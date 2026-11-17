@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.5.0 in voorbereiding** (herstelroute naar kluisinstellingen vanaf het vergrendelscherm).
+Laatst bijgewerkt: 17 november 2026 · versie **3.6.0 in voorbereiding** (meerdere benoemde lokale en online administraties).
 
 ---
 
@@ -11,6 +11,8 @@ Laatst bijgewerkt: 17 november 2026 · versie **3.5.0 in voorbereiding** (herste
 Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Vervolgwijzigingen lopen via afzonderlijke branches/PR's. Geen productiegegevensmigratie of productie-write zonder expliciet akkoord.
 
 ## 2. Stand
+
+- **PR #13 – 3.6.0 in voorbereiding:** de Core-runtime ondersteunt nu per administratie een eigen namespace. De standaardadministratie behoudt de bestaande prefixes en remote paden; extra administraties krijgen unieke lokale prefixes en online paden onder `workspaces/<kluiscode>/pwa-core-v1/`. De UI biedt een kluiskeuze op naam, lokale/online labels, naamgeving bij nieuwe administraties en herstel naar de keuze zonder data te wissen. Nieuwe tests controleren standaardpadbehoud en gescheiden remote bestanden. Volledige CI en functionele browser-/iPhone-tests moeten nog worden uitgevoerd; niet mergen of deployen voordat die controles groen zijn.
 
 Vaste Lasten gebruikt op `main` PWA-Core v1.1.0 als vastgepinde, meegeleverde basis. PR #5 is op 15 november 2026 gemerged; de actuele `main`-head vóór deze documentatie-PR is `77591c46404698371d11f04e4c5c05c77feb58f2`. De GitHub Actions-testworkflow (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de workflow, niet een handmatige runtimecontrole van de live pagina. De Core-modules worden door de service worker geprecachet; de app haalt tijdens gebruik geen Core-code op uit de Core-repository.
 
