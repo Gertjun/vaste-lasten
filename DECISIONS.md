@@ -68,3 +68,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Compatibiliteit:** de standaardadministratie behoudt de bestaande payloadstructuur zonder workspace-ID. Namen blijven uitsluitend presentatiemetadata en worden niet gebruikt voor sleutelafleiding.
 - **Veiligheid:** een bestand dat onder een andere workspace-namespace terechtkomt, wordt geweigerd, ook wanneer de wachtwoorden toevallig gelijk zijn. Er wordt niets naar de remote repository geschreven.
 - **Runtimebeheer:** bij het wisselen of resetten worden de drie workspacegebonden vault-instanties expliciet vrijgegeven. Lokale gegevens blijven bij gewoon wisselen behouden; de opslagprefixen kunnen daarna veilig opnieuw worden geopend.
+
+
+### D13 – Back-upherstel bevestigt Core-opslag (17 nov 2026)
+- **Besluit:** het terugzetten van een back-up in PWA-Core bouwt eerst een afzonderlijke nieuwe state op en wacht daarna op `persistState` én `flushLocal` voor de twee actieve kluizen.
+- **Succesmelding:** de app meldt pas dat de back-up lokaal is opgeslagen nadat beide opslagbewerkingen zijn bevestigd. Online synchronisatie volgt via de bestaande synchronisatieroute; lokale opslag wordt niet voorgesteld als remote bevestiging.
+- **Foutafhandeling:** een opslagfout wordt niet als ongeldige back-up gemeld. Bij een mogelijke gedeeltelijke opslag blijft de Core-runtime leidend en wordt de fout expliciet getoond; de gebruiker houdt de kluizen ontgrendeld en kan opnieuw proberen.

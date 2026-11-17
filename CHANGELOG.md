@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.6.1 — 17 november 2026
+- Opgelost: een back-up terugzetten in PWA-Core wacht nu op bevestigde lokale opslag in beide actieve kluizen voordat de app succes meldt.
+- Verbeterd: een opslagfout wordt apart gemeld en niet langer verward met een ongeldige back-up.
+
+
 ## 3.6.0 — 17 november 2026
 - Nieuw: meerdere benoemde administraties naast elkaar. Kies bij het openen welke kluis je wilt gebruiken; iedere administratie heeft een eigen naam en een duidelijk label voor lokaal of online.
 - Nieuw: maak een nieuwe administratie lokaal aan (alleen op dit apparaat) of online in een privé-GitHub-repository. Online administraties krijgen eigen bestanden en een deelbare kluiscode om op een ander apparaat dezelfde administratie te koppelen.
