@@ -447,7 +447,7 @@ test('workspaces: bestaande standaardpaden blijven exact behouden en benoemde we
   assert.equal(legacy['personal-p1'].path, 'pwa-core-v1/eigen-p1.json');
   assert.notEqual(first.shared.storagePrefix, second.shared.storagePrefix);
   assert.notEqual(first.shared.path, second.shared.path);
-  assert.match(first.shared.path, /^workspaces\\/11111111-1111-4111-8111-111111111111\\/pwa-core-v1\\/samen\\.json$/);
+  assert.equal(first.shared.path, 'workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json');
 });
 
 test('workspaces: twee online administraties in dezelfde repository schrijven naar gescheiden bestanden', async () => {
