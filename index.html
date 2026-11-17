@@ -3622,9 +3622,9 @@ if(IS_PWA){
 /* meerdere tabbladen of vensters: wat een ander tabblad bewaart, wordt hier samengevoegd (2.18.2) */
 function fromOtherTab(raw){
   if(coreMode){
-    try{localStorage.setItem(CORE_STAGING_KEY,raw);}catch(e){syncError='Een wijziging uit een oud tabblad kon niet lokaal worden veiliggesteld.';return;}
-    if(coreReady&&coreRuntime){
-      if(coreProfile?.workspaceId==='default') mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
+    if(coreProfile?.workspaceId==='default'){
+      try{localStorage.setItem(CORE_STAGING_KEY,raw);}catch(e){syncError='Een wijziging uit een oud tabblad kon niet lokaal worden veiliggesteld.';return;}
+      if(coreReady&&coreRuntime) mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
         state=next; render(); scheduleSync();
       }).catch(e=>{syncError=e.message||'Een wijziging uit een oud tabblad kon niet worden samengevoegd.';renderSyncPanel();});
     }
