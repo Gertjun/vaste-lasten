@@ -63,7 +63,13 @@ test('legacy state split carries the exact workspace identity for named vaults',
   assert.equal(validateDomainPayload(split['personal-p1'], 'personal-p1', domains), split['personal-p1']);
   assert.throws(
     () => validateDomainPayload({ ...split.shared, workspaceId: '87654321-abcd-1234-abcd-1234567890ab' }, 'shared', domains),
-    /andere administratie/,
+    /andere administratie.*Domein: shared.*Verwachte kluiscode: 12345678-abcd-1234-abcd-1234567890ab.*Aangetroffen kluiscode: 87654321-abcd-1234-abcd-1234567890ab/,
+  );
+  const { workspaceId: omittedWorkspaceId, ...withoutWorkspaceId } = split.shared;
+  assert.equal(omittedWorkspaceId, domains.shared.workspaceId);
+  assert.throws(
+    () => validateDomainPayload(withoutWorkspaceId, 'shared', domains),
+    /Domein: shared.*Verwachte kluiscode: 12345678-abcd-1234-abcd-1234567890ab.*Aangetroffen kluiscode: \(ontbreekt in de lokale kluisinhoud\)/,
   );
 });
 
