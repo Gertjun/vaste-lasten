@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "repository": "Gertjun/PWA-Core",
-  "version": "1.1.0",
-  "tag": "v1.1.0",
-  "commit": "9763502c2233ca3824b6525fd5a5785fb3596c9c",
-  "manifestSha256": "4ed3aaac52e28c54c2e478068285fcbe1a95ac749605aea6ce7c39f74c85f3cb"
+  "version": "1.2.0",
+  "tag": "v1.2.0",
+  "commit": "bf63ed00e57e7060bd622b7ae85961bd45ef272a",
+  "manifestSha256": "816072dc7ed8d619ebaab6da69858006428b7a6a7b66b336a07958b97450b134"
 }
