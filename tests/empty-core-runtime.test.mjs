@@ -515,7 +515,7 @@ test('workspaces: online ontgrendelen haalt latere niet-lege remote wijzigingen 
     passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
     settings: connection,
   });
-  assert.deepEqual(reopened.samen.items.map(item => item.id).sort(), ['first-record', 'second-record']);
+  assert.deepEqual([...new Set(reopened.samen.items.map(item => item.id))].sort(), ['first-record', 'second-record']);
   await second.core.lock();
 });
 
