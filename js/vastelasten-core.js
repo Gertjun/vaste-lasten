@@ -559,6 +559,7 @@ export function createVasteLastenCore({
         settings,
         createClient: clientFactory,
         mergeStore,
+        domains,
         legacySync,
         raiseBarrier,
       });
