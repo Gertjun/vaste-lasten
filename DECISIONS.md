@@ -47,3 +47,24 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - Veiligheid: een remote Core-bestand mag alleen worden hergebruikt als de SHA al lokaal als eigen publicatie is bevestigd en het bestand met de lokale datasleutel kan worden ontsleuteld. Onbekende of afwijkende remote bestanden worden geweigerd; ze worden niet samengevoegd of overschreven.
 - Hervatten: na een gedeeltelijke upload mag de gebruiker opnieuw proberen; reeds bevestigde bestanden worden gecontroleerd en ontbrekende bestanden gepubliceerd.
 - Tweede apparaat: de gedeelde remote kluis is verplicht; alleen de gekozen persoonlijke kluis wordt geïmporteerd of, als die nog niet bestaat, leeg aangemaakt. Legacybestanden blijven onaangeraakt.
+
+
+### D10 – Herstelroute vanaf het Core-vergrendelscherm (17 nov 2026, 3.5.0)
+- **Besluit:** vanaf het vergrendelscherm is het altijd mogelijk terug te keren naar de kluisinstellingen, ook als de huidige wachtwoorden niet meer werken.
+- **Veiligheid:** alleen teruggaan naar instellen wist niets. Het vervangen van lokale Core-kluizen vereist een afzonderlijke bevestiging en wist uitsluitend de lokale drie Core-kluizen plus de lokale passkey-koppeling op dat apparaat. Remote GitHub-bestanden en gegevens op andere apparaten blijven onaangeroerd.
+- **Waarom:** een gebruiker mag niet permanent vastlopen op een vergrendelscherm wanneer een wachtwoord of repositorykoppeling niet meer werkt.
+
+
+### D11 – Meerdere benoemde gegevenskluizen (17 nov 2026, 3.6.0)
+- **Besluit:** de gebruiker kan meerdere administraties naast elkaar bewaren en kiezen op naam. Iedere administratie bevat intern dezelfde drie domeinen: gezamenlijk, persoonlijk p1 en persoonlijk p2.
+- **Opslag:** lokale administraties krijgen per workspace een eigen lokale opslagprefix. Online administraties krijgen per workspace een eigen padnamespace in de gekozen privérepository en een deelbare kluiscode om dezelfde administratie op een ander apparaat te koppelen.
+- **Compatibiliteit:** de bestaande standaardadministratie blijft op de bestaande lokale prefixes en GitHub-paden staan; de profielnaam en workspace-identificatie veranderen de cryptografische sleutels of bestaande ciphertext niet.
+- **Herstel:** teruggaan naar de kluiskeuze wist niets. Een bevestigde lokale reset is beperkt tot de gekozen workspace op dit apparaat; andere workspaces en remote bestanden blijven behouden.
+
+
+### D12 – Workspace-identiteit en administratiekeuze bij opstarten (17 nov 2026, PR #13)
+- **Keuze:** bij iedere nieuwe app-start toont de PWA eerst de lijst met bestaande administraties. De laatst gebruikte administratie wordt niet automatisch geopend; de gebruiker kiest expliciet.
+- **Identiteit:** benoemde workspaces bewaren hun workspace-ID ook als metadata binnen de versleutelde domeinpayload. Bij openen, koppelen, synchroniseren en hervatten wordt gecontroleerd of de payload bij de gekozen workspace hoort.
+- **Compatibiliteit:** de standaardadministratie behoudt de bestaande payloadstructuur zonder workspace-ID. Namen blijven uitsluitend presentatiemetadata en worden niet gebruikt voor sleutelafleiding.
+- **Veiligheid:** een bestand dat onder een andere workspace-namespace terechtkomt, wordt geweigerd, ook wanneer de wachtwoorden toevallig gelijk zijn. Er wordt niets naar de remote repository geschreven.
+- **Runtimebeheer:** bij het wisselen of resetten worden de drie workspacegebonden vault-instanties expliciet vrijgegeven. Lokale gegevens blijven bij gewoon wisselen behouden; de opslagprefixen kunnen daarna veilig opnieuw worden geopend.

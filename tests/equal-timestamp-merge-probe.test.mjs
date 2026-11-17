@@ -21,8 +21,16 @@ const mergeById = (x, y) => {
 };
 const newest = (x, y) => !x ? (y ? { ...y } : undefined)
   : !y ? { ...x } : ((+y.u || 0) > (+x.u || 0) ? { ...y } : { ...x });
+const canon = (value) => {
+  if (Array.isArray(value)) return '[' + value.map(canon).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map((key) => JSON.stringify(key) + ':' + canon(value[key])).join(',') + '}';
+  }
+  return JSON.stringify(value === undefined ? null : value);
+};
 
 const context = {
+  canon,
   EMPTY: () => ({ items: [], del: {}, paid: {}, meta: null }),
   MERGE: {
     cats: mergeById,
@@ -51,25 +59,35 @@ function assertOrderDependent(label, left, right) {
   );
 }
 
-test('probe: conflicterende lasten met gelijke timestamp zijn volgordeafhankelijk', () => {
+function assertOrderIndependent(label, left, right) {
+  const lr = merge(left, right);
+  const rl = merge(right, left);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(lr)),
+    JSON.parse(JSON.stringify(rl)),
+    label + ': gelijke timestamps horen hier dezelfde uitkomst te geven'
+  );
+}
+
+test('probe: conflicterende lasten met gelijke timestamp geven dezelfde merge-uitkomst', () => {
   const a = base(), b = base();
   a.items = [{ id: 'same-record', u: timestamp, amount: 125, note: 'edit-from-A' }];
   b.items = [{ id: 'same-record', u: timestamp, amount: 250, note: 'edit-from-B' }];
-  assertOrderDependent('items', a, b);
+  assertOrderIndependent('items', a, b);
 });
 
-test('probe: conflicterende betaalvinkjes met gelijke timestamp zijn volgordeafhankelijk', () => {
+test('probe: conflicterende betaalvinkjes met gelijke timestamp geven dezelfde merge-uitkomst', () => {
   const a = base(), b = base();
   a.paid = { '2026-11': { rent: { p: true, u: timestamp, a: 125 } } };
   b.paid = { '2026-11': { rent: { p: false, u: timestamp, a: 250 } } };
-  assertOrderDependent('paid', a, b);
+  assertOrderIndependent('paid', a, b);
 });
 
-test('probe: conflicterende metadata met gelijke timestamp zijn volgordeafhankelijk', () => {
+test('probe: conflicterende metadata met gelijke timestamp geven dezelfde merge-uitkomst', () => {
   const a = base(), b = base();
   a.meta = { p1: 'Persoon A', p2: 'Partner', split: 50, u: timestamp };
   b.meta = { p1: 'A', p2: 'Persoon B', split: 60, u: timestamp };
-  assertOrderDependent('meta', a, b);
+  assertOrderIndependent('meta', a, b);
 });
 
 test('probe: categorieën, verrekeningen en scenario-items kiezen bij gelijke timestamp de eerste versie', () => {

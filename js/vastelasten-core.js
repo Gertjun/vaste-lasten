@@ -7,6 +7,7 @@ import { createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey 
 import { createClient } from './core/github.js';
 import {
   VAULT_DOMAINS,
+  createVaultDomains,
   createVaultRegistry,
   acquireActiveLocks,
   openAndSyncDomain,
@@ -19,10 +20,11 @@ import {
 } from './multi-vault-adapter.js';
 
 const clone = (value) => structuredClone(value);
-const emptyPayload = (id) => ({
+const emptyPayload = (id, domains = VAULT_DOMAINS) => ({
   items: [], del: {}, paid: {},
   ...(id === 'shared' ? { meta: null } : {}),
-  schema: 2, domain: VAULT_DOMAINS[id].domain,
+  schema: 2, domain: domains[id].domain,
+  ...(domains[id].workspaceId ? { workspaceId: domains[id].workspaceId } : {}),
 });
 
 export function createVasteLastenCore({
@@ -32,8 +34,10 @@ export function createVasteLastenCore({
   mergeStore,
   clientFactory = createClient,
   factories = {},
+  workspaceId = 'default',
 } = {}) {
   if (typeof mergeStore !== 'function') throw new TypeError('De bestaande Vaste Lasten merge-functie is verplicht.');
+  const domains = createVaultDomains({ workspaceId });
   const registry = createVaultRegistry({
     createVault: factories.createVault || createVault,
     createSync: factories.createSync || createSync,
@@ -42,23 +46,26 @@ export function createVasteLastenCore({
     storage,
     kdfIterations,
     appName,
+    domains,
   });
 
   const makeBundleKey = factories.generateBundleKey || generateBundleKey;
   const wrapBundleKey = factories.wrapVaultKey || wrapVaultKey;
   const unwrapBundleKey = factories.unwrapVaultKey || unwrapVaultKey;
-  const bundleStorageKey = (person) => `vaste-lasten:biometric-bundle:${person}:v1`;
+  const bundleStorageKey = (person) => workspaceId === 'default'
+    ? `vaste-lasten:biometric-bundle:${person}:v1`
+    : `vaste-lasten:${workspaceId}:biometric-bundle:${person}:v1`;
   const deviceBiometricFor = (person) => {
     if (!['p1', 'p2'].includes(person)) throw new TypeError('Persoon moet p1 of p2 zijn.');
     if (!deviceBiometrics.has(person)) {
       const factory = factories.createDeviceBiometric || createBundleBiometric;
       deviceBiometrics.set(person, factory({
-        storagePrefix: `vaste-lasten-device-${person}`,
+        storagePrefix: workspaceId === 'default' ? `vaste-lasten-device-${person}` : `vaste-lasten-${workspaceId}-device-${person}`,
         // Herkoppelen accepteert uitsluitend de eigen actieve Core-domeinen
         // (plus de nieuwe device-bundel), niet de persoonlijke kluis van de ander.
         allowedUserHandlePrefixes: [
-          VAULT_DOMAINS.shared.storagePrefix,
-          VAULT_DOMAINS[`personal-${person}`].storagePrefix,
+          domains.shared.storagePrefix,
+          domains[`personal-${person}`].storagePrefix,
         ],
         appName,
         storage,
@@ -120,7 +127,7 @@ export function createVasteLastenCore({
     const probe = clientFactory({
       ...input,
       branch: input.branch || 'main',
-      path: VAULT_DOMAINS.shared.path,
+      path: domains.shared.path,
     });
     const info = await probe.checkRepo();
     if (!info.private) throw new Error('De gegevensrepository moet privé zijn.');
@@ -161,11 +168,11 @@ export function createVasteLastenCore({
 
   function syncOptions(id) {
     if (!settings) throw new Error('Er is nog geen actieve GitHub-verbinding; synchroniseren kan pas na verbinden.');
-    const spec = VAULT_DOMAINS[id];
+    const spec = domains[id];
     return {
       settings: { ...settings, path: spec.path },
-      merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore),
-      migrate: (remote) => validateDomainPayload(remote, id),
+      merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore, domains),
+      migrate: (remote) => validateDomainPayload(remote, id, domains),
       schemaVersion: 2,
     };
   }
@@ -212,7 +219,7 @@ export function createVasteLastenCore({
         const appPayload = { ...split[id] };
         if (Object.hasOwn(current, '__pwaSync')) appPayload.__pwaSync = clone(current.__pwaSync);
         else delete appPayload.__pwaSync;
-        const next = mergeDomainPayload(current, appPayload, id, mergeStore);
+        const next = mergeDomainPayload(current, appPayload, id, mergeStore, domains);
         if (JSON.stringify(next) !== JSON.stringify(current)) await vault.setData(next);
         await vault.flush();
       }
@@ -238,11 +245,12 @@ export function createVasteLastenCore({
         await openAndSyncDomain({
           id,
           password: passwords?.[id],
-          legacyData: emptyPayload(id),
+          legacyData: emptyPayload(id, domains),
           registry,
           settings,
           createClient: clientFactory,
           mergeStore,
+          domains,
           allowCreate: false,
         });
       }
@@ -278,7 +286,7 @@ export function createVasteLastenCore({
       // Eerst alle remote bestanden lezen; vóór deze volledige preflight wordt niets gepubliceerd.
       for (const id of ids) {
         activeId = id;
-        const options = { ...settings, path: VAULT_DOMAINS[id].path };
+        const options = { ...settings, path: domains[id].path };
         remotes[id] = await clientFactory(options).getFile();
       }
       for (const id of ids) {
@@ -286,7 +294,7 @@ export function createVasteLastenCore({
         const vault = registry[id].vault;
         if (!vault.hasVault()) throw new Error(`De lokale kluis ${id} ontbreekt. Er is niets naar GitHub geschreven.`);
         await vault.unlockWithPassword(passwords?.[id]);
-        validateDomainPayload(vault.getData(), id);
+        validateDomainPayload(vault.getData(), id, domains);
         await vault.flush();
         const remote = remotes[id];
         if (remote) {
@@ -295,13 +303,13 @@ export function createVasteLastenCore({
             throw new Error(`Het GitHub-bestand voor ${id} bestaat al, maar hoort niet aantoonbaar bij deze lokale kluis. Er is niets overschreven. Controleer de repository.`);
           }
           // De SHA moet niet alleen bekend zijn; de inhoud moet ook met deze lokale datasleutel ontsleutelen.
-          validateDomainPayload(await vault.decryptRemote(remote.envelope), id);
+          validateDomainPayload(await vault.decryptRemote(remote.envelope), id, domains);
         }
       }
       for (const id of ids) {
         activeId = id;
         const vault = registry[id].vault;
-        const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+        const remoteSettings = { ...settings, path: domains[id].path };
         const rejectUnexpectedRemote = () => {
           throw new Error(`Tijdens het koppelen verscheen onverwacht een ander GitHub-bestand voor ${id}. De lokale kluis is behouden; controleer de repository voordat je opnieuw probeert.`);
         };
@@ -316,7 +324,7 @@ export function createVasteLastenCore({
         if (!confirmed || confirmed.sha !== vault.getSyncMeta().sha) {
           throw new Error(`GitHub heeft de publicatie van ${id} niet bevestigd. De lokale kluis is behouden; je kunt veilig opnieuw proberen.`);
         }
-        validateDomainPayload(await vault.decryptRemote(confirmed.envelope), id);
+        validateDomainPayload(await vault.decryptRemote(confirmed.envelope), id, domains);
       }
       return { complete: true, results, state: getState() };
     } catch (error) {
@@ -344,7 +352,7 @@ export function createVasteLastenCore({
       const remotes = {};
       for (const id of ids) {
         activeId = id;
-        remotes[id] = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+        remotes[id] = await clientFactory({ ...settings, path: domains[id].path }).getFile();
       }
       if (!remotes.shared) {
         throw new Error('De gedeelde PWA-Core-kluis ontbreekt in deze repository. Controleer de repository; er is niets aangemaakt of overschreven.');
@@ -369,24 +377,24 @@ export function createVasteLastenCore({
         const remote = remotes[id];
         if (vault.hasVault()) {
           await vault.unlockWithPassword(password);
-          validateDomainPayload(vault.getData(), id);
+          validateDomainPayload(vault.getData(), id, domains);
           const meta = vault.getSyncMeta();
           if (remote) {
             if (!meta.sha || meta.sha !== remote.sha) {
               throw new Error(`De lokale kluis ${id} en het GitHub-bestand verschillen. Er is niets overschreven; herstel eerst de juiste koppeling.`);
             }
-            validateDomainPayload(await vault.decryptRemote(remote.envelope), id);
+            validateDomainPayload(await vault.decryptRemote(remote.envelope), id, domains);
           } else if (id === 'shared' || meta.sha) {
             throw new Error(`Het eerder gekoppelde GitHub-bestand voor ${id} ontbreekt. De lokale kluis is behouden en wordt niet opnieuw gepubliceerd.`);
           }
         } else if (remote) {
           await vault.importEnvelope(remote.envelope, password);
-          validateDomainPayload(vault.getData(), id);
+          validateDomainPayload(vault.getData(), id, domains);
           vault.setSyncMeta({ ...vault.getSyncMeta(), sha: remote.sha, dirty: false });
         } else {
           if (id === 'shared') throw new Error('De gedeelde PWA-Core-kluis ontbreekt. Er is niets aangemaakt.');
-          await vault.create(password, emptyPayload(id));
-          validateDomainPayload(vault.getData(), id);
+          await vault.create(password, emptyPayload(id, domains));
+          validateDomainPayload(vault.getData(), id, domains);
         }
         await vault.flush();
       }
@@ -395,11 +403,11 @@ export function createVasteLastenCore({
         const options = syncOptions(id);
         results[id] = await registry[id].sync.syncNow(options);
         await registry[id].vault.flush();
-        const confirmed = await clientFactory({ ...settings, path: VAULT_DOMAINS[id].path }).getFile();
+        const confirmed = await clientFactory({ ...settings, path: domains[id].path }).getFile();
         if (!confirmed || confirmed.sha !== registry[id].vault.getSyncMeta().sha) {
           throw new Error(`GitHub heeft de koppeling van ${id} niet bevestigd. Probeer opnieuw; bestaande gegevens blijven behouden.`);
         }
-        validateDomainPayload(await registry[id].vault.decryptRemote(confirmed.envelope), id);
+        validateDomainPayload(await registry[id].vault.decryptRemote(confirmed.envelope), id, domains);
       }
       return { complete: true, results, state: getState() };
     } catch (error) {
@@ -425,6 +433,7 @@ export function createVasteLastenCore({
           settings,
           createClient: clientFactory,
           mergeStore,
+          domains,
         });
       }
       return { complete: true, results, state: getState() };
@@ -452,11 +461,11 @@ export function createVasteLastenCore({
         }
         if (vault.hasVault()) {
           await vault.unlockWithPassword(password);
-          assertEmptyDomainPayload(vault.getData(), id);
+          assertEmptyDomainPayload(vault.getData(), id, domains);
           results[id] = { id, existing: true, localOnly: true };
         } else {
-          await vault.create(password, emptyPayload(id));
-          assertEmptyDomainPayload(vault.getData(), id);
+          await vault.create(password, emptyPayload(id, domains));
+          assertEmptyDomainPayload(vault.getData(), id, domains);
           results[id] = { id, created: true, localOnly: true };
         }
         await vault.flush();
@@ -551,6 +560,7 @@ export function createVasteLastenCore({
         settings,
         createClient: clientFactory,
         mergeStore,
+        domains,
         legacySync,
         raiseBarrier,
       });
@@ -622,17 +632,30 @@ export function createVasteLastenCore({
     if (typeof asNewest !== 'function') throw new TypeError('De bestaande app-herstelbewerking ontbreekt.');
     const vault = registry[id].vault;
     const current = vault.getData();
-    const previous = validateDomainPayload(await vault.decryptRemote(envelope), id);
-    const newest = validateDomainPayload(asNewest(previous, current, Date.now()), id);
-    const reconciled = validateDomainPayload(vault.reconcileRestoredBackup(newest), id);
+    const previous = validateDomainPayload(await vault.decryptRemote(envelope), id, domains);
+    const newest = validateDomainPayload(asNewest(previous, current, Date.now()), id, domains);
+    const reconciled = validateDomainPayload(vault.reconcileRestoredBackup(newest), id, domains);
     await vault.setData(reconciled);
     await vault.flush();
     return syncDomain(id);
   }
 
   function hasVault(id) {
-    if (!Object.hasOwn(VAULT_DOMAINS, id)) throw new TypeError('Onbekend gegevensdomein.');
+    if (!Object.hasOwn(domains, id)) throw new TypeError('Onbekend gegevensdomein.');
     return registry[id].vault.hasVault();
+  }
+
+  /** Verwijdert uitsluitend de lokale Core-kluizen op dit apparaat; remote GitHub-bestanden blijven intact. */
+  async function resetLocalVaults() {
+    if (session) await release();
+    for (const id of Object.keys(domains)) await registry[id].vault.reset();
+    for (const person of ['p1', 'p2']) deviceBiometricFor(person).disable();
+  }
+
+  /** Geeft alle workspacegebonden vault-instanties vrij zonder lokale gegevens te verwijderen. */
+  async function dispose() {
+    if (session) await release();
+    for (const id of Object.keys(domains)) await registry[id].vault.dispose();
   }
 
   function isBiometricEnrolled(person = me) {
@@ -678,6 +701,8 @@ export function createVasteLastenCore({
     enrollExistingBiometric,
     restoreDomain,
     hasVault,
+    resetLocalVaults,
+    dispose,
     isBiometricEnrolled,
     getSyncDevices,
     deactivateSyncDevice,

@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.4.0 in voorbereiding** (lokale Core-kluizen veilig koppelen aan GitHub Sync).
+Laatst bijgewerkt: 17 november 2026 · versie **3.6.0 in voorbereiding** (meerdere benoemde lokale en online administraties).
 
 ---
 
@@ -11,6 +11,8 @@ Laatst bijgewerkt: 17 november 2026 · versie **3.4.0 in voorbereiding** (lokale
 Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Vervolgwijzigingen lopen via afzonderlijke branches/PR's. Geen productiegegevensmigratie of productie-write zonder expliciet akkoord.
 
 ## 2. Stand
+
+- **PR #13 – 3.6.0 in voorbereiding:** de Core-runtime ondersteunt per administratie een eigen namespace en versleutelde workspace-identiteit. De standaardadministratie behoudt de bestaande prefixes, remote paden en payloadstructuur; extra administraties krijgen unieke lokale prefixes en online paden onder `workspaces/<kluiscode>/pwa-core-v1/`. Bij iedere app-start verschijnt eerst de administratiekeuze. Tests controleren standaardpadbehoud, gescheiden remote bestanden, bescherming tegen een verkeerde workspace-identiteit, online heropening met latere remote wijzigingen, vrijgave van workspace-vaultinstanties en passkey-prefixen. Workflow #627 op code-head `7eb883706f8fa1b6bae8b8fbbd31a25bcec97c81` is groen: 125/125 tests, 0 fouten en 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn eveneens geslaagd. Praktische browser-/iPhone-tests moeten nog worden uitgevoerd; niet mergen of deployen.
 
 Vaste Lasten gebruikt op `main` PWA-Core v1.1.0 als vastgepinde, meegeleverde basis. PR #5 is op 15 november 2026 gemerged; de actuele `main`-head vóór deze documentatie-PR is `77591c46404698371d11f04e4c5c05c77feb58f2`. De GitHub Actions-testworkflow (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de workflow, niet een handmatige runtimecontrole van de live pagina. De Core-modules worden door de service worker geprecachet; de app haalt tijdens gebruik geen Core-code op uit de Core-repository.
 
@@ -43,6 +45,10 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **17 nov 2026 – herstel vanaf vergrendelscherm:** PR #13 voegt een route terug naar kluiskeuze toe zonder gegevens te wissen. Een afzonderlijk bevestigde lokale reset raakt alleen de gekozen workspace op dit apparaat; remote GitHub-bestanden en andere workspaces blijven behouden.
+- **17 nov 2026 – testcorrectie:** op commit `31c0e9e14068f52844b1b8b32f592b8b50d18e5f` slaagde workflow #572 met 118/118 tests. Dit was vóór de daaropvolgende workspace-refactor en is dus geen testbewijs voor de huidige code.
+- **17 nov 2026 – benoemde administraties:** PR #13 voegt een workspace-register, lokale/online keuze, unieke opslagprefixen en remote paden per kluiscode toe. Bij iedere app-start wordt eerst de kluiskeuze getoond. Benoemde workspaces krijgen een versleutelde workspace-ID in elk domeinbestand; bestanden uit een andere namespace worden ook bij gelijke wachtwoorden geweigerd. Online heropenen valideert de workspace-identiteit en behoudt latere remote wijzigingen. Workspace-vaultinstanties worden bij wisselen en resetten expliciet vrijgegeven, zodat dezelfde administratie later opnieuw kan worden geopend zonder dubbele opslagprefixen. De standaardadministratie behoudt de oude prefixes, passkey-identificaties, paden en payloadstructuur. CI #627 op head `7eb883706f8fa1b6bae8b8fbbd31a25bcec97c81` is volledig groen: 125/125 tests. #623 had één onjuiste testverwachting in de synthetische mergeproef; de test is gecorrigeerd en de daaropvolgende workflows zijn geslaagd. Geen merge, Pages-deployment of productiegegevenswijziging uitgevoerd.
 
 - **16 nov 2026 – PR #10 schone start:** aparte `initializeEmpty`-route toegevoegd. Deze maakt of opent uitsluitend lege shared + actieve persoonlijke Core-kluis, valideert lokale en remote inhoud en controleert na synchronisatie de remote bevestiging. Legacydata wordt niet gelezen of geïmporteerd; een lokale marker voorkomt latere automatische legacy-merge. Oude bestanden worden niet verwijderd. Synthetische tests toegevoegd voor eerste apparaat, tweede apparaat, profielspecifieke kluis, niet-lege data, verkeerd wachtwoord en uploadfout. CI nog af te wachten.
 

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
+import { createVaultDomains } from '../js/multi-vault-adapter.js';
 import {
   randomBytes, bytesToB64, b64ToBytes, generateDataKey, passwordKey,
   wrapDataKey, unwrapDataKey, encryptJSON, decryptJSON,
@@ -12,7 +13,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 const clone = (value) => structuredClone(value);
 const domainFor = (prefix) => prefix.endsWith('-shared')
   ? 'shared'
-  : prefix.endsWith('-p1') ? 'personal-p1' : 'personal-p2';
+  : prefix.endsWith('-personal-p1') || prefix.endsWith('-p1') ? 'personal-p1' : 'personal-p2';
 const mergeStore = (a, b) => ({
   ...a, ...b,
   items: [...(a.items || []), ...(b.items || [])],
@@ -39,7 +40,7 @@ async function openEnvelope(envelope, password) {
   return { key, data: await decryptJSON(envelope.payload, key) };
 }
 
-function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {}) {
+function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null, workspaceId = 'default' } = {}) {
   const localStorageFor = () => {
     const map = new Map();
     return {
@@ -54,6 +55,7 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
   const vaults = {};
   const syncCalls = [];
   const events = [];
+  const deviceBiometricCalls = [];
   let nextSha = 0;
   let failPath = failUploadPath;
 
@@ -97,6 +99,10 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
         getSyncMeta: () => ({ ...meta }),
         setSyncMeta: (next) => { meta = { ...next }; },
         async flush() {},
+        async reset() {
+          envelope = null; dataKey = null; data = null; meta = { sha: null, dirty: false };
+          events.push(id + ':reset');
+        },
         lock() { dataKey = null; data = null; events.push(id + ':lock'); },
         async dispose() { this.lock(); },
         getDataKey: () => dataKey,
@@ -163,13 +169,17 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
       async enrollExisting() {},
       isEnrolled: () => false,
     }),
+    createDeviceBiometric: (options) => {
+      deviceBiometricCalls.push(options);
+      return { isEnrolled: () => false, disable() {} };
+    },
   };
   const clientFactory = (settings) => ({
     async checkRepo() { return { private: true, defaultBranch: 'main' }; },
     async getFile() { return clone(remoteFiles.get(settings.path) || null); },
   });
-  const core = createVasteLastenCore({ storage: localStorage, mergeStore, clientFactory, factories });
-  return { core, remoteFiles, vaults, syncCalls, events };
+  const core = createVasteLastenCore({ storage: localStorage, mergeStore, clientFactory, factories, workspaceId });
+  return { core, remoteFiles, vaults, syncCalls, events, deviceBiometricCalls };
 }
 
 const connection = { owner: 'synthetic-owner', repo: 'synthetic-private-repo', token: 'synthetic-token' };
@@ -400,4 +410,193 @@ test('runtime: nieuw apparaat weigert een te kort of gedeeld wachtwoord voor een
   assert.equal(rejectedSame.complete, false);
   assert.match(rejectedSame.error.message, /ander wachtwoord/);
   assert.equal(same.remoteFiles.has('pwa-core-v1/eigen-p2.json'), false);
+});
+
+
+test('runtime: dispose geeft alle workspacegebonden vault-instanties vrij zonder gegevens te wissen', async () => {
+  const h = runtimeHarness({ workspaceId: '55555555-5555-4555-8555-555555555555' });
+  const created = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  assert.equal(created.complete, true);
+  const before = Object.fromEntries(Object.entries(h.vaults).map(([id, vault]) => [id, vault.hasVault()]));
+  await h.core.dispose();
+  assert.deepEqual(Object.fromEntries(Object.entries(h.vaults).map(([id, vault]) => [id, vault.hasVault()])), before);
+  assert.equal(h.events.filter(event => event.endsWith(':lock')).length >= 3, true);
+});
+
+test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen, behoudt GitHub en laat een nieuwe lege start toe', async () => {
+  const h = runtimeHarness();
+  const first = await h.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(first.complete, true);
+  assert.equal(h.vaults.shared.hasVault(), true);
+  assert.equal(h.vaults['personal-p1'].hasVault(), true);
+  const remoteBefore = [...h.remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
+
+  await h.core.lock();
+  await h.core.resetLocalVaults();
+
+  assert.equal(h.vaults.shared.hasVault(), false);
+  assert.equal(h.vaults['personal-p1'].hasVault(), false);
+  assert.equal(h.vaults['personal-p2'].hasVault(), false);
+  assert.deepEqual([...h.remoteFiles.entries()], remoteBefore);
+
+  const nextPasswords = {
+    shared: 'another-new-shared-password',
+    'personal-p1': 'another-new-personal-password',
+    'personal-p2': 'another-new-p2-password',
+  };
+  const second = await h.core.initializeEmptyLocal({ me: 'p1', passwords: nextPasswords });
+  assert.equal(second.complete, true);
+  assert.deepEqual(second.state.samen.items, []);
+  assert.deepEqual(second.state.eigen.items, []);
+  await h.core.lock();
+});
+
+
+test('workspaces: bestaande standaardpaden blijven exact behouden en benoemde werkruimten krijgen eigen namespaces', () => {
+  const legacy = createVaultDomains();
+  const first = createVaultDomains({ workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const second = createVaultDomains({ workspaceId: '22222222-2222-4222-8222-222222222222' });
+
+  assert.equal(legacy.shared.storagePrefix, 'vaste-lasten-shared');
+  assert.equal(legacy.shared.path, 'pwa-core-v1/samen.json');
+  assert.equal(legacy['personal-p1'].path, 'pwa-core-v1/eigen-p1.json');
+  assert.notEqual(first.shared.storagePrefix, second.shared.storagePrefix);
+  assert.notEqual(first.shared.path, second.shared.path);
+  assert.equal(first.shared.path, 'workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json');
+  assert.equal(first.shared.workspaceId, '11111111-1111-4111-8111-111111111111');
+});
+
+test('workspaces: twee online administraties in dezelfde repository schrijven naar gescheiden bestanden', async () => {
+  const remoteFiles = new Map();
+  const first = runtimeHarness({ remoteFiles, workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const second = runtimeHarness({ remoteFiles, workspaceId: '22222222-2222-4222-8222-222222222222' });
+
+  const a = await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  const b = await second.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+
+  assert.equal(a.complete, true);
+  assert.equal(b.complete, true);
+  assert.equal(remoteFiles.size, 4);
+  assert.ok(remoteFiles.has('workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json'));
+  assert.ok(remoteFiles.has('workspaces/22222222-2222-4222-8222-222222222222/pwa-core-v1/samen.json'));
+  assert.ok(remoteFiles.has('workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/eigen-p1.json'));
+  assert.ok(remoteFiles.has('workspaces/22222222-2222-4222-8222-222222222222/pwa-core-v1/eigen-p1.json'));
+  assert.equal(first.vaults.shared.hasVault(), true);
+  assert.equal(second.vaults.shared.hasVault(), true);
+  await first.core.lock();
+  await second.core.lock();
+});
+
+
+test('workspaces: online ontgrendelen haalt latere niet-lege remote wijzigingen op', async () => {
+  const remoteFiles = new Map();
+  const workspaceId = '44444444-4444-4444-8444-444444444444';
+  const first = runtimeHarness({ remoteFiles, workspaceId });
+  const created = await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+  let state = first.core.getState();
+  state.samen.items.push({ id: 'first-record', name: 'Eerste record' });
+  await first.core.persistState(state);
+  await first.core.sync();
+  await first.core.lock();
+
+  const second = runtimeHarness({ remoteFiles, workspaceId });
+  const joined = await second.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  assert.equal(joined.complete, true);
+  await second.core.lock();
+
+  await first.core.unlock({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  state = first.core.getState();
+  state.samen.items.push({ id: 'second-record', name: 'Tweede record' });
+  await first.core.persistState(state);
+  await first.core.sync();
+  await first.core.lock();
+
+  const reopened = await second.core.unlock({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  assert.deepEqual([...new Set(reopened.samen.items.map(item => item.id))].sort(), ['first-record', 'second-record']);
+  await second.core.lock();
+});
+
+test('workspaces: een verkeerde kluiscode kan geen andere online administratie openen of overschrijven', async () => {
+  const remoteFiles = new Map();
+  const owner = runtimeHarness({ remoteFiles, workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const created = await owner.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+  const before = [...remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
+
+  const wrongCode = runtimeHarness({ remoteFiles, workspaceId: '22222222-2222-4222-8222-222222222222' });
+  const result = await wrongCode.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+
+  assert.equal(result.complete, false);
+  assert.match(result.error.message, /gedeelde PWA-Core-kluis ontbreekt/);
+  assert.deepEqual([...remoteFiles.entries()], before);
+  await owner.core.lock();
+});
+
+
+test('workspaces: een remote envelope uit een andere workspace wordt geweigerd, ook bij hetzelfde wachtwoord', async () => {
+  const remoteFiles = new Map();
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const wrongId = '22222222-2222-4222-8222-222222222222';
+  const owner = runtimeHarness({ remoteFiles, workspaceId: ownerId });
+  const created = await owner.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+
+  // Simuleer een bestand dat onder de verkeerde workspace-namespace terechtkomt.
+  // De wachtwoorden zijn identiek; alleen de versleutelde workspace-identiteit kan dit onderscheiden.
+  for (const [domainFile, ownerFile] of [
+    ['samen.json', 'samen.json'],
+    ['eigen-p1.json', 'eigen-p1.json'],
+  ]) {
+    remoteFiles.set(
+      `workspaces/${wrongId}/pwa-core-v1/${domainFile}`,
+      clone(remoteFiles.get(`workspaces/${ownerId}/pwa-core-v1/${ownerFile}`)),
+    );
+  }
+  const before = [...remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
+  const impostor = runtimeHarness({ remoteFiles, workspaceId: wrongId });
+  const result = await impostor.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+
+  assert.equal(result.complete, false);
+  assert.match(result.error.message, /andere administratie/);
+  assert.deepEqual([...remoteFiles.entries()], before);
+  await owner.core.lock();
+});
+
+test('workspaces: standaardadministratie behoudt bestaande passkey-identificaties en extra administraties krijgen eigen identificaties', () => {
+  const legacy = runtimeHarness();
+  const workspaceId = '33333333-3333-4333-8333-333333333333';
+  const named = runtimeHarness({ workspaceId });
+
+  legacy.core.isBiometricEnrolled('p1');
+  named.core.isBiometricEnrolled('p1');
+
+  assert.equal(legacy.deviceBiometricCalls[0].storagePrefix, 'vaste-lasten-device-p1');
+  assert.deepEqual(legacy.deviceBiometricCalls[0].allowedUserHandlePrefixes, [
+    'vaste-lasten-shared', 'vaste-lasten-personal-p1',
+  ]);
+  assert.equal(named.deviceBiometricCalls[0].storagePrefix, `vaste-lasten-${workspaceId}-device-p1`);
+  assert.deepEqual(named.deviceBiometricCalls[0].allowedUserHandlePrefixes, [
+    `vaste-lasten-${workspaceId}-shared`, `vaste-lasten-${workspaceId}-personal-p1`,
+  ]);
 });
