@@ -794,7 +794,7 @@ try{
   // De laatst gekozen administratie blijft bewaard, maar wordt pas geopend na een expliciete keuze.
   if(coreProfiles.length){
     coreProfile=null;
-    coreMode=false;
+    coreMode=true;
     coreSetupMode=true;
     localStorage.setItem(CORE_ACTIVE_KEY,'__chooser__');
   }else{
