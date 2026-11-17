@@ -819,7 +819,8 @@ function selectCoreProfile(id){
   ui.me=profile.me||ui.me||'p1'; saveUi();
   localStorage.setItem(CORE_ACTIVE_KEY,profile.id);
   state={samen:EMPTY(),eigen:EMPTY()};
-  renderCoreGate();
+  renderCoreGate(); renderSyncPanel();
+  ensureCoreRuntime().then(()=>renderCoreGate()).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderCoreGate();});
 }
 function newWorkspaceId(){
   if(globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -2350,7 +2351,7 @@ function renderSyncPanel(){
   if(!IS_PWA){el.innerHTML=h+'<div class="note">Synchroniseren tussen apparaten en met je partner werkt in de versie die je via GitHub Pages installeert, niet in deze voorbeeldweergave.</div>';return;}
   if(coreMode){
     if(coreProfile?.localOnly){
-      el.innerHTML=h+'<div class="ok-line">Lokale PWA-Core-kluis · actief als <b>'+esc(nameOf(coreProfile.me))+'</b>.</div><div class="note">Je gegevens zijn versleuteld op dit apparaat opgeslagen. Na het koppelen worden wijzigingen via GitHub Sync met je andere apparaat gedeeld.</div><div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+coreLocalSyncHtml()+'<div class="btns"><button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>';
+      el.innerHTML=h+'<div class="ok-line">'+esc(coreProfile?.name||'Mijn administratie')+' · lokale PWA-Core-kluis · actief als <b>'+esc(nameOf(coreProfile.me))+'</b>.</div><div class="note">Je gegevens zijn versleuteld op dit apparaat opgeslagen. Na het koppelen worden wijzigingen via GitHub Sync met je andere apparaat gedeeld.</div><div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+coreLocalSyncHtml()+'<div class="btns"><button class="btn danger" id="core-lock">Kluizen vergrendelen</button></div>';
       renderCoreGate(); return;
     }
     if(!cfg){
@@ -3659,7 +3660,7 @@ if(!['alle','samen','eigen'].includes(ui.filter)) ui.filter='alle';
 if(!coreMode) shareMyIncome();
 saveLocal(); renderVer(); render(); renderSyncPanel(); pillIdle(); checkUpdate(true);
 if(IS_PWA&&cfg&&!coreMode){Promise.all([keyGet('kSamen'),keyGet('kEigen')]).then(async([s,e])=>{keys={samen:s||null,eigen:e||null}; try{await storeToken(cfg);}catch(e){syncError=e.message;setPill('err','Sync-fout',e.message);} renderSyncPanel(); if(!syncError) sync();});}
-if(IS_PWA&&cfg&&coreMode){ensureCoreRuntime().then(()=>{renderSyncPanel();renderCoreGate();}).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderSyncPanel();});}
+if(IS_PWA&&coreMode){ensureCoreRuntime().then(()=>{renderSyncPanel();renderCoreGate();}).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderSyncPanel();renderCoreGate();});}
 })();
 </script>
 
