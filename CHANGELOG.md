@@ -1,3 +1,7 @@
+## 3.8.0 — 17 november 2026
+- Verbeterd: de QR-koppeling gebruikt nu de generieke, geteste apparaatkoppeling uit PWA-Core v1.2.0. Vaste Lasten valideert zelf de administratiegegevens; Core verzorgt de versleuteling, geldigheidscontrole en replaybescherming.
+- Beveiliging: de QR-overdracht is cryptografisch aan Vaste Lasten gebonden. De gebruikte-code-markering wordt pas opgeslagen nadat het koppelen van de kluizen is geslaagd.
+
 ## 3.7.0 — 17 november 2026
 - Nieuw: een tweede apparaat koppelen door een QR-code vanaf de laptop te scannen. De workspace, administratie, GitHub-repository en GitHub-token worden als één versleuteld pakket overgedragen; de twee kluiswachtwoorden zijn nodig op beide apparaten.
 - Beveiliging: de QR-code bevat geen leesbare wachtwoorden of token, verloopt na drie minuten en kan op hetzelfde ontvangende apparaat maar één keer worden gebruikt. De token wordt na koppelen weer met de apparaatspecifieke sleutel in IndexedDB opgeslagen.
