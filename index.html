@@ -769,6 +769,7 @@ const UIKEY=BASE+'.ui';
 const CORE_MODE_KEY=BASE+'.v3.core';
 const CORE_PROFILES_KEY=BASE+'.v3.profiles';
 const CORE_ACTIVE_KEY=BASE+'.v3.active-profile';
+const CORE_DRAFT_KEY=BASE+'.v3.workspace-draft';
 const CORE_STAGING_KEY=BASE+'.v3.legacy-staging';
 const CORE_EMPTY_SETUP_KEY=BASE+'.v3.empty-setup';
 let coreStagingMerged=false;
@@ -794,6 +795,7 @@ try{
   coreMode=!!coreProfile;
 }catch(e){coreProfiles=[];coreProfile=null;coreMode=false;}
 let coreRuntime=null, coreRuntimeWorkspaceId=null, pendingWorkspaceId=null;
+try{const draft=localStorage.getItem(CORE_DRAFT_KEY);if(draft&&/^[a-f0-9-]{8,64}$/i.test(draft))pendingWorkspaceId=draft;}catch(e){}
 let coreReady=false, coreConnected=false, corePersistError='';
 let vaultChoiceDismissed=false;
 function saveCoreProfile(profile=coreProfile){
@@ -813,7 +815,7 @@ function selectCoreProfile(id){
   if(!profile) return;
   coreProfile=profile; coreMode=true; coreSetupMode=false; vaultChoiceDismissed=false;
   coreReady=false; coreConnected=false; corePersistError=''; syncError='';
-  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null;
+  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   cfg=profile.localOnly?null:{owner:profile.owner,repo:profile.repo,me:profile.me,salt:{},iter:{}};
   if(cfg) localStorage.setItem(CFGKEY,JSON.stringify(cfg)); else localStorage.removeItem(CFGKEY);
   ui.me=profile.me||ui.me||'p1'; saveUi();
@@ -2583,7 +2585,7 @@ async function connectExistingCore(){
   ui.me=me; saveUi();
   state=result.state;
   coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
-  saveCoreProfile(); pendingWorkspaceId=null;
+  saveCoreProfile(); pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
@@ -2613,7 +2615,7 @@ async function connectLocalCore(){
   }
   state=result.state;
   coreProfile={...coreProfile,version:1,owner,repo,me,storageType:'online',localOnly:false,coreRelease:'v1.1.0',emptySetup:true};
-  saveCoreProfile(); pendingWorkspaceId=null;
+  saveCoreProfile(); pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(coreProfile.workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
@@ -2743,9 +2745,10 @@ async function initializeEmptyCore(){
   const personalPassword=$('core-empty-e')?.value||'';
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het nieuwe gezamenlijke en persoonlijke wachtwoord in.');
   const passwords={shared:sharedPassword,[`personal-${me}`]:personalPassword};
-  let workspaceId=newWorkspaceId();
-  while(coreProfiles.some(p=>p.id===workspaceId)) workspaceId=newWorkspaceId();
+  let workspaceId=pendingWorkspaceId||newWorkspaceId();
+  if(coreProfiles.some(p=>p.id===workspaceId)){workspaceId=newWorkspaceId();}
   pendingWorkspaceId=workspaceId;
+  localStorage.setItem(CORE_DRAFT_KEY,workspaceId);
   if(storageType==='online'){
     if(!navigator.onLine) throw new SyncError('Een online administratie aanmaken vereist internet.');
     const owner=$('core-empty-owner')?.value.trim().replace(/^@/,'')||'';
@@ -2770,7 +2773,7 @@ async function initializeEmptyCore(){
     coreConnected=false; lastSync=null;
     toast('De nieuwe lokale administratie is aangemaakt. De gegevens staan alleen op dit apparaat.');
   }
-  saveCoreProfile(); pendingWorkspaceId=null;
+  saveCoreProfile(); pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(coreProfile.workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; corePersistError=''; syncError='';
   if(timer){clearTimeout(timer);timer=null;}
@@ -2911,7 +2914,7 @@ async function resetLocalCoreForSetup(){
   }
   localStorage.removeItem(CFGKEY);
   coreProfile=null; coreMode=false; coreSetupMode=true; cfg=null; vaultChoiceDismissed=false;
-  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null;
+  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   coreReady=false; coreConnected=false; corePersistError=''; syncError='';
   state={samen:EMPTY(),eigen:EMPTY()};
   renderCoreGate(); renderSyncPanel();
