@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.8.0 in voorbereiding** (PWA-Core v1.2.0-apparaatkoppeling).november 2026 · versie **3.7.0 in voorbereiding** (QR-koppeling tweede apparaat).
+Laatst bijgewerkt: 17 november 2026 · versie **3.8.0 in voorbereiding** (PWA-Core v1.2.0-apparaatkoppeling).
 
 ---
 
