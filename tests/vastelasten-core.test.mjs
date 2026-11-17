@@ -7,8 +7,32 @@ import {
   createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey,
   isForeignUserHandle,
 } from '../js/bundle-biometric.js';
+import { createUserHandle as createCoreUserHandle, isForeignUserHandle as isCoreForeignUserHandle } from '../js/core/biometric-factory.js';
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
+
+
+test('Core bundle userHandles are compact, scope-bound and accept only explicit legacy formats', async () => {
+  const storagePrefix = `vaste-lasten-${'very-long-workspace-name-'.repeat(5)}device-p1`;
+  const userHandle = await createCoreUserHandle({ storagePrefix, scope: 'bundle' });
+  assert.ok(userHandle.byteLength <= 64);
+  assert.match(new TextDecoder().decode(userHandle), /^pwc1:bundle:[a-f0-9]{24}:/);
+  assert.equal(await isCoreForeignUserHandle(userHandle, { storagePrefix, scope: 'bundle' }), false);
+  assert.equal(await isCoreForeignUserHandle(userHandle, { storagePrefix, scope: 'vault' }), true);
+
+  const legacyPrefixHandle = new TextEncoder().encode(`${storagePrefix}:legacy`);
+  assert.equal(await isCoreForeignUserHandle(legacyPrefixHandle, { storagePrefix, scope: 'bundle' }), false);
+
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(storagePrefix)));
+  const oldHash = [...digest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const legacyCompactHandle = new TextEncoder().encode(`vl1-${oldHash}:legacy`);
+  assert.equal(await isCoreForeignUserHandle(legacyCompactHandle, {
+    storagePrefix, scope: 'bundle', legacyTags: [`vl1-${oldHash}:`],
+  }), false);
+
+  const foreignWorkspaceHandle = await createCoreUserHandle({ storagePrefix: 'cryptotracker-device-p1', scope: 'bundle' });
+  assert.equal(await isCoreForeignUserHandle(foreignWorkspaceHandle, { storagePrefix, scope: 'bundle' }), true);
+});
 
 test('existing passkey relinking accepts only the shared and matching personal vault userHandles', () => {
   const encode = (value) => new TextEncoder().encode(value).buffer;
@@ -183,7 +207,9 @@ test('new passkeys use a compact userHandle tag for long workspace prefixes and 
 
     const userId = new Uint8Array(createOptions.publicKey.user.id);
     assert.ok(userId.byteLength <= 64, `WebAuthn user.id was ${userId.byteLength} bytes`);
-    assert.match(new TextDecoder().decode(userId), /^vl1-[0-9a-f]{24}:/);
+    assert.match(new TextDecoder().decode(userId), /^pwc1:bundle:[0-9a-f]{24}:/);
+    assert.equal(await isCoreForeignUserHandle(userId, { storagePrefix: longPrefix, scope: 'bundle' }), false);
+    assert.equal(await isCoreForeignUserHandle(userId, { storagePrefix: longPrefix, scope: 'vault' }), true);
     assert.equal(biometric.isEnrolled(), true);
 
     // A newly-created compact tag must also be recognized by the relinking flow.
