@@ -85,7 +85,13 @@ export function validateDomainPayload(payload, id, domains = VAULT_DOMAINS) {
   }
   const expectedWorkspaceId = domains[id].workspaceId;
   if (payload.workspaceId !== expectedWorkspaceId) {
-    throw new Error('De inhoud van deze kluis hoort bij een andere administratie. Controleer de kluiscode; er is niets gewijzigd.');
+    const expectedLabel = expectedWorkspaceId ?? '(standaardadministratie: geen kluiscode)';
+    const actualLabel = Object.hasOwn(payload, 'workspaceId')
+      ? String(payload.workspaceId)
+      : '(ontbreekt in de lokale kluisinhoud)';
+    throw new Error(
+      `De inhoud van deze kluis hoort bij een andere administratie. Controleer de kluiscode; er is niets gewijzigd. Domein: ${id}. Verwachte kluiscode: ${expectedLabel}. Aangetroffen kluiscode: ${actualLabel}.`,
+    );
   }
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   if (forbidden.some((key) => Object.hasOwn(payload, key))) {

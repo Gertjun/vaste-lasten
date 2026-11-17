@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.6.3 — 17 november 2026
+- Verbeterd: een fout door een afwijkende workspace-identiteit toont nu het betrokken kluisdomein en de verwachte en aangetroffen kluiscode. Zo is zichtbaar of de code ontbreekt of naar een andere administratie verwijst.
+- Beveiliging: de validatie blijft strikt; er wordt niets automatisch aangepast of overschreven.
+
+
 ## 3.6.2 — 17 november 2026
 - Opgelost: back-upherstel en andere volledige state-opslagen behouden nu de workspace-identiteit van benoemde administraties. Core accepteert de inhoud daardoor in de juiste kluis, terwijl gegevens uit een andere administratie geweigerd blijven.
 - Nieuw: regressietests controleren zowel benoemde administraties als behoud van de bestaande standaardadministratie.
