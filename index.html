@@ -2913,13 +2913,13 @@ function renderCoreGate(){
   const biometricControls=passkeyEnrolled
     ?'<div class="field"><span class="flabel">Of ontgrendel beide kluizen met één Face ID / passkey</span><div class="btns"><button class="btn primary" id="core-biometric">Ontgrendel beide kluizen</button></div></div>':'';
   gate.innerHTML='<section class="card" style="width:min(100%,460px);padding:24px">'+
-    (firstStart?'<h2>Kies je gegevenskluis</h2><p class="note">Koppel een bestaande PWA-Core-kluis op GitHub, of maak op dit apparaat een nieuwe lokale kluis aan. Een lokale kluis kun je later veilig publiceren naar GitHub Sync.</p>'+coreFirstStartConnectHtml()+coreEmptySetupHtml()+'<div class="btns"><button class="btn" id="core-vault-existing">Oude synchronisatie-instellingen openen</button>'+(coreSetupMode?'<button class="btn danger" id="core-reset-local">Lokale kluizen op dit apparaat vervangen</button>':'')+'</div>' : '<h2>Vaste Lasten is vergrendeld</h2>')+
+    (firstStart?'<h2>Kies je gegevenskluis</h2><p class="note">Kies een bestaande administratie of maak een nieuwe aan. Iedere administratie heeft een eigen naam, opslaglocatie en versleutelde kluizen.</p>'+coreWorkspaceChooserHtml()+coreFirstStartConnectHtml()+coreEmptySetupHtml()+'<div class="btns"><button class="btn" id="core-vault-existing">Oude synchronisatie-instellingen openen</button>'+(coreSetupMode?'<button class="btn danger" id="core-reset-local">Lokale kluizen op dit apparaat vervangen</button>':'')+'</div>' : '<h2>Vaste Lasten is vergrendeld</h2><p class="note"><b>'+esc(coreProfile?.name||'Mijn administratie')+'</b> · '+(coreProfile?.localOnly?'Lokaal op dit apparaat':'Online · privé-GitHub-repository')+'</p>')+
     ((!firstStart&&(cfg||coreProfile?.localOnly))?'<p class="note">Je gegevens staan in twee afzonderlijk versleutelde PWA-Core-kluizen: gezamenlijk en persoonlijk. Ontgrendel beide om verder te gaan.'+(coreProfile?.localOnly?' Deze kluizen zijn alleen op dit apparaat beschikbaar.':'')+'</p>'+
       '<div class="field"><label for="core-u-s">Gezamenlijk Core-wachtwoord</label><input id="core-u-s" type="password" autocomplete="current-password"></div>'+
       '<div class="field"><label for="core-u-e">Eigen Core-wachtwoord</label><input id="core-u-e" type="password" autocomplete="current-password"></div>'+
       '<div class="err" id="core-gate-err"></div><div class="btns">'+(cfg&&!coreProfile?.localOnly?'<button class="btn primary" id="core-unlock">Online ontgrendelen</button>':'')+'<button class="btn" id="core-unlock-local">Alleen lokaal ontgrendelen</button></div>'+
       biometricControls+
-      '<div class="btns"><button class="btn" id="core-vault-setup">Terug naar kluis instellen</button></div>'+
+      '<div class="btns"><button class="btn" id="core-vault-setup">Terug naar kluis kiezen</button></div>'+
       (cfg&&!coreProfile?.localOnly?'<p class="hint">'+(navigator.onLine?'Online worden de kluizen meteen met GitHub gesynchroniseerd.':'Offline worden alleen de eerder op dit apparaat opgeslagen kluizen geopend.')+'</p>':'<p class="hint">Deze lokale kluis synchroniseert nog niet met andere apparaten. Stel GitHub Sync in via het synchronisatiepaneel nadat je lokaal hebt ontgrendeld.</p>')+
       (cfg&&!coreProfile?.localOnly?'<details style="margin-top:16px"><summary>GitHub-token opnieuw invoeren</summary><p class="hint">Nodig na een nieuwe installatie of als je token is verlopen. De token wordt versleuteld in de lokale beveiligde opslag bewaard.</p><div class="field"><label for="core-token">GitHub-token</label><input id="core-token" type="password" autocomplete="off" spellcheck="false"></div><div class="err" id="core-token-err"></div><button class="btn" id="core-token-save">Verbinding herstellen</button></details>':'')
       :(firstStart?'':'<p class="note">De Core-kluizen zijn aanwezig, maar de lokale repository-instellingen ontbreken. Herstel eerst de repositorygegevens.</p>'))+
@@ -3133,6 +3133,8 @@ function appBackupSnapshot(){
 }
 let unlinkArmed=false;
 document.addEventListener('click',e=>{
+  const workspacePick=e.target.closest('[data-workspace-select]');
+  if(workspacePick){selectCoreProfile(workspacePick.dataset.workspaceSelect);return;}
   const eye=e.target.closest('[data-eye]');
   if(eye){const inp=$(eye.dataset.eye), show=inp.type==='password'; inp.type=show?'text':'password';
     eye.setAttribute('aria-pressed',String(show)); eye.setAttribute('aria-label',eye.getAttribute('aria-label').replace(show?'Toon':'Verberg',show?'Verberg':'Toon')); inp.focus(); return;}
