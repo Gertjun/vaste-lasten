@@ -790,7 +790,7 @@ try{
     localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   }
   const active=localStorage.getItem(CORE_ACTIVE_KEY)||coreProfile?.id||coreProfiles[0]?.id||null;
-  coreProfile=coreProfiles.find(p=>p.id===active)||null;
+  coreProfile=coreProfiles.find(p=>p.id===active)||coreProfiles[0]||null;
   coreMode=!!coreProfile;
 }catch(e){coreProfiles=[];coreProfile=null;coreMode=false;}
 let coreRuntime=null, coreRuntimeWorkspaceId=null, pendingWorkspaceId=null;
@@ -2019,7 +2019,8 @@ async function readRemote(c,file,ref){
   if(!env||!env.kdf||!env.kdf.salt||!env.iv||!env.ct) throw new SyncError('Het bestand '+file+' in de repository is niet door deze app gemaakt.');
   return {env,sha:j.sha};
 }
-const corePathFor=st=>st==='samen'?'pwa-core-v1/samen.json':`pwa-core-v1/eigen-${cfg.me}.json`;
+const corePathRoot=()=>coreProfile?.workspaceId&&coreProfile.workspaceId!=='default'?`workspaces/${coreProfile.workspaceId}/pwa-core-v1`:'pwa-core-v1';
+const corePathFor=st=>st==='samen'?`${corePathRoot()}/samen.json`:`${corePathRoot()}/eigen-${cfg.me}.json`;
 async function readCoreRemote(c,file,ref){
   const r=await gh('GET',cpath(c,file)+(ref?'?ref='+encodeURIComponent(ref):''),null,c);
   if(r.status===404) return {env:null,sha:undefined};
@@ -2365,7 +2366,7 @@ function renderSyncPanel(){
       (!passkeyEnrolled?'<button class="btn" id="core-passkey-existing">Bestaande passkey koppelen</button><button class="btn" id="core-passkey">Nieuwe passkey instellen</button>':'<span class="ok-line">Passkey voor beide actieve kluizen ingesteld.</span>')+
       '</div>';
     el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 · actief als <b>'+esc(nameOf(cfg.me))+'</b>.</div>'+
-      '<div class="note">Actieve kluizen: <code>pwa-core-v1/samen.json</code> en <code>pwa-core-v1/eigen-'+esc(cfg.me)+'.json</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
+      '<div class="note">Administratie: <b>'+esc(coreProfile?.name||'Mijn administratie')+'</b>. Actieve kluizen: <code>'+esc(corePathFor('samen'))+'</code> en <code>'+esc(corePathFor('eigen'))+'</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
       (hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+
