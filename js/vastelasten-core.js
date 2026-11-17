@@ -51,13 +51,15 @@ export function createVasteLastenCore({
   const makeBundleKey = factories.generateBundleKey || generateBundleKey;
   const wrapBundleKey = factories.wrapVaultKey || wrapVaultKey;
   const unwrapBundleKey = factories.unwrapVaultKey || unwrapVaultKey;
-  const bundleStorageKey = (person) => `vaste-lasten:${workspaceId}:biometric-bundle:${person}:v1`;
+  const bundleStorageKey = (person) => workspaceId === 'default'
+    ? `vaste-lasten:biometric-bundle:${person}:v1`
+    : `vaste-lasten:${workspaceId}:biometric-bundle:${person}:v1`;
   const deviceBiometricFor = (person) => {
     if (!['p1', 'p2'].includes(person)) throw new TypeError('Persoon moet p1 of p2 zijn.');
     if (!deviceBiometrics.has(person)) {
       const factory = factories.createDeviceBiometric || createBundleBiometric;
       deviceBiometrics.set(person, factory({
-        storagePrefix: `vaste-lasten-${workspaceId}-device-${person}`,
+        storagePrefix: workspaceId === 'default' ? `vaste-lasten-device-${person}` : `vaste-lasten-${workspaceId}-device-${person}`,
         // Herkoppelen accepteert uitsluitend de eigen actieve Core-domeinen
         // (plus de nieuwe device-bundel), niet de persoonlijke kluis van de ander.
         allowedUserHandlePrefixes: [
