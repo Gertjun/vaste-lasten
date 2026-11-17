@@ -1,3 +1,6 @@
+## 3.8.1 — 17 november 2026
+- Opgelost: nieuwe passkeys gebruiken een compacte WebAuthn-gebruikersidentificatie. Ook lange workspacenamen blijven binnen de limiet van 64 bytes; opnieuw koppelen herkent deze nieuwe identificatie.
+
 ## 3.8.0 — 17 november 2026
 - Verbeterd: de QR-koppeling gebruikt nu de generieke, geteste apparaatkoppeling uit PWA-Core v1.2.0. Vaste Lasten valideert zelf de administratiegegevens; Core verzorgt de versleuteling, geldigheidscontrole en replaybescherming.
 - Beveiliging: de QR-overdracht is cryptografisch aan Vaste Lasten gebonden. De gebruikte-code-markering wordt pas opgeslagen nadat het koppelen van de kluizen is geslaagd.
