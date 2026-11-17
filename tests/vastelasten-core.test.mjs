@@ -5,7 +5,6 @@ import { webcrypto } from 'node:crypto';
 import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
 import {
   createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey,
-  isForeignUserHandle,
 } from '../js/bundle-biometric.js';
 import { createUserHandle as createCoreUserHandle, isForeignUserHandle as isCoreForeignUserHandle } from '../js/core/biometric-factory.js';
 
@@ -34,20 +33,20 @@ test('Core bundle userHandles are compact, scope-bound and accept only explicit 
   assert.equal(await isCoreForeignUserHandle(foreignWorkspaceHandle, { storagePrefix, scope: 'bundle' }), true);
 });
 
-test('existing passkey relinking accepts only the shared and matching personal vault userHandles', () => {
-  const encode = (value) => new TextEncoder().encode(value).buffer;
-  const allowed = [
-    'vaste-lasten-device-p1',
-    'vaste-lasten-shared',
-    'vaste-lasten-personal-p1',
-  ];
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-shared:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-device-p1:credential'), allowed), false);
-  assert.equal(isForeignUserHandle(encode('vaste-lasten-personal-p2:credential'), allowed), true);
-  assert.equal(isForeignUserHandle(encode('cryptotracker:credential'), allowed), true);
+test('Core relinking accepts only the active vault domains and legacy random handles', async () => {
+  const encode = (value) => new TextEncoder().encode(value);
+  const options = {
+    storagePrefix: 'vaste-lasten-device-p1',
+    scope: 'bundle',
+    legacyPrefixes: ['vaste-lasten-shared', 'vaste-lasten-personal-p1'],
+  };
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-shared:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-device-p1:credential'), options), false);
+  assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-personal-p2:credential'), options), true);
+  assert.equal(await isCoreForeignUserHandle(encode('cryptotracker:credential'), options), true);
   // Legacy passkeys used random user handles without an app prefix.
-  assert.equal(isForeignUserHandle(encode('legacy-random-user-handle'), allowed), false);
+  assert.equal(await isCoreForeignUserHandle(encode('legacy-random-user-handle'), options), false);
 });
 
 
