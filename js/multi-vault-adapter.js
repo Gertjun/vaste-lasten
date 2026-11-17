@@ -216,9 +216,9 @@ export async function openAndSyncDomain({
   const syncOptions = {
     settings: remoteSettings,
     merge: (local, incoming) => {
-      assertEmptyDomainPayload(local, id);
-      assertEmptyDomainPayload(incoming, id);
-      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore, domains), id);
+      assertEmptyDomainPayload(local, id, domains);
+      assertEmptyDomainPayload(incoming, id, domains);
+      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore, domains), id, domains);
     },
     // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
     migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id, domains), id),
@@ -339,7 +339,7 @@ export async function initializeEmptyDomain({
   };
   const result = await entry.sync.syncNow(syncOptions);
   await entry.vault.flush();
-  assertEmptyDomainPayload(entry.vault.getData(), id);
+  assertEmptyDomainPayload(entry.vault.getData(), id, domains);
 
   const confirmed = await client.getFile();
   if (!confirmed) throw new Error(`GitHub heeft de lege kluis ${id} niet bevestigd. De lokale kluis is behouden; probeer opnieuw.`);
