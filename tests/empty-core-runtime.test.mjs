@@ -460,9 +460,11 @@ test('workspaces: twee online administraties in dezelfde repository schrijven na
 
   assert.equal(a.complete, true);
   assert.equal(b.complete, true);
-  assert.equal(remoteFiles.size, 6);
+  assert.equal(remoteFiles.size, 4);
   assert.ok(remoteFiles.has('workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json'));
   assert.ok(remoteFiles.has('workspaces/22222222-2222-4222-8222-222222222222/pwa-core-v1/samen.json'));
+  assert.ok(remoteFiles.has('workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/eigen-p1.json'));
+  assert.ok(remoteFiles.has('workspaces/22222222-2222-4222-8222-222222222222/pwa-core-v1/eigen-p1.json'));
   assert.equal(first.vaults.shared.hasVault(), true);
   assert.equal(second.vaults.shared.hasVault(), true);
   await first.core.lock();
