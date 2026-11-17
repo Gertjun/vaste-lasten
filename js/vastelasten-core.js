@@ -652,6 +652,12 @@ export function createVasteLastenCore({
     for (const person of ['p1', 'p2']) deviceBiometricFor(person).disable();
   }
 
+  /** Geeft alle workspacegebonden vault-instanties vrij zonder lokale gegevens te verwijderen. */
+  async function dispose() {
+    if (session) await release();
+    for (const id of Object.keys(domains)) await registry[id].vault.dispose();
+  }
+
   function isBiometricEnrolled(person = me) {
     if (!['p1', 'p2'].includes(person)) return false;
     return deviceBiometricFor(person).isEnrolled() && !!storage.getItem(bundleStorageKey(person));
@@ -696,6 +702,7 @@ export function createVasteLastenCore({
     restoreDomain,
     hasVault,
     resetLocalVaults,
+    dispose,
     isBiometricEnrolled,
     getSyncDevices,
     deactivateSyncDevice,
