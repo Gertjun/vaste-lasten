@@ -144,6 +144,58 @@ test('app passkey adapter stores and restores a wrapping-capable bundle key with
   }
 });
 
+test('new passkeys use a compact userHandle tag for long workspace prefixes and can be relinked', async () => {
+  const previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const secret = new Uint8Array(32).fill(41);
+  const longPrefix = `vaste-lasten-${'very-long-workspace-name-'.repeat(5)}device-p1`;
+  let createOptions = null;
+  let userHandle = null;
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { credentials: {
+      async create(options) {
+        createOptions = options;
+        userHandle = options.publicKey.user.id.slice();
+        return {
+          rawId: new Uint8Array([5, 4, 3, 2, 1]).buffer,
+          getClientExtensionResults: () => ({ prf: { enabled: true, results: { first: secret.buffer } } }),
+        };
+      },
+      async get() {
+        return {
+          rawId: new Uint8Array([5, 4, 3, 2, 1]).buffer,
+          response: { userHandle },
+          getClientExtensionResults: () => ({ prf: { results: { first: secret.buffer } } }),
+        };
+      },
+    } },
+  });
+  try {
+    const values = new Map();
+    const storage = {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, String(value)),
+      removeItem: (key) => values.delete(key),
+    };
+    const biometric = createBundleBiometric({ storagePrefix: longPrefix, storage });
+    const bundleKey = await generateBundleKey();
+    await biometric.enroll(bundleKey);
+
+    const userId = new Uint8Array(createOptions.publicKey.user.id);
+    assert.ok(userId.byteLength <= 64, `WebAuthn user.id was ${userId.byteLength} bytes`);
+    assert.match(new TextDecoder().decode(userId), /^vl1-[0-9a-f]{24}:/);
+    assert.equal(biometric.isEnrolled(), true);
+
+    // A newly-created compact tag must also be recognized by the relinking flow.
+    await biometric.enrollExisting(bundleKey);
+    assert.equal(biometric.isEnrolled(), true);
+  } finally {
+    if (previousNavigator) Object.defineProperty(globalThis, 'navigator', previousNavigator);
+    else delete globalThis.navigator;
+  }
+});
+
+
 const clone = (value) => structuredClone(value);
 const domainForPrefix = (prefix) => prefix.endsWith('-shared')
   ? 'shared'
