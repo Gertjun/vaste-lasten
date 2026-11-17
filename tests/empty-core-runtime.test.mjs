@@ -413,6 +413,16 @@ test('runtime: nieuw apparaat weigert een te kort of gedeeld wachtwoord voor een
 });
 
 
+test('runtime: dispose geeft alle workspacegebonden vault-instanties vrij zonder gegevens te wissen', async () => {
+  const h = runtimeHarness({ workspaceId: '55555555-5555-4555-8555-555555555555' });
+  const created = await h.core.initializeEmptyLocal({ me: 'p1', passwords });
+  assert.equal(created.complete, true);
+  const before = Object.fromEntries(Object.entries(h.vaults).map(([id, vault]) => [id, vault.hasVault()]));
+  await h.core.dispose();
+  assert.deepEqual(Object.fromEntries(Object.entries(h.vaults).map(([id, vault]) => [id, vault.hasVault()])), before);
+  assert.equal(h.events.filter(event => event.endsWith(':lock')).length >= 3, true);
+});
+
 test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen, behoudt GitHub en laat een nieuwe lege start toe', async () => {
   const h = runtimeHarness();
   const first = await h.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
