@@ -823,7 +823,7 @@ function selectCoreProfile(id){
   if(!profile) return;
   coreProfile=profile; coreMode=true; coreSetupMode=false; vaultChoiceDismissed=false;
   coreReady=false; coreConnected=false; corePersistError=''; syncError='';
-  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
+  pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   cfg=profile.localOnly?null:{owner:profile.owner,repo:profile.repo,me:profile.me,salt:{},iter:{}};
   if(cfg) localStorage.setItem(CFGKEY,JSON.stringify(cfg)); else localStorage.removeItem(CFGKEY);
   ui.me=profile.me||ui.me||'p1'; saveUi();
@@ -2635,7 +2635,13 @@ async function connectLocalCore(){
 async function ensureCoreRuntime(){
   const workspaceId=pendingWorkspaceId||coreProfile?.workspaceId||'default';
   if(coreRuntime&&coreRuntimeWorkspaceId===workspaceId) return coreRuntime;
-  if(coreRuntime&&coreReady) await coreRuntime.lock();
+  if(coreRuntime){
+    // Vrijgeven is nodig voordat dezelfde workspace later opnieuw wordt geïnstantieerd:
+    // de vault-factory bewaakt actieve opslagprefixen tegen dubbele instanties.
+    await coreRuntime.dispose();
+    coreRuntime=null;
+    coreRuntimeWorkspaceId=null;
+  }
   const mod=await import('./js/vastelasten-core.js');
   coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge,workspaceId});
   coreRuntimeWorkspaceId=workspaceId;
@@ -2912,6 +2918,7 @@ async function resetLocalCoreForSetup(){
   if(!window.confirm('Alleen de drie lokale Core-kluizen en de passkey-koppeling van “'+(coreProfile.name||'deze administratie')+'” op dit apparaat worden verwijderd. Andere administraties, GitHub-bestanden en gegevens op andere apparaten blijven staan. Doorgaan?')) return;
   await ensureCoreRuntime();
   await coreRuntime.resetLocalVaults();
+  await coreRuntime.dispose();
   const wasLocalOnly=!!coreProfile.localOnly;
   if(wasLocalOnly) coreProfiles=coreProfiles.filter(p=>p.id!==coreProfile.id);
   else coreProfiles=coreProfiles.map(p=>p.id===coreProfile.id?{...p,needsReconnect:true}:p);
