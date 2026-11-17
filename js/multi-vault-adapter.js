@@ -384,7 +384,7 @@ export async function raiseLegacyUpdateBarrier({
  * worden de reeds bevestigde resultaten teruggegeven; de legacybron blijft behouden.
  */
 export async function migrateActiveDomains({
-  state, getState, me, passwords, registry, settings, createClient, mergeStore,
+  state, getState, me, passwords, registry, settings, createClient, mergeStore, domains = VAULT_DOMAINS,
   legacySync, raiseBarrier,
 } = {}) {
   if (!['p1', 'p2'].includes(me)) throw new TypeError('Persoon moet p1 of p2 zijn.');
@@ -408,6 +408,7 @@ export async function migrateActiveDomains({
         settings,
         createClient,
         mergeStore,
+        domains,
       });
     } catch (error) {
       return { complete: false, results, failedDomain: id, error };
