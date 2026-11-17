@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
+import { createVaultDomains } from '../js/multi-vault-adapter.js';
 import {
   randomBytes, bytesToB64, b64ToBytes, generateDataKey, passwordKey,
   wrapDataKey, unwrapDataKey, encryptJSON, decryptJSON,
@@ -12,7 +13,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 const clone = (value) => structuredClone(value);
 const domainFor = (prefix) => prefix.endsWith('-shared')
   ? 'shared'
-  : prefix.endsWith('-p1') ? 'personal-p1' : 'personal-p2';
+  : prefix.endsWith('-personal-p1') || prefix.endsWith('-p1') ? 'personal-p1' : 'personal-p2';
 const mergeStore = (a, b) => ({
   ...a, ...b,
   items: [...(a.items || []), ...(b.items || [])],
@@ -39,7 +40,7 @@ async function openEnvelope(envelope, password) {
   return { key, data: await decryptJSON(envelope.payload, key) };
 }
 
-function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {}) {
+function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null, workspaceId = 'default' } = {}) {
   const localStorageFor = () => {
     const map = new Map();
     return {
@@ -172,7 +173,7 @@ function runtimeHarness({ remoteFiles = new Map(), failUploadPath = null } = {})
     async checkRepo() { return { private: true, defaultBranch: 'main' }; },
     async getFile() { return clone(remoteFiles.get(settings.path) || null); },
   });
-  const core = createVasteLastenCore({ storage: localStorage, mergeStore, clientFactory, factories });
+  const core = createVasteLastenCore({ storage: localStorage, mergeStore, clientFactory, factories, workspaceId });
   return { core, remoteFiles, vaults, syncCalls, events };
 }
 
@@ -433,4 +434,37 @@ test('runtime: expliciete lokale reset wist alle drie lokale Core-kluizen, behou
   assert.deepEqual(second.state.samen.items, []);
   assert.deepEqual(second.state.eigen.items, []);
   await h.core.lock();
+});
+
+
+test('workspaces: bestaande standaardpaden blijven exact behouden en benoemde werkruimten krijgen eigen namespaces', () => {
+  const legacy = createVaultDomains();
+  const first = createVaultDomains({ workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const second = createVaultDomains({ workspaceId: '22222222-2222-4222-8222-222222222222' });
+
+  assert.equal(legacy.shared.storagePrefix, 'vaste-lasten-shared');
+  assert.equal(legacy.shared.path, 'pwa-core-v1/samen.json');
+  assert.equal(legacy['personal-p1'].path, 'pwa-core-v1/eigen-p1.json');
+  assert.notEqual(first.shared.storagePrefix, second.shared.storagePrefix);
+  assert.notEqual(first.shared.path, second.shared.path);
+  assert.match(first.shared.path, /^workspaces\\/11111111-1111-4111-8111-111111111111\\/pwa-core-v1\\/samen\\.json$/);
+});
+
+test('workspaces: twee online administraties in dezelfde repository schrijven naar gescheiden bestanden', async () => {
+  const remoteFiles = new Map();
+  const first = runtimeHarness({ remoteFiles, workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const second = runtimeHarness({ remoteFiles, workspaceId: '22222222-2222-4222-8222-222222222222' });
+
+  const a = await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  const b = await second.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+
+  assert.equal(a.complete, true);
+  assert.equal(b.complete, true);
+  assert.equal(remoteFiles.size, 6);
+  assert.ok(remoteFiles.has('workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json'));
+  assert.ok(remoteFiles.has('workspaces/22222222-2222-4222-8222-222222222222/pwa-core-v1/samen.json'));
+  assert.equal(first.vaults.shared.hasVault(), true);
+  assert.equal(second.vaults.shared.hasVault(), true);
+  await first.core.lock();
+  await second.core.lock();
 });
