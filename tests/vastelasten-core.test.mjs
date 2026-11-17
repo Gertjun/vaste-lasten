@@ -83,7 +83,6 @@ test('bundle passkey relinking accepts an active vault credential and rejects th
     const bundleKey = await generateBundleKey();
     await biometric.enrollExisting(bundleKey);
     assert.equal(biometric.isEnrolled(), true);
-    const previous = storage.getItem('vaste-lasten-device-p1:biometric-bundle');
 
     // The compact vl1 format introduced by app PR #20 remains linkable.
     const legacyDigest = new Uint8Array(await crypto.subtle.digest(
@@ -93,6 +92,7 @@ test('bundle passkey relinking accepts an active vault credential and rejects th
     const legacyHash = [...legacyDigest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
     userHandle = new TextEncoder().encode(`vl1-${legacyHash}:legacy-credential`);
     await biometric.enrollExisting(bundleKey);
+    const previous = storage.getItem('vaste-lasten-device-p1:biometric-bundle');
 
     // A vault-scoped Core passkey must not be mistaken for the bundle passkey.
     userHandle = await createCoreUserHandle({ storagePrefix: 'vaste-lasten-device-p1', scope: 'vault' });
