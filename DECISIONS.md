@@ -53,3 +53,10 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** vanaf het vergrendelscherm is het altijd mogelijk terug te keren naar de kluisinstellingen, ook als de huidige wachtwoorden niet meer werken.
 - **Veiligheid:** alleen teruggaan naar instellen wist niets. Het vervangen van lokale Core-kluizen vereist een afzonderlijke bevestiging en wist uitsluitend de lokale drie Core-kluizen plus de lokale passkey-koppeling op dat apparaat. Remote GitHub-bestanden en gegevens op andere apparaten blijven onaangeroerd.
 - **Waarom:** een gebruiker mag niet permanent vastlopen op een vergrendelscherm wanneer een wachtwoord of repositorykoppeling niet meer werkt.
+
+
+### D11 – Meerdere benoemde gegevenskluizen (17 nov 2026, 3.6.0)
+- **Besluit:** de gebruiker kan meerdere administraties naast elkaar bewaren en kiezen op naam. Iedere administratie bevat intern dezelfde drie domeinen: gezamenlijk, persoonlijk p1 en persoonlijk p2.
+- **Opslag:** lokale administraties krijgen per workspace een eigen lokale opslagprefix. Online administraties krijgen per workspace een eigen padnamespace in de gekozen privérepository en een deelbare kluiscode om dezelfde administratie op een ander apparaat te koppelen.
+- **Compatibiliteit:** de bestaande standaardadministratie blijft op de bestaande lokale prefixes en GitHub-paden staan; de profielnaam en workspace-identificatie veranderen de cryptografische sleutels of bestaande ciphertext niet.
+- **Herstel:** teruggaan naar de kluiskeuze wist niets. Een bevestigde lokale reset is beperkt tot de gekozen workspace op dit apparaat; andere workspaces en remote bestanden blijven behouden.
