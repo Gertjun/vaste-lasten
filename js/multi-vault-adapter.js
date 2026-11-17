@@ -230,7 +230,9 @@ export async function openAndSyncDomain({
       return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore, domains), id, domains);
     },
     // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
-    migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id, domains), id),
+    // Bij normaal ontgrendelen mag de remote administratie bestaande records bevatten;
+    // controleer de domein- en workspace-identiteit, maar dwing geen lege payload af.
+    migrate: (incoming) => validateDomainPayload(incoming, id, domains),
     schemaVersion: 2,
   };
 
@@ -346,7 +348,8 @@ export async function initializeEmptyDomain({
   const syncOptions = {
     settings: remoteSettings,
     merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore, domains),
-    migrate: (incoming) => validateDomainPayload(incoming, id, domains),
+    // Alleen de eerste lege start mag remote inhoud aannemen als deze nog leeg is.
+    migrate: (incoming) => assertEmptyDomainPayload(incoming, id, domains),
     schemaVersion: 2,
   };
   const result = await entry.sync.syncNow(syncOptions);
