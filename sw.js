@@ -1,4 +1,4 @@
-const CACHE='vaste-lasten-3.6.3-core-v1.1.0';
+const CACHE='vaste-lasten-3.7.0-core-v1.1.0';
 const PRECACHE=[
   "./index.html",
   "./manifest.webmanifest",
@@ -31,7 +31,11 @@ const PRECACHE=[
   "./js/vastelasten-core.js",
   "./js/conflict-review.js",
   "./js/cr06-fixture.js",
-  "./js/backup-restore.js"
+  "./js/backup-restore.js",
+  "./js/device-pairing.js",
+  "./js/vendor/qrcode.js",
+  "./js/vendor/qrcode_UTF8.js",
+  "./js/vendor/jsQR.js"
 ];
 const ASSETS=PRECACHE;
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));});
