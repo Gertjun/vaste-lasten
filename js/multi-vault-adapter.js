@@ -20,6 +20,19 @@ export const VAULT_DOMAINS = Object.freeze({
   }),
 });
 
+export function createVaultDomains({ workspaceId = 'default' } = {}) {
+  if (workspaceId === 'default') return VAULT_DOMAINS;
+  if (typeof workspaceId !== 'string' || !/^[a-f0-9-]{8,64}$/i.test(workspaceId)) {
+    throw new TypeError('workspaceId moet een stabiele UUID of hex-identificatie zijn.');
+  }
+  const root = `workspaces/${workspaceId}/pwa-core-v1`;
+  return Object.freeze({
+    shared: Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-shared`, path: `${root}/samen.json`, domain: 'shared' }),
+    'personal-p1': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p1`, path: `${root}/eigen-p1.json`, domain: 'personal-p1' }),
+    'personal-p2': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p2`, path: `${root}/eigen-p2.json`, domain: 'personal-p2' }),
+  });
+}
+
 const clone = (value) => structuredClone(value ?? {});
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -30,8 +43,8 @@ export function requireLegacyEnvelope({ env, file, owner, repo } = {}) {
   throw new Error(`Het bestaande legacybestand ${file || '(onbekend bestand)'} ontbreekt in ${target}. Controleer de repository; de migratie is gestopt voordat er iets is geschreven.`);
 }
 
-function assertDomainId(id) {
-  if (!Object.hasOwn(VAULT_DOMAINS, id)) throw new TypeError(`Onbekend gegevensdomein: ${id}`);
+function assertDomainId(id, domains = VAULT_DOMAINS) {
+  if (!Object.hasOwn(domains, id)) throw new TypeError(`Onbekend gegevensdomein: ${id}`);
 }
 
 /** Splitst de oude lokale {samen,eigen}-state zonder privévelden te kopiëren. */
@@ -53,9 +66,9 @@ export function splitLegacyState(state, me) {
   };
 }
 
-export function validateDomainPayload(payload, id) {
-  assertDomainId(id);
-  if (!isRecord(payload) || ![1, 2].includes(payload.schema) || payload.domain !== VAULT_DOMAINS[id].domain) {
+export function validateDomainPayload(payload, id, domains = VAULT_DOMAINS) {
+  assertDomainId(id, domains);
+  if (!isRecord(payload) || ![1, 2].includes(payload.schema) || payload.domain !== domains[id].domain) {
     throw new Error(`De inhoud van de kluis hoort niet bij het domein ${id} of heeft een onbekend schema.`);
   }
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
@@ -66,9 +79,9 @@ export function validateDomainPayload(payload, id) {
 }
 
 /** Behoudt de bestaande app-merge, maar dwingt domeingrenzen af. */
-export function mergeDomainPayload(local, remote, id, mergeStore) {
-  validateDomainPayload(local, id);
-  validateDomainPayload(remote, id);
+export function mergeDomainPayload(local, remote, id, mergeStore, domains = VAULT_DOMAINS) {
+  validateDomainPayload(local, id, domains);
+  validateDomainPayload(remote, id, domains);
   if (typeof mergeStore !== 'function') throw new TypeError('De bestaande app-mergefunctie ontbreekt.');
   const merged = mergeStore(local, remote);
   if (!isRecord(merged)) throw new Error('De samenvoeging leverde geen geldig gegevensobject op.');
@@ -76,20 +89,20 @@ export function mergeDomainPayload(local, remote, id, mergeStore) {
   // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
-  return validateDomainPayload({ ...merged, schema: 2, domain: VAULT_DOMAINS[id].domain }, id);
+  return validateDomainPayload({ ...merged, schema: 2, domain: VAULT_DOMAINS[id].domain }, id, domains);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
 export function createVaultRegistry({
   createVault, createSync, createSessionLock, createBiometric,
-  storage = globalThis.localStorage, kdfIterations = 600000, appName = 'Vaste Lasten',
+  storage = globalThis.localStorage, kdfIterations = 600000, appName = 'Vaste Lasten', domains = VAULT_DOMAINS,
 } = {}) {
   for (const [name, fn] of Object.entries({ createVault, createSync, createSessionLock, createBiometric })) {
     if (typeof fn !== 'function') throw new TypeError(`${name} ontbreekt.`);
   }
   const registry = {};
   try {
-    for (const [id, spec] of Object.entries(VAULT_DOMAINS)) {
+    for (const [id, spec] of Object.entries(domains)) {
       const vault = createVault({ storagePrefix: spec.storagePrefix, kdfIterations, storage });
       registry[id] = { vault, path: spec.path, storage };
       registry[id].sync = createSync({ vault, appName });
@@ -141,17 +154,17 @@ const keyMismatch = (error) => /met een andere sleutel versleuteld/i.test(error?
  * createClient is uitsluitend voor preflight en herstel bij een race om de eerste upload.
  */
 export async function openAndSyncDomain({
-  id, password, legacyData, registry, settings, createClient, mergeStore, canonicalize = JSON.stringify,
+  id, password, legacyData, registry, settings, createClient, mergeStore, domains = VAULT_DOMAINS, canonicalize = JSON.stringify,
   allowCreate = true,
 } = {}) {
-  assertDomainId(id);
+  assertDomainId(id, domains);
   if (!password) throw new Error(`Het wachtwoord voor ${id} ontbreekt.`);
   if (!registry?.[id]) throw new TypeError(`De kluisinstantie voor ${id} ontbreekt.`);
   if (typeof createClient !== 'function') throw new TypeError('De GitHub-client ontbreekt.');
-  validateDomainPayload(legacyData, id);
+  validateDomainPayload(legacyData, id, domains);
 
   const entry = registry[id];
-  const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+  const remoteSettings = { ...settings, path: domains[id].path };
   const client = createClient(remoteSettings);
   const remote = await client.getFile();
 
@@ -176,7 +189,7 @@ export async function openAndSyncDomain({
         const localData = await entry.vault.decryptRemote(localEnvelope);
         entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
         const remoteData = entry.vault.getData();
-        const preserved = mergeDomainPayload(remoteData, localData, id, mergeStore);
+        const preserved = mergeDomainPayload(remoteData, localData, id, mergeStore, domains);
         if (canonicalize(preserved) !== canonicalize(remoteData)) await entry.vault.setData(preserved);
         await entry.vault.flush();
       } catch (error) {
@@ -196,7 +209,7 @@ export async function openAndSyncDomain({
   }
 
   let current = entry.vault.getData();
-  let merged = mergeDomainPayload(current, legacyData, id, mergeStore);
+  let merged = mergeDomainPayload(current, legacyData, id, mergeStore, domains);
   if (canonicalize(merged) !== canonicalize(current)) await entry.vault.setData(merged);
   await entry.vault.flush();
 
@@ -205,10 +218,10 @@ export async function openAndSyncDomain({
     merge: (local, incoming) => {
       assertEmptyDomainPayload(local, id);
       assertEmptyDomainPayload(incoming, id);
-      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore), id);
+      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore, domains), id);
     },
     // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
-    migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id), id),
+    migrate: (incoming) => assertEmptyDomainPayload(validateDomainPayload(incoming, id, domains), id),
     schemaVersion: 2,
   };
 
@@ -226,7 +239,7 @@ export async function openAndSyncDomain({
     await entry.vault.importEnvelope(winner.envelope, password);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: winner.sha, dirty: false });
     current = entry.vault.getData();
-    merged = mergeDomainPayload(current, localSnapshot, id, mergeStore);
+    merged = mergeDomainPayload(current, localSnapshot, id, mergeStore, domains);
     if (canonicalize(merged) !== canonicalize(current)) await entry.vault.setData(merged);
     await entry.vault.flush();
 
@@ -240,8 +253,8 @@ export async function openAndSyncDomain({
  * Controleert dat een Core-domein werkelijk leeg is op app-niveau.
  * Core mag daarnaast zijn eigen __pwaSync-apparaat-/verwijdermetadata bewaren.
  */
-export function assertEmptyDomainPayload(payload, id) {
-  validateDomainPayload(payload, id);
+export function assertEmptyDomainPayload(payload, id, domains = VAULT_DOMAINS) {
+  validateDomainPayload(payload, id, domains);
   if (payload.schema !== 2) throw new Error(`De kluis ${id} heeft een onbekend schema; er wordt niets gewijzigd.`);
   const allowed = id === 'shared'
     ? ['items', 'del', 'paid', 'meta', 'schema', 'domain', '__pwaSync']
@@ -276,7 +289,7 @@ async function decryptEnvelopeWithPassword(vault, envelope, password) {
 }
 
 export async function initializeEmptyDomain({
-  id, password, registry, settings, createClient, mergeStore,
+  id, password, registry, settings, createClient, mergeStore, domains = VAULT_DOMAINS,
   openEnvelope = decryptEnvelopeWithPassword,
 } = {}) {
   assertDomainId(id);
@@ -294,18 +307,18 @@ export async function initializeEmptyDomain({
 
   if (localExists) {
     await entry.vault.unlockWithPassword(password);
-    assertEmptyDomainPayload(entry.vault.getData(), id);
+    assertEmptyDomainPayload(entry.vault.getData(), id, domains);
     if (remote) {
       // Alleen dezelfde lokale datasleutel mag de remote inhoud inspecteren.
       // Een sleutelconflict stopt; we resetten of vervangen geen bestaande kluis.
       const remoteData = assertEmptyDomainPayload(
-        await entry.vault.decryptRemote(remote.envelope), id,
+        await entry.vault.decryptRemote(remote.envelope), id, domains,
       );
       void remoteData;
     }
   } else if (remote) {
     // Inspecteer vóór import: een bestaande niet-lege kluis komt niet in lokale opslag terecht.
-    assertEmptyDomainPayload(await openEnvelope(entry.vault, remote.envelope, password), id);
+    assertEmptyDomainPayload(await openEnvelope(entry.vault, remote.envelope, password), id, domains);
     await entry.vault.importEnvelope(remote.envelope, password);
     assertEmptyDomainPayload(entry.vault.getData(), id);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
@@ -330,7 +343,7 @@ export async function initializeEmptyDomain({
 
   const confirmed = await client.getFile();
   if (!confirmed) throw new Error(`GitHub heeft de lege kluis ${id} niet bevestigd. De lokale kluis is behouden; probeer opnieuw.`);
-  assertEmptyDomainPayload(await entry.vault.decryptRemote(confirmed.envelope), id);
+  assertEmptyDomainPayload(await entry.vault.decryptRemote(confirmed.envelope), id, domains);
   return { id, result, path: remoteSettings.path, confirmed: true };
 }
 
