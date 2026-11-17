@@ -38,7 +38,7 @@ test('Core relinking accepts only the active vault domains and legacy random han
   const options = {
     storagePrefix: 'vaste-lasten-device-p1',
     scope: 'bundle',
-    legacyPrefixes: ['vaste-lasten-shared', 'vaste-lasten-personal-p1'],
+    legacyPrefixes: ['vaste-lasten-device-p1', 'vaste-lasten-shared', 'vaste-lasten-personal-p1'],
   };
   assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-shared:credential'), options), false);
   assert.equal(await isCoreForeignUserHandle(encode('vaste-lasten-personal-p1:credential'), options), false);
@@ -167,10 +167,10 @@ test('app passkey adapter stores and restores a wrapping-capable bundle key with
     assert.equal(createOptions.publicKey.extensions.prf.eval.first instanceof Uint8Array, true);
     const expectedPrfSalt = new Uint8Array(await crypto.subtle.digest(
       'SHA-256',
-      new TextEncoder().encode(`${longPrefix}:biometric-bundle-prf:v1`),
+      new TextEncoder().encode(`vaste-lasten-device-p1:biometric-bundle-prf:v1`),
     ));
     assert.deepEqual([...createOptions.publicKey.extensions.prf.eval.first], [...expectedPrfSalt]);
-    const storedBundle = JSON.parse(values.get(`${longPrefix}:biometric-bundle`));
+    const storedBundle = JSON.parse(values.get('vaste-lasten-device-p1:biometric-bundle'));
     assert.deepEqual([...b64ToBytes(storedBundle.prfSalt)], [...expectedPrfSalt]);
     const unlocked = await biometric.unlock();
     assert.deepEqual([...unlocked.usages].sort(), ['unwrapKey', 'wrapKey']);
@@ -223,6 +223,14 @@ test('new passkeys use a compact userHandle tag for long workspace prefixes and 
     const biometric = createBundleBiometric({ storagePrefix: longPrefix, storage });
     const bundleKey = await generateBundleKey();
     await biometric.enroll(bundleKey);
+
+    const expectedPrfSalt = new Uint8Array(await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`${longPrefix}:biometric-bundle-prf:v1`),
+    ));
+    assert.deepEqual([...createOptions.publicKey.extensions.prf.eval.first], [...expectedPrfSalt]);
+    const storedBundle = JSON.parse(values.get(`${longPrefix}:biometric-bundle`));
+    assert.deepEqual([...b64ToBytes(storedBundle.prfSalt)], [...expectedPrfSalt]);
 
     const userId = new Uint8Array(createOptions.publicKey.user.id);
     assert.ok(userId.byteLength <= 64, `WebAuthn user.id was ${userId.byteLength} bytes`);
