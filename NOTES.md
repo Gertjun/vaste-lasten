@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.6.3 in voorbereiding** (diagnostiek workspace-identiteit).
+Laatst bijgewerkt: 17 november 2026 · versie **3.7.0 in voorbereiding** (QR-koppeling tweede apparaat).
 
 ---
 
@@ -45,6 +45,9 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **17 nov 2026 – QR-koppeling tweede apparaat (3.7.0):** featurebranch `feat/qr-device-pairing`. QR-overdracht versleutelt workspace, administratie, GitHub-repository, gebruikersrol en token met een sleutel die uit beide kluiswachtwoorden wordt afgeleid (PBKDF2-SHA-256, 600.000 rondes; AES-256-GCM). QR-code verloopt na drie minuten; nonce wordt lokaal als gebruikt gemarkeerd. De token wordt op het tweede apparaat via de bestaande opslagroute opnieuw met de apparaatspecifieke IndexedDB-sleutel versleuteld. QR-generator en scanner zijn lokaal meegeleverd en worden door de service worker gecachet. Tests en CI moeten nog worden uitgevoerd; geen echte wachtwoorden, tokens of productiegegevens gebruikt.
+
 
 - **17 nov 2026 – diagnostiek workspace-identiteit (3.6.3):** de validatiefout toont nu domein, verwachte kluiscode en aangetroffen kluiscode (of expliciet dat die ontbreekt). Dit maakt onderscheid mogelijk tussen een oude lokale payload zonder workspaceId en een payload van een andere administratie. De controle blijft fail-closed; er vindt geen automatische correctie plaats. Regressietests controleren beide foutvarianten.
 
