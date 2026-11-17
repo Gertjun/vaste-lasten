@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  VAULT_DOMAINS, splitLegacyState, validateDomainPayload, mergeDomainPayload,
+  VAULT_DOMAINS, createVaultDomains, splitLegacyState, validateDomainPayload, mergeDomainPayload,
   createVaultRegistry, acquireActiveLocks, openAndSyncDomain,
   raiseLegacyUpdateBarrier, migrateActiveDomains, requireLegacyEnvelope,
 } from '../js/multi-vault-adapter.js';
@@ -48,6 +48,30 @@ test('legacy state is split without crossing shared and private fields', () => {
   for (const key of ['meta', 'cats', 'inc', 'settle']) assert.equal(Object.hasOwn(split['personal-p1'], key), false);
   assert.deepEqual(split.shared.meta, { p1: 'A', p2: 'B' });
   assert.deepEqual(split['personal-p1'].prof, { income: 100 });
+});
+
+test('legacy state split carries the exact workspace identity for named vaults', () => {
+  const domains = createVaultDomains({ workspaceId: '12345678-abcd-1234-abcd-1234567890ab' });
+  const legacy = {
+    samen: store([{ id: 'shared' }], { meta: { p1: 'A' } }),
+    eigen: store([{ id: 'private-p1' }], { prof: { income: 100 } }),
+  };
+  const split = splitLegacyState(legacy, 'p1', domains);
+  assert.equal(split.shared.workspaceId, domains.shared.workspaceId);
+  assert.equal(split['personal-p1'].workspaceId, domains['personal-p1'].workspaceId);
+  assert.equal(validateDomainPayload(split.shared, 'shared', domains), split.shared);
+  assert.equal(validateDomainPayload(split['personal-p1'], 'personal-p1', domains), split['personal-p1']);
+  assert.throws(
+    () => validateDomainPayload({ ...split.shared, workspaceId: '87654321-abcd-1234-abcd-1234567890ab' }, 'shared', domains),
+    /andere administratie/,
+  );
+});
+
+test('legacy state split keeps the default workspace identity absent', () => {
+  const legacy = { samen: store(), eigen: store() };
+  const split = splitLegacyState(legacy, 'p1');
+  assert.equal(Object.hasOwn(split.shared, 'workspaceId'), false);
+  assert.equal(Object.hasOwn(split['personal-p1'], 'workspaceId'), false);
 });
 
 test('each Core payload is bound to exactly one domain', () => {

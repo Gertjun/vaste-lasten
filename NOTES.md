@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.6.1 in voorbereiding** (bevestigde back-upopslag in PWA-Core).
+Laatst bijgewerkt: 17 november 2026 · versie **3.6.2 in voorbereiding** (workspace-identiteit bij back-upherstel).
 
 ---
 
@@ -45,6 +45,8 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **17 nov 2026 – workspace-identiteit bij back-upherstel (3.6.2):** oorzaak gevonden in `splitLegacyState`: bij benoemde administraties ontbrak `workspaceId` in de gedeelde en persoonlijke payload. `persistState` gaf daardoor een payload aan `mergeDomainPayload` die terecht als andere administratie werd geweigerd. Fix geeft de actuele domeinconfiguratie mee bij splitsen en bewaart de workspace-identiteit; standaardadministratie blijft zonder `workspaceId`. Regressietests toegevoegd voor beide gevallen. PR volgt na CI-controle. Geen echte back-up of productiegegevens gebruikt in tests.
 
 - **17 nov 2026 – back-upherstel PWA-Core (3.6.1):** de import bouwt eerst een aparte snapshot op en wacht op `persistState` plus `flushLocal` voor beide actieve Core-kluizen. De succesmelding betreft lokale opslag; online synchronisatie loopt via de bestaande route. Opslagfouten worden onderscheiden van ongeldige back-ups en de Core-runtime blijft leidend bij mogelijk gedeeltelijk succes. Synthetische tests toegevoegd voor de merge, behoud van betaalhistorie/metadata, wachten op opslagbevestiging en foutafhandeling. PR #14 staat open voor review; CI-resultaten worden gecontroleerd. Geen echte back-up of productiegegevens gebruikt in tests.
 

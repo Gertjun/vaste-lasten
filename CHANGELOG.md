@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.6.2 — 17 november 2026
+- Opgelost: back-upherstel en andere volledige state-opslagen behouden nu de workspace-identiteit van benoemde administraties. Core accepteert de inhoud daardoor in de juiste kluis, terwijl gegevens uit een andere administratie geweigerd blijven.
+- Nieuw: regressietests controleren zowel benoemde administraties als behoud van de bestaande standaardadministratie.
+
+
 ## 3.6.1 — 17 november 2026
 - Opgelost: een back-up terugzetten in PWA-Core wacht nu op bevestigde lokale opslag in beide actieve kluizen voordat de app succes meldt.
 - Verbeterd: een opslagfout wordt apart gemeld en niet langer verward met een ongeldige back-up.
