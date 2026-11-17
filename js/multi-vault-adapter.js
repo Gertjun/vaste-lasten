@@ -89,7 +89,7 @@ export function mergeDomainPayload(local, remote, id, mergeStore, domains = VAUL
   // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
-  return validateDomainPayload({ ...merged, schema: 2, domain: VAULT_DOMAINS[id].domain }, id, domains);
+  return validateDomainPayload({ ...merged, schema: 2, domain: domains[id].domain }, id, domains);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
@@ -292,7 +292,7 @@ export async function initializeEmptyDomain({
   id, password, registry, settings, createClient, mergeStore, domains = VAULT_DOMAINS,
   openEnvelope = decryptEnvelopeWithPassword,
 } = {}) {
-  assertDomainId(id);
+  assertDomainId(id, domains);
   if (typeof password !== 'string' || password.length < 12) throw new Error(`Kies voor ${id} een nieuw wachtwoord van minstens 12 tekens.`);
   const entry = registry?.[id];
   if (!entry?.vault || !entry?.sync) throw new TypeError(`De kluisinstantie voor ${id} ontbreekt.`);
@@ -300,7 +300,7 @@ export async function initializeEmptyDomain({
     throw new TypeError('De GitHub-client en Vaste Lasten-samenvoegfunctie zijn verplicht.');
   }
 
-  const remoteSettings = { ...settings, path: VAULT_DOMAINS[id].path };
+  const remoteSettings = { ...settings, path: domains[id].path };
   const client = createClient(remoteSettings);
   const remote = await client.getFile();
   const localExists = entry.vault.hasVault();
@@ -320,21 +320,21 @@ export async function initializeEmptyDomain({
     // Inspecteer vóór import: een bestaande niet-lege kluis komt niet in lokale opslag terecht.
     assertEmptyDomainPayload(await openEnvelope(entry.vault, remote.envelope, password), id, domains);
     await entry.vault.importEnvelope(remote.envelope, password);
-    assertEmptyDomainPayload(entry.vault.getData(), id);
+    assertEmptyDomainPayload(entry.vault.getData(), id, domains);
     entry.vault.setSyncMeta({ ...entry.vault.getSyncMeta(), sha: remote.sha, dirty: false });
   } else {
     const empty = {
       items: [], del: {}, paid: {},
       ...(id === 'shared' ? { meta: null } : {}),
-      schema: 2, domain: VAULT_DOMAINS[id].domain,
+      schema: 2, domain: domains[id].domain,
     };
     await entry.vault.create(password, empty);
   }
 
   const syncOptions = {
     settings: remoteSettings,
-    merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore),
-    migrate: (incoming) => validateDomainPayload(incoming, id),
+    merge: (local, incoming) => mergeDomainPayload(local, incoming, id, mergeStore, domains),
+    migrate: (incoming) => validateDomainPayload(incoming, id, domains),
     schemaVersion: 2,
   };
   const result = await entry.sync.syncNow(syncOptions);
