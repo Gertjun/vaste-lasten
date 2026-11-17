@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
 import { webcrypto } from 'node:crypto';
-import { generateDataKey, encryptJSON, decryptJSON } from '../js/core/crypto.js';
+import { generateDataKey, encryptJSON, decryptJSON, b64ToBytes } from '../js/core/crypto.js';
 import {
   createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey, unwrapBundleKey,
 } from '../js/bundle-biometric.js';
@@ -152,6 +152,13 @@ test('app passkey adapter stores and restores a wrapping-capable bundle key with
     await biometric.enroll(bundleKey);
     assert.equal(biometric.isEnrolled(), true);
     assert.equal(createOptions.publicKey.extensions.prf.eval.first instanceof Uint8Array, true);
+    const expectedPrfSalt = new Uint8Array(await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`${longPrefix}:biometric-bundle-prf:v1`),
+    ));
+    assert.deepEqual([...createOptions.publicKey.extensions.prf.eval.first], [...expectedPrfSalt]);
+    const storedBundle = JSON.parse(values.get(`${longPrefix}:biometric-bundle`));
+    assert.deepEqual([...b64ToBytes(storedBundle.prfSalt)], [...expectedPrfSalt]);
     const unlocked = await biometric.unlock();
     assert.deepEqual([...unlocked.usages].sort(), ['unwrapKey', 'wrapKey']);
     assert.equal(getOptions.publicKey.userVerification, 'required');
