@@ -2329,6 +2329,7 @@ function coreEmptySetupHtml(){
     '<p class="note">Geef deze administratie een herkenbare naam. Kies of de drie versleutelde kluizen alleen op dit apparaat blijven of via je eigen privé-GitHub-repository synchroniseren. Iedere administratie krijgt een eigen lokale opslag en eigen bestanden; bestaande administraties worden niet overschreven.</p>'+
     fieldHtml('core-empty-name','Naam van deze administratie','autocomplete="off" required maxlength="60" placeholder="Bijvoorbeeld: Gezamenlijke administratie"')+
     '<div class="field"><label for="core-empty-storage">Waar bewaar je deze administratie?</label><select id="core-empty-storage"><option value="local">Lokaal · alleen op dit apparaat</option><option value="online">Online · privé-GitHub-repository</option></select></div>'+
+    '<p class="hint">De volgende GitHub-velden zijn alleen nodig als je hierboven Online kiest.</p>'+
     '<div class="two">'+fieldHtml('core-empty-owner','GitHub-gebruikersnaam','autocapitalize="off" spellcheck="false" autocomplete="off"')+
     fieldHtml('core-empty-repo','Privé-repository','autocapitalize="off" spellcheck="false" placeholder="bijvoorbeeld vaste-lasten-data"')+'</div>'+
     fieldHtml('core-empty-token','GitHub-token','type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"')+
