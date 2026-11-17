@@ -795,7 +795,7 @@ try{
   coreMode=!!coreProfile;
 }catch(e){coreProfiles=[];coreProfile=null;coreMode=false;}
 let coreRuntime=null, coreRuntimeWorkspaceId=null, pendingWorkspaceId=null;
-try{const draft=localStorage.getItem(CORE_DRAFT_KEY);if(draft&&/^[a-f0-9-]{8,64}$/i.test(draft))pendingWorkspaceId=draft;}catch(e){}
+try{const draft=localStorage.getItem(CORE_DRAFT_KEY);if(!coreProfile&&draft&&/^[a-f0-9-]{8,64}$/i.test(draft))pendingWorkspaceId=draft;}catch(e){}
 let coreReady=false, coreConnected=false, corePersistError='';
 let vaultChoiceDismissed=false;
 function saveCoreProfile(profile=coreProfile){
@@ -2746,7 +2746,7 @@ async function initializeEmptyCore(){
   const personalPassword=$('core-empty-e')?.value||'';
   if(!sharedPassword||!personalPassword) throw new SyncError('Vul het nieuwe gezamenlijke en persoonlijke wachtwoord in.');
   const passwords={shared:sharedPassword,[`personal-${me}`]:personalPassword};
-  let workspaceId=pendingWorkspaceId||newWorkspaceId();
+  let workspaceId=pendingWorkspaceId||localStorage.getItem(CORE_DRAFT_KEY)||newWorkspaceId();
   if(coreProfiles.some(p=>p.id===workspaceId)){workspaceId=newWorkspaceId();}
   pendingWorkspaceId=workspaceId;
   localStorage.setItem(CORE_DRAFT_KEY,workspaceId);
