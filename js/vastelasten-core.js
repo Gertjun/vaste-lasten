@@ -463,7 +463,7 @@ export function createVasteLastenCore({
           assertEmptyDomainPayload(vault.getData(), id, domains);
           results[id] = { id, existing: true, localOnly: true };
         } else {
-          await vault.create(password, emptyPayload(id));
+          await vault.create(password, emptyPayload(id, domains));
           assertEmptyDomainPayload(vault.getData(), id, domains);
           results[id] = { id, created: true, localOnly: true };
         }
