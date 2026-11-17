@@ -71,9 +71,15 @@ export function createBundleBiometric({
   const storeKey = `${storagePrefix}:biometric-bundle`;
   const prfLabel = `${storagePrefix}:biometric-bundle-prf:v1`;
   const hkdfInfo = `${storagePrefix}:biometric-bundle-kek:v1`;
-  const userTag = encoder.encode(`${storagePrefix}:`);
   const acceptedUserHandlePrefixes = [...new Set([storagePrefix, ...allowedUserHandlePrefixes])];
 
+  // WebAuthn limits user.id to 64 bytes. Hash the full device/workspace prefix
+  // into a compact, stable tag so even long named workspaces remain supported.
+  async function compactUserHandlePrefix() {
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(storagePrefix)));
+    const shortHash = [...digest.slice(0, 12)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `vl1-${shortHash}`;
+  }
 
   async function prfSalt() {
     return new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(prfLabel)));
@@ -118,6 +124,7 @@ export function createBundleBiometric({
 
   async function enroll(bundleKey) {
     const salt = await prfSalt();
+    const userTag = encoder.encode(`${await compactUserHandlePrefix()}:`);
     const userId = new Uint8Array(userTag.length + 16);
     userId.set(userTag);
     userId.set(randomBytes(16), userTag.length);
@@ -153,7 +160,8 @@ export function createBundleBiometric({
         extensions: { prf: { eval: { first: salt } } },
       },
     });
-    if (isForeignUserHandle(assertion.response?.userHandle, acceptedUserHandlePrefixes)) {
+    const compactPrefix = await compactUserHandlePrefix();
+    if (isForeignUserHandle(assertion.response?.userHandle, [...acceptedUserHandlePrefixes, compactPrefix])) {
       throw new Error(`Deze passkey hoort bij een andere app. Kies een passkey voor ${appName}.`);
     }
     const secret = readSecret(assertion.getClientExtensionResults().prf?.results?.first);
