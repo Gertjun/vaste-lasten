@@ -1,3 +1,7 @@
+## 3.8.2 — 17 november 2026
+- Verbeterd: Vaste Lasten gebruikt PWA-Core v1.2.1 voor WebAuthn-passkeys. Nieuwe bundle-passkeys hebben een eigen Core-scope; oude `storagePrefix:`- en `vl1-...`-passkeys blijven herkenbaar.
+- Beveiliging: PRF-zout, HKDF-context, credential-ID's, verpakte bundelsleutel en kluissleutels blijven ongewijzigd.
+
 ## 3.8.1 — 17 november 2026
 - Opgelost: nieuwe passkeys gebruiken een compacte WebAuthn-gebruikersidentificatie. Ook lange workspacenamen blijven binnen de limiet van 64 bytes; opnieuw koppelen herkent deze nieuwe identificatie.
 
