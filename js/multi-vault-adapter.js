@@ -27,9 +27,9 @@ export function createVaultDomains({ workspaceId = 'default' } = {}) {
   }
   const root = `workspaces/${workspaceId}/pwa-core-v1`;
   return Object.freeze({
-    shared: Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-shared`, path: `${root}/samen.json`, domain: 'shared' }),
-    'personal-p1': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p1`, path: `${root}/eigen-p1.json`, domain: 'personal-p1' }),
-    'personal-p2': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p2`, path: `${root}/eigen-p2.json`, domain: 'personal-p2' }),
+    shared: Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-shared`, path: `${root}/samen.json`, domain: 'shared', workspaceId }),
+    'personal-p1': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p1`, path: `${root}/eigen-p1.json`, domain: 'personal-p1', workspaceId }),
+    'personal-p2': Object.freeze({ storagePrefix: `vaste-lasten-${workspaceId}-personal-p2`, path: `${root}/eigen-p2.json`, domain: 'personal-p2', workspaceId }),
   });
 }
 
@@ -71,6 +71,10 @@ export function validateDomainPayload(payload, id, domains = VAULT_DOMAINS) {
   if (!isRecord(payload) || ![1, 2].includes(payload.schema) || payload.domain !== domains[id].domain) {
     throw new Error(`De inhoud van de kluis hoort niet bij het domein ${id} of heeft een onbekend schema.`);
   }
+  const expectedWorkspaceId = domains[id].workspaceId;
+  if (payload.workspaceId !== expectedWorkspaceId) {
+    throw new Error('De inhoud van deze kluis hoort bij een andere administratie. Controleer de kluiscode; er is niets gewijzigd.');
+  }
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   if (forbidden.some((key) => Object.hasOwn(payload, key))) {
     throw new Error(`De kluis ${id} bevat velden buiten het toegestane gegevensdomein.`);
@@ -89,7 +93,12 @@ export function mergeDomainPayload(local, remote, id, mergeStore, domains = VAUL
   // Dat lege standaardveld mag niet alsnog in een persoonlijk Core-domein belanden.
   const forbidden = id === 'shared' ? ['prof', 'scen'] : ['meta', 'cats', 'inc', 'settle'];
   for (const key of forbidden) if (Object.hasOwn(merged, key) && merged[key] == null) delete merged[key];
-  return validateDomainPayload({ ...merged, schema: 2, domain: domains[id].domain }, id, domains);
+  return validateDomainPayload({
+    ...merged,
+    ...(domains[id].workspaceId ? { workspaceId: domains[id].workspaceId } : {}),
+    schema: 2,
+    domain: domains[id].domain,
+  }, id, domains);
 }
 
 /** Maakt alle drie de instanties aan; alleen shared + eigen persoonlijk worden ontgrendeld. */
@@ -256,9 +265,11 @@ export async function openAndSyncDomain({
 export function assertEmptyDomainPayload(payload, id, domains = VAULT_DOMAINS) {
   validateDomainPayload(payload, id, domains);
   if (payload.schema !== 2) throw new Error(`De kluis ${id} heeft een onbekend schema; er wordt niets gewijzigd.`);
-  const allowed = id === 'shared'
-    ? ['items', 'del', 'paid', 'meta', 'schema', 'domain', '__pwaSync']
-    : ['items', 'del', 'paid', 'schema', 'domain', '__pwaSync'];
+  const allowed = [
+    'items', 'del', 'paid', 'schema', 'domain', '__pwaSync',
+    ...(id === 'shared' ? ['meta'] : []),
+    ...(domains[id].workspaceId ? ['workspaceId'] : []),
+  ];
   if (Object.keys(payload).some((key) => !allowed.includes(key))) {
     throw new Error(`De kluis ${id} bevat bestaande of onbekende gegevens. De lege start is afgebroken; niets is overschreven.`);
   }
@@ -327,6 +338,7 @@ export async function initializeEmptyDomain({
       items: [], del: {}, paid: {},
       ...(id === 'shared' ? { meta: null } : {}),
       schema: 2, domain: domains[id].domain,
+      ...(domains[id].workspaceId ? { workspaceId: domains[id].workspaceId } : {}),
     };
     await entry.vault.create(password, empty);
   }
