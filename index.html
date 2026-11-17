@@ -790,7 +790,7 @@ try{
     localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   }
   const active=localStorage.getItem(CORE_ACTIVE_KEY)||coreProfile?.id||coreProfiles[0]?.id||null;
-  coreProfile=coreProfiles.find(p=>p.id===active)||coreProfiles[0]||null;
+  coreProfile=active==='__chooser__'?null:(coreProfiles.find(p=>p.id===active)||coreProfiles[0]||null);
   coreMode=!!coreProfile;
 }catch(e){coreProfiles=[];coreProfile=null;coreMode=false;}
 let coreRuntime=null, coreRuntimeWorkspaceId=null, pendingWorkspaceId=null;
@@ -2896,7 +2896,7 @@ async function resetLocalCoreForSetup(){
   if(wasLocalOnly) coreProfiles=coreProfiles.filter(p=>p.id!==coreProfile.id);
   else coreProfiles=coreProfiles.map(p=>p.id===coreProfile.id?{...p,needsReconnect:true}:p);
   localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
-  localStorage.removeItem(CORE_ACTIVE_KEY);
+  localStorage.setItem(CORE_ACTIVE_KEY,'__chooser__');
   localStorage.removeItem(CORE_MODE_KEY);
   localStorage.removeItem(CORE_EMPTY_SETUP_KEY);
   localStorage.removeItem(CORE_STAGING_KEY);
