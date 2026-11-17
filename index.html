@@ -2584,7 +2584,7 @@ async function connectExistingCore(){
   state=result.state;
   coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
   saveCoreProfile(); pendingWorkspaceId=null;
-  localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
+  if(workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
   toast('Bestaande PWA-Core-kluis gekoppeld als '+nameOf(me));
@@ -2614,7 +2614,7 @@ async function connectLocalCore(){
   state=result.state;
   coreProfile={...coreProfile,version:1,owner,repo,me,storageType:'online',localOnly:false,coreRelease:'v1.1.0',emptySetup:true};
   saveCoreProfile(); pendingWorkspaceId=null;
-  localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
+  if(coreProfile.workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
   toast('Je bestaande lokale kluis is gekoppeld aan GitHub Sync.');
@@ -2771,7 +2771,7 @@ async function initializeEmptyCore(){
     toast('De nieuwe lokale administratie is aangemaakt. De gegevens staan alleen op dit apparaat.');
   }
   saveCoreProfile(); pendingWorkspaceId=null;
-  localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
+  if(coreProfile.workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreReady=true; corePersistError=''; syncError='';
   if(timer){clearTimeout(timer);timer=null;}
   render(); renderSyncPanel(); pillIdle();
@@ -2786,7 +2786,7 @@ async function unlockCoreLocal(){
   syncError='';
   try{
     let next=await coreRuntime.unlockLocal({me,passwords});
-    if(!coreProfile?.localOnly) next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    if(coreProfile?.workspaceId==='default'&&!coreProfile?.localOnly) next=await mergeStagedLegacyState(next,{connectIfOnline:false});
     state=next; coreReady=true; coreConnected=false; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
@@ -2810,7 +2810,7 @@ async function unlockCore(){
     }else{
       next=await coreRuntime.unlockLocal({me:cfg.me,passwords});
     }
-    next=await mergeStagedLegacyState(next);
+    if(coreProfile?.workspaceId==='default') next=await mergeStagedLegacyState(next);
     state=next; coreReady=true; coreConnected=!!navigator.onLine; corePersistError='';
     if(shareMyIncome()) saveLocal();
     render(); renderSyncPanel(); pillIdle();
@@ -2825,7 +2825,7 @@ async function unlockCoreBiometric(){
   syncError='';
   try{
     let next=await coreRuntime.unlockWithBiometricLocal({me:cfg.me});
-    next=await mergeStagedLegacyState(next,{connectIfOnline:false});
+    if(coreProfile?.workspaceId==='default') next=await mergeStagedLegacyState(next,{connectIfOnline:false});
     state=next; coreReady=true; coreConnected=false; corePersistError='';
     if(shareMyIncome()) saveLocal();
     if(navigator.onLine){
@@ -2905,8 +2905,10 @@ async function resetLocalCoreForSetup(){
   localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   localStorage.setItem(CORE_ACTIVE_KEY,'__chooser__');
   localStorage.removeItem(CORE_MODE_KEY);
-  localStorage.removeItem(CORE_EMPTY_SETUP_KEY);
-  localStorage.removeItem(CORE_STAGING_KEY);
+  if(coreProfile.workspaceId==='default'){
+    localStorage.removeItem(CORE_EMPTY_SETUP_KEY);
+    localStorage.removeItem(CORE_STAGING_KEY);
+  }
   localStorage.removeItem(CFGKEY);
   coreProfile=null; coreMode=false; coreSetupMode=true; cfg=null; vaultChoiceDismissed=false;
   coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null;
@@ -3622,7 +3624,7 @@ function fromOtherTab(raw){
   if(coreMode){
     try{localStorage.setItem(CORE_STAGING_KEY,raw);}catch(e){syncError='Een wijziging uit een oud tabblad kon niet lokaal worden veiliggesteld.';return;}
     if(coreReady&&coreRuntime){
-      mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
+      if(coreProfile?.workspaceId==='default') mergeStagedLegacyState(coreRuntime.getState()).then(next=>{
         state=next; render(); scheduleSync();
       }).catch(e=>{syncError=e.message||'Een wijziging uit een oud tabblad kon niet worden samengevoegd.';renderSyncPanel();});
     }
