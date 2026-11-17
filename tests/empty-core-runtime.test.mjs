@@ -468,3 +468,24 @@ test('workspaces: twee online administraties in dezelfde repository schrijven na
   await first.core.lock();
   await second.core.lock();
 });
+
+
+test('workspaces: een verkeerde kluiscode kan geen andere online administratie openen of overschrijven', async () => {
+  const remoteFiles = new Map();
+  const owner = runtimeHarness({ remoteFiles, workspaceId: '11111111-1111-4111-8111-111111111111' });
+  const created = await owner.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+  const before = [...remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
+
+  const wrongCode = runtimeHarness({ remoteFiles, workspaceId: '22222222-2222-4222-8222-222222222222' });
+  const result = await wrongCode.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+
+  assert.equal(result.complete, false);
+  assert.match(result.error.message, /gedeelde PWA-Core-kluis ontbreekt/);
+  assert.deepEqual([...remoteFiles.entries()], before);
+  await owner.core.lock();
+});
