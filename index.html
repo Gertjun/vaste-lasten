@@ -2370,6 +2370,7 @@ function renderSyncPanel(){
       '</div>';
     el.innerHTML=h+'<div class="ok-line">PWA-Core v1.1.0 · actief als <b>'+esc(nameOf(cfg.me))+'</b>.</div>'+
       '<div class="note">Administratie: <b>'+esc(coreProfile?.name||'Mijn administratie')+'</b>. Actieve kluizen: <code>'+esc(corePathFor('samen'))+'</code> en <code>'+esc(corePathFor('eigen'))+'</code>. De persoonlijke kluis van de andere gebruiker blijft vergrendeld.</div>'+
+      (coreProfile?.workspaceId&&coreProfile.workspaceId!=='default'?'<div class="note">Kluiscode om dezelfde administratie op een ander apparaat te koppelen: <code>'+esc(coreProfile.workspaceId)+'</code>.</div>':'')+
       '<div class="err" id="s-err">'+esc(corePersistError||syncError)+'</div>'+
       '<div class="btns"><button class="btn" id="core-sync">Nu synchroniseren</button>'+
       (hist.open?'':'<button class="btn" id="h-open">Vorige versie herstellen</button>')+
