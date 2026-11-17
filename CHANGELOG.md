@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.6.0 — 17 november 2026
+- Nieuw: meerdere benoemde administraties naast elkaar. Kies bij het openen welke kluis je wilt gebruiken; iedere administratie heeft een eigen naam en een duidelijk label voor lokaal of online.
+- Nieuw: maak een nieuwe administratie lokaal aan (alleen op dit apparaat) of online in een privé-GitHub-repository. Online administraties krijgen eigen bestanden en een deelbare kluiscode om op een ander apparaat dezelfde administratie te koppelen.
+- Beveiliging: elke administratie heeft een eigen lokale opslagprefix en, online, een eigen padnamespace. De bestaande standaardadministratie behoudt exact haar oude lokale opslagprefixen, passkey-identificaties en GitHub-paden.
+- Herstel: vanuit het vergrendelscherm kun je terug naar de kluiskeuze zonder gegevens te wissen. Een bevestigde lokale reset raakt alleen de gekozen administratie op dit apparaat; andere administraties en GitHub-bestanden blijven behouden.
+
 ## 3.5.0 — 17 november 2026
 - Nieuw: vanaf het vergrendelscherm kun je terug naar het scherm om een bestaande of nieuwe kluis in te stellen, ook als de wachtwoorden niet werken.
 - Beveiliging: teruggaan naar instellen verwijdert niets. Lokale Core-kluizen vervangen vereist een aparte bevestiging; alleen de lokale kluizen en passkey-koppeling op dit apparaat worden gewist. GitHub-bestanden en gegevens op andere apparaten blijven behouden.
