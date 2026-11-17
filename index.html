@@ -2598,9 +2598,9 @@ async function connectLocalCore(){
     throw new SyncError(result.error?.message||'De lokale kluis kon niet volledig worden gepubliceerd. Je kunt veilig opnieuw proberen.');
   }
   state=result.state;
-  coreProfile={version:1,owner,repo,me,coreRelease:'v1.1.0',emptySetup:true};
+  coreProfile={...coreProfile,version:1,owner,repo,me,storageType:'online',localOnly:false,coreRelease:'v1.1.0',emptySetup:true};
+  saveCoreProfile(); pendingWorkspaceId=null;
   localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
-  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
   coreMode=true; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
   render(); renderSyncPanel(); pillIdle();
   toast('Je bestaande lokale kluis is gekoppeld aan GitHub Sync.');
@@ -2707,8 +2707,8 @@ async function migrateToCore(){
     throw new SyncError(reason+' De bestaande lokale gegevens en legacybestanden zijn behouden. Je kunt de migratie opnieuw proberen.');
   }
   state=result.state;
-  coreProfile={version:1,owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0'};
-  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(coreProfile));
+  coreProfile={version:1,id:'default',workspaceId:'default',name:coreProfile?.name||'Mijn administratie',storageType:'online',owner:cfg.owner,repo:cfg.repo,me:cfg.me,coreRelease:'v1.1.0'};
+  saveCoreProfile();
   coreMode=true;
   coreReady=true; coreConnected=true;
   localStorage.removeItem(DKEY); // pas nadat beide Core-kluizen lokaal én remote zijn bevestigd
@@ -2877,15 +2877,21 @@ async function lockCore(){
 }
 
 async function resetLocalCoreForSetup(){
-  if(!window.confirm('Alleen de drie lokale PWA-Core-kluizen op dit apparaat worden verwijderd, inclusief de lokale passkey-koppeling. Bestanden op GitHub en gegevens op andere apparaten blijven staan. Je kunt daarna een bestaande kluis koppelen of een nieuwe lege kluis aanmaken. Doorgaan?')) return;
+  if(!coreProfile) throw new SyncError('Kies eerst de administratie die je lokaal wilt herstellen.');
+  if(!window.confirm('Alleen de drie lokale Core-kluizen en de passkey-koppeling van “'+(coreProfile.name||'deze administratie')+'” op dit apparaat worden verwijderd. Andere administraties, GitHub-bestanden en gegevens op andere apparaten blijven staan. Doorgaan?')) return;
   await ensureCoreRuntime();
   await coreRuntime.resetLocalVaults();
-  await idb('readwrite',store=>{store.delete('githubToken');store.delete('githubTokenKey');});
+  const wasLocalOnly=!!coreProfile.localOnly;
+  if(wasLocalOnly) coreProfiles=coreProfiles.filter(p=>p.id!==coreProfile.id);
+  else coreProfiles=coreProfiles.map(p=>p.id===coreProfile.id?{...p,needsReconnect:true}:p);
+  localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
+  localStorage.removeItem(CORE_ACTIVE_KEY);
   localStorage.removeItem(CORE_MODE_KEY);
   localStorage.removeItem(CORE_EMPTY_SETUP_KEY);
   localStorage.removeItem(CORE_STAGING_KEY);
   localStorage.removeItem(CFGKEY);
-  coreProfile=null; coreMode=false; coreSetupMode=false; cfg=null; vaultChoiceDismissed=false;
+  coreProfile=null; coreMode=false; coreSetupMode=true; cfg=null; vaultChoiceDismissed=false;
+  coreRuntime=null; coreRuntimeWorkspaceId=null; pendingWorkspaceId=null;
   coreReady=false; coreConnected=false; corePersistError=''; syncError='';
   state={samen:EMPTY(),eigen:EMPTY()};
   renderCoreGate(); renderSyncPanel();
