@@ -82,3 +82,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Geldigheid:** QR-codes verlopen na drie minuten en een nonce voorkomt hergebruik op hetzelfde ontvangende apparaat. Er is geen centrale server; daarom is dit geen globale eenmalige code. De code blijft alleen bruikbaar zolang hij geldig is en de twee wachtwoorden bekend zijn.
 - **Opslag:** na koppelen wordt de GitHub-token opnieuw lokaal versleuteld opgeslagen met de bestaande apparaatspecifieke, niet-exporteerbare IndexedDB-sleutel. De QR-code bevat geen gegevens van de persoonlijke kluis van de andere gebruiker.
 - **Grenzen:** koppelen importeert alleen de bestaande workspace via de bestaande fail-closed `connectExisting`-route. Bestaande lokale of remote kluizen worden niet gereset of overschreven; legacybestanden blijven onaangeraakt.
+
+
+### D15 – WebAuthn-identificaties voor Vaste Lasten-bundels (17 nov 2026, 3.8.2)
+- **Besluit:** de aparte Vaste Lasten-bundel gebruikt de gedeelde PWA-Core-functies voor compacte WebAuthn userHandles met expliciete scope `bundle`. Vault-passkeys blijven scope `vault` gebruiken.
+- **Compatibiliteit:** bestaande Vaste Lasten-bundelpasskeys met een legacy `storagePrefix:`-handle of de eerder geïntroduceerde `vl1-<hash>:`-handle blijven herkenbaar. Herkoppelen accepteert alleen de eigen bundel, de actieve gedeelde kluis en de actieve persoonlijke kluis; de kluis van de andere persoon en andere apps blijven geweigerd.
+- **Cryptografie:** PRF-label/zout, HKDF-context, credential-ID, opgeslagen wrappingrecord, bundelsleutel en bestaande kluis-DEK's worden niet gewijzigd of opnieuw afgeleid. De wijziging raakt uitsluitend de WebAuthn userHandle-identificatie en validatie.
