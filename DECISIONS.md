@@ -74,3 +74,11 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** het terugzetten van een back-up in PWA-Core bouwt eerst een afzonderlijke nieuwe state op en wacht daarna op `persistState` én `flushLocal` voor de twee actieve kluizen.
 - **Succesmelding:** de app meldt pas dat de back-up lokaal is opgeslagen nadat beide opslagbewerkingen zijn bevestigd. Online synchronisatie volgt via de bestaande synchronisatieroute; lokale opslag wordt niet voorgesteld als remote bevestiging.
 - **Foutafhandeling:** een opslagfout wordt niet als ongeldige back-up gemeld. Bij een mogelijke gedeeltelijke opslag blijft de Core-runtime leidend en wordt de fout expliciet getoond; de gebruiker houdt de kluizen ontgrendeld en kan opnieuw proberen.
+
+
+### D14 – QR-koppeling tussen apparaten (17 nov 2026, 3.7.0 in voorbereiding)
+- **Besluit:** een tweede apparaat mag de bestaande benoemde PWA-Core-workspace via een QR-code koppelen. De QR-code draagt de workspace-identiteit, administratienaam, GitHub-eigenaar/repository, gebruikersrol en GitHub-token over.
+- **Beveiliging:** alle overdrachtsgegevens worden met AES-256-GCM versleuteld. De sleutel wordt met PBKDF2-SHA-256 (600.000 rondes) afgeleid uit beide kluiswachtwoorden plus een willekeurige salt. De QR-code bevat nooit leesbare wachtwoorden of token.
+- **Geldigheid:** QR-codes verlopen na drie minuten en een nonce voorkomt hergebruik op hetzelfde ontvangende apparaat. Er is geen centrale server; daarom is dit geen globale eenmalige code. De code blijft alleen bruikbaar zolang hij geldig is en de twee wachtwoorden bekend zijn.
+- **Opslag:** na koppelen wordt de GitHub-token opnieuw lokaal versleuteld opgeslagen met de bestaande apparaatspecifieke, niet-exporteerbare IndexedDB-sleutel. De QR-code bevat geen gegevens van de persoonlijke kluis van de andere gebruiker.
+- **Grenzen:** koppelen importeert alleen de bestaande workspace via de bestaande fail-closed `connectExisting`-route. Bestaande lokale of remote kluizen worden niet gereset of overschreven; legacybestanden blijven onaangeraakt.
