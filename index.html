@@ -776,10 +776,11 @@ let coreProfile=null, coreProfiles=[], coreMode=false, coreSetupMode=false;
 try{
   const raw=localStorage.getItem(CORE_MODE_KEY);
   const legacy=raw&&raw!=='1'?JSON.parse(raw):null;
-  const stored=JSON.parse(localStorage.getItem(CORE_PROFILES_KEY)||'[]');
+  let stored=[];
+  try{stored=JSON.parse(localStorage.getItem(CORE_PROFILES_KEY)||'[]');}catch(e){}
   coreProfiles=Array.isArray(stored)?stored.filter(p=>p&&p.version===1):[];
   if(!coreProfiles.length&&legacy&&legacy.version===1){
-    coreProfile={...legacy,id:'default',workspaceId:'default',name:'Mijn administratie',storageType:legacy.localOnly?'local':'online'};
+    coreProfile={...legacy,id:legacy.id||'default',workspaceId:legacy.workspaceId||'default',name:legacy.name||'Mijn administratie',storageType:legacy.localOnly?'local':'online'};
     coreProfiles=[coreProfile];
     localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   }
