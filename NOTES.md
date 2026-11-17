@@ -2,7 +2,7 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.7.0 in voorbereiding** (QR-koppeling tweede apparaat).
+Laatst bijgewerkt: 17 november 2026 · versie **3.8.0 in voorbereiding** (PWA-Core v1.2.0-apparaatkoppeling).november 2026 · versie **3.7.0 in voorbereiding** (QR-koppeling tweede apparaat).
 
 ---
 
@@ -45,6 +45,9 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **17 nov 2026 – PWA-Core v1.2.0-integratie (3.8.0, in voorbereiding):** release `v1.2.0` is gepubliceerd en immutable. Vaste Lasten krijgt de nieuwe Core-module `js/core/device-pairing.js`; de app-adapter beperkt zich tot het valideren van Vaste Lasten-profielgegevens en bindt de overdracht aan de context `vaste-lasten/device-pairing/v1`. Replaybescherming wordt pas na succesvolle kluiskoppeling vastgelegd. De featurebranch is nog niet gemerged; pin-, precache-, CI- en fysieke QR-acceptatie moeten nog slagen.
+
 
 - **17 nov 2026 – QR-koppeling tweede apparaat (3.7.0):** featurebranch `feat/qr-device-pairing`. QR-overdracht versleutelt workspace, administratie, GitHub-repository, gebruikersrol en token met een sleutel die uit beide kluiswachtwoorden wordt afgeleid (PBKDF2-SHA-256, 600.000 rondes; AES-256-GCM). QR-code verloopt na drie minuten; nonce wordt lokaal als gebruikt gemarkeerd. De token wordt op het tweede apparaat via de bestaande opslagroute opnieuw met de apparaatspecifieke IndexedDB-sleutel versleuteld. QR-generator en scanner zijn lokaal meegeleverd en worden door de service worker gecachet. Tests en CI moeten nog worden uitgevoerd; geen echte wachtwoorden, tokens of productiegegevens gebruikt.
 
