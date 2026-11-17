@@ -453,6 +453,7 @@ test('workspaces: bestaande standaardpaden blijven exact behouden en benoemde we
   assert.notEqual(first.shared.storagePrefix, second.shared.storagePrefix);
   assert.notEqual(first.shared.path, second.shared.path);
   assert.equal(first.shared.path, 'workspaces/11111111-1111-4111-8111-111111111111/pwa-core-v1/samen.json');
+  assert.equal(first.shared.workspaceId, '11111111-1111-4111-8111-111111111111');
 });
 
 test('workspaces: twee online administraties in dezelfde repository schrijven naar gescheiden bestanden', async () => {
@@ -497,6 +498,39 @@ test('workspaces: een verkeerde kluiscode kan geen andere online administratie o
   await owner.core.lock();
 });
 
+
+test('workspaces: een remote envelope uit een andere workspace wordt geweigerd, ook bij hetzelfde wachtwoord', async () => {
+  const remoteFiles = new Map();
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const wrongId = '22222222-2222-4222-8222-222222222222';
+  const owner = runtimeHarness({ remoteFiles, workspaceId: ownerId });
+  const created = await owner.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+
+  // Simuleer een bestand dat onder de verkeerde workspace-namespace terechtkomt.
+  // De wachtwoorden zijn identiek; alleen de versleutelde workspace-identiteit kan dit onderscheiden.
+  for (const [domainFile, ownerFile] of [
+    ['samen.json', 'samen.json'],
+    ['eigen-p1.json', 'eigen-p1.json'],
+  ]) {
+    remoteFiles.set(
+      `workspaces/${wrongId}/pwa-core-v1/${domainFile}`,
+      clone(remoteFiles.get(`workspaces/${ownerId}/pwa-core-v1/${ownerFile}`)),
+    );
+  }
+  const before = [...remoteFiles.entries()].map(([path, value]) => [path, clone(value)]);
+  const impostor = runtimeHarness({ remoteFiles, workspaceId: wrongId });
+  const result = await impostor.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+
+  assert.equal(result.complete, false);
+  assert.match(result.error.message, /andere administratie/);
+  assert.deepEqual([...remoteFiles.entries()], before);
+  await owner.core.lock();
+});
 
 test('workspaces: standaardadministratie behoudt bestaande passkey-identificaties en extra administraties krijgen eigen identificaties', () => {
   const legacy = runtimeHarness();
