@@ -831,7 +831,7 @@ function newWorkspaceId(){
 function coreWorkspaceChooserHtml(){
   if(!coreSetupMode||!coreProfiles.length) return '';
   return '<div class="hist"><h4>Bestaande gegevenskluizen</h4><p class="note">Kies een administratie om te openen. De gegevens blijven gescheiden; teruggaan naar dit scherm wist niets.</p>'+
-    coreProfiles.map(p=>'<div class="row" style="grid-template-columns:1fr auto"><div><b>'+esc(p.name||'Mijn administratie')+'</b><div class="meta"><span class="chip info">'+(p.localOnly?'Lokaal op dit apparaat':'Online · privérepository')+'</span>'+(p.repo?'<span>'+esc(p.owner+'/'+p.repo)+'</span>':'')+(p.workspaceId&&p.workspaceId!=='default'?'<span>Kluiscode: <code>'+esc(p.workspaceId)+'</code></span>':'')+'</div></div><button class="btn primary" data-workspace-select="'+esc(p.id)+'">Kies kluis</button></div>').join('')+'</div>';
+    coreProfiles.map(p=>'<div class="row" style="grid-template-columns:1fr auto"><div><b>'+esc(p.name||'Mijn administratie')+'</b><div class="meta"><span class="chip info">'+(p.localOnly?'Lokaal op dit apparaat':'Online · privérepository')+'</span>'+(p.repo?'<span>'+esc(p.owner+'/'+p.repo)+'</span>':'')+(!p.localOnly&&p.workspaceId&&p.workspaceId!=='default'?'<span>Kluiscode: <code>'+esc(p.workspaceId)+'</code></span>':'')+'</div></div><button class="btn primary" data-workspace-select="'+esc(p.id)+'">Kies kluis</button></div>').join('')+'</div>';
 }
 const IS_PWA=!!document.querySelector('link[rel="manifest"]');
 const IS_CR06_PREVIEW=location.hostname==='gertjun.github.io'&&location.pathname.startsWith('/vaste-lasten-pr9-preview/');
