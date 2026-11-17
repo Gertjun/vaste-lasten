@@ -1,3 +1,8 @@
+## 3.7.0 — 17 november 2026
+- Nieuw: een tweede apparaat koppelen door een QR-code vanaf de laptop te scannen. De workspace, administratie, GitHub-repository en GitHub-token worden als één versleuteld pakket overgedragen; de twee kluiswachtwoorden zijn nodig op beide apparaten.
+- Beveiliging: de QR-code bevat geen leesbare wachtwoorden of token, verloopt na drie minuten en kan op hetzelfde ontvangende apparaat maar één keer worden gebruikt. De token wordt na koppelen weer met de apparaatspecifieke sleutel in IndexedDB opgeslagen.
+
+
 # Changelog
 
 ## 3.6.3 — 17 november 2026
