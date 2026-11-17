@@ -174,9 +174,9 @@ test('registry disposes earlier vault instances if later factory creation fails'
 });
 
 
-function fakeVault({ remotePayload = null } = {}) {
-  let data = null;
-  let exists = false;
+function fakeVault({ remotePayload = null, initialData = null } = {}) {
+  let data = initialData === null ? null : structuredClone(initialData);
+  let exists = initialData !== null;
   let syncMeta = { sha: null, dirty: false };
   return {
     hasVault: () => exists,
@@ -220,6 +220,51 @@ test('existing Core remote envelope is imported before legacy data is merged', a
   assert.deepEqual(result.data.items.map((x) => x.id).sort(), ['legacy', 'remote']);
   assert.equal(vault.getSyncMeta().sha, 'remote-sha');
   assert.equal(calls.length, 1);
+});
+
+test('normal online unlock merges existing shared-vault data without applying the empty-start guard', async () => {
+  const localData = {
+    ...store([{ id: 'local-existing', u: 10 }], { meta: { p1: 'A', p2: 'B' } }),
+    schema: 2,
+    domain: 'shared',
+  };
+  const remoteData = {
+    ...store([{ id: 'remote-existing', u: 20 }], { meta: { p1: 'A', p2: 'B' } }),
+    schema: 2,
+    domain: 'shared',
+  };
+  const vault = fakeVault({ initialData: localData });
+  let syncOptions;
+  const entry = {
+    vault,
+    sync: {
+      async syncNow(options) {
+        syncOptions = options;
+        const merged = options.merge(vault.getData(), remoteData);
+        await vault.setData(merged);
+        return 'synced';
+      },
+    },
+  };
+  const result = await openAndSyncDomain({
+    id: 'shared',
+    password: 'shared-password',
+    legacyData: {
+      ...store([], { meta: null }),
+      schema: 2,
+      domain: 'shared',
+    },
+    registry: { shared: entry },
+    settings: { owner: 'synthetic', repo: 'synthetic', branch: 'main', token: 'synthetic' },
+    createClient: () => ({
+      getFile: async () => ({ sha: 'existing-sha', envelope: { payload: remoteData } }),
+    }),
+    mergeStore,
+  });
+  assert.equal(result.result, 'synced');
+  assert.deepEqual(result.data.items.map((item) => item.id).sort(), ['local-existing', 'remote-existing']);
+  assert.equal(syncOptions.schemaVersion, 2);
+  assert.equal(result.data.domain, 'shared');
 });
 
 test('missing remote Core file does not silently republish an existing local vault during normal unlock', async () => {
