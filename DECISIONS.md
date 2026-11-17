@@ -60,3 +60,10 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Opslag:** lokale administraties krijgen per workspace een eigen lokale opslagprefix. Online administraties krijgen per workspace een eigen padnamespace in de gekozen privérepository en een deelbare kluiscode om dezelfde administratie op een ander apparaat te koppelen.
 - **Compatibiliteit:** de bestaande standaardadministratie blijft op de bestaande lokale prefixes en GitHub-paden staan; de profielnaam en workspace-identificatie veranderen de cryptografische sleutels of bestaande ciphertext niet.
 - **Herstel:** teruggaan naar de kluiskeuze wist niets. Een bevestigde lokale reset is beperkt tot de gekozen workspace op dit apparaat; andere workspaces en remote bestanden blijven behouden.
+
+
+### D12 – Workspace-identiteit en administratiekeuze bij opstarten (17 nov 2026, PR #13)
+- **Keuze:** bij iedere nieuwe app-start toont de PWA eerst de lijst met bestaande administraties. De laatst gebruikte administratie wordt niet automatisch geopend; de gebruiker kiest expliciet.
+- **Identiteit:** benoemde workspaces bewaren hun workspace-ID ook als metadata binnen de versleutelde domeinpayload. Bij openen, koppelen, synchroniseren en hervatten wordt gecontroleerd of de payload bij de gekozen workspace hoort.
+- **Compatibiliteit:** de standaardadministratie behoudt de bestaande payloadstructuur zonder workspace-ID. Namen blijven uitsluitend presentatiemetadata en worden niet gebruikt voor sleutelafleiding.
+- **Veiligheid:** een bestand dat onder een andere workspace-namespace terechtkomt, wordt geweigerd, ook wanneer de wachtwoorden toevallig gelijk zijn. Er wordt niets naar de remote repository geschreven.
