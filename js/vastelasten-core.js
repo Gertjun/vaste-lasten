@@ -168,8 +168,8 @@ export function createVasteLastenCore({
     const spec = domains[id];
     return {
       settings: { ...settings, path: spec.path },
-      merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore),
-      migrate: (remote) => validateDomainPayload(remote, id),
+      merge: (local, remote) => mergeDomainPayload(local, remote, id, mergeStore, domains),
+      migrate: (remote) => validateDomainPayload(remote, id, domains),
       schemaVersion: 2,
     };
   }
@@ -374,24 +374,24 @@ export function createVasteLastenCore({
         const remote = remotes[id];
         if (vault.hasVault()) {
           await vault.unlockWithPassword(password);
-          validateDomainPayload(vault.getData(), id);
+          validateDomainPayload(vault.getData(), id, domains);
           const meta = vault.getSyncMeta();
           if (remote) {
             if (!meta.sha || meta.sha !== remote.sha) {
               throw new Error(`De lokale kluis ${id} en het GitHub-bestand verschillen. Er is niets overschreven; herstel eerst de juiste koppeling.`);
             }
-            validateDomainPayload(await vault.decryptRemote(remote.envelope), id);
+            validateDomainPayload(await vault.decryptRemote(remote.envelope), id, domains);
           } else if (id === 'shared' || meta.sha) {
             throw new Error(`Het eerder gekoppelde GitHub-bestand voor ${id} ontbreekt. De lokale kluis is behouden en wordt niet opnieuw gepubliceerd.`);
           }
         } else if (remote) {
           await vault.importEnvelope(remote.envelope, password);
-          validateDomainPayload(vault.getData(), id);
+          validateDomainPayload(vault.getData(), id, domains);
           vault.setSyncMeta({ ...vault.getSyncMeta(), sha: remote.sha, dirty: false });
         } else {
           if (id === 'shared') throw new Error('De gedeelde PWA-Core-kluis ontbreekt. Er is niets aangemaakt.');
           await vault.create(password, emptyPayload(id, domains));
-          validateDomainPayload(vault.getData(), id);
+          validateDomainPayload(vault.getData(), id, domains);
         }
         await vault.flush();
       }
@@ -404,7 +404,7 @@ export function createVasteLastenCore({
         if (!confirmed || confirmed.sha !== registry[id].vault.getSyncMeta().sha) {
           throw new Error(`GitHub heeft de koppeling van ${id} niet bevestigd. Probeer opnieuw; bestaande gegevens blijven behouden.`);
         }
-        validateDomainPayload(await registry[id].vault.decryptRemote(confirmed.envelope), id);
+        validateDomainPayload(await registry[id].vault.decryptRemote(confirmed.envelope), id, domains);
       }
       return { complete: true, results, state: getState() };
     } catch (error) {
@@ -462,7 +462,7 @@ export function createVasteLastenCore({
           results[id] = { id, existing: true, localOnly: true };
         } else {
           await vault.create(password, emptyPayload(id));
-          assertEmptyDomainPayload(vault.getData(), id);
+          assertEmptyDomainPayload(vault.getData(), id, domains);
           results[id] = { id, created: true, localOnly: true };
         }
         await vault.flush();
