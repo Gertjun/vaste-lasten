@@ -2301,7 +2301,7 @@ $('themePanel').addEventListener('change',e=>{
 });
 function coreFirstStartConnectHtml(){
   return '<div class="hist" id="coreExistingConnect"><h4>Bestaande PWA-Core-kluis koppelen</h4>'+
-    fieldHtml('core-existing-name','Naam van deze administratie','autocomplete="off" placeholder="Bijvoorbeeld: Gezamenlijke administratie"')+
+    fieldHtml('core-existing-name','Naam van deze administratie','autocomplete="off" required maxlength="60" placeholder="Bijvoorbeeld: Gezamenlijke administratie"')+
     fieldHtml('core-existing-workspace-id','Kluiscode (alleen bij een benoemde administratie)','autocomplete="off" spellcheck="false" placeholder="Leeg laten voor de bestaande standaardkluis"')+
     '<p class="note">Gebruik dit op een tweede apparaat om de bestaande gedeelde kluis te openen. Je eigen persoonlijke kluis wordt gekoppeld als die al bestaat; anders wordt alleen jouw lege persoonlijke kluis aangemaakt. Oude bestanden in de repository worden niet gelezen of gewijzigd.</p>'+
     '<div class="two">'+fieldHtml('core-existing-owner','GitHub-gebruikersnaam (eigenaar)','autocapitalize="off" spellcheck="false" autocomplete="off"',cfg?.owner||'')+fieldHtml('core-existing-repo','Privé-repository','autocapitalize="off" spellcheck="false"',cfg?.repo||'vaste-lasten-data')+'</div>'+
@@ -2566,7 +2566,10 @@ async function connectExistingCore(){
   let token=$('core-existing-token')?.value.trim()||'';
   if(!token&&cfg) token=await tokenFor(cfg);
   const me=$('core-existing-me')?.value==='p2'?'p2':'p1';
-  const name=$('core-existing-name')?.value.trim()||'Mijn administratie';
+  const name=$('core-existing-name')?.value.trim()||'';
+  if(!name) throw new SyncError('Geef deze administratie eerst een naam.');
+  if(name.length>60) throw new SyncError('De naam mag maximaal 60 tekens bevatten.');
+  if(coreProfiles.some(p=>(p.name||'').toLocaleLowerCase('nl')===name.toLocaleLowerCase('nl'))) throw new SyncError('Er bestaat al een administratie met deze naam. Kies een andere naam.');
   const shared=$('core-existing-s')?.value||'', personal=$('core-existing-e')?.value||'';
   if(!owner||!repo) throw new SyncError('Vul de GitHub-gebruikersnaam en repository in.');
   if(!token) throw new SyncError('Vul je GitHub-token in.');
