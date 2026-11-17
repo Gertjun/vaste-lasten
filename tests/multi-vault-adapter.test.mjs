@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  VAULT_DOMAINS, splitLegacyState, validateDomainPayload, mergeDomainPayload,
+  VAULT_DOMAINS, createVaultDomains, splitLegacyState, validateDomainPayload, mergeDomainPayload,
   createVaultRegistry, acquireActiveLocks, openAndSyncDomain,
   raiseLegacyUpdateBarrier, migrateActiveDomains, requireLegacyEnvelope,
 } from '../js/multi-vault-adapter.js';
