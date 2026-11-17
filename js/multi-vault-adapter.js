@@ -243,9 +243,16 @@ export async function openAndSyncDomain({
   const syncOptions = {
     settings: remoteSettings,
     merge: (local, incoming) => {
-      assertEmptyDomainPayload(local, id, domains);
-      assertEmptyDomainPayload(incoming, id, domains);
-      return assertEmptyDomainPayload(mergeDomainPayload(local, incoming, id, mergeStore, domains), id, domains);
+      // Normaal ontgrendelen mag bestaande gegevens bevatten. Controleer hier
+      // alleen schema, domein en workspace-identiteit; de lege-startcontrole
+      // hoort uitsluitend bij initializeEmptyDomain().
+      validateDomainPayload(local, id, domains);
+      validateDomainPayload(incoming, id, domains);
+      return validateDomainPayload(
+        mergeDomainPayload(local, incoming, id, mergeStore, domains),
+        id,
+        domains,
+      );
     },
     // Ook bij een race na de eerste preflight mag sync nooit onverwachte data opnemen.
     // Bij normaal ontgrendelen mag de remote administratie bestaande records bevatten;
