@@ -24,6 +24,7 @@ const emptyPayload = (id, domains = VAULT_DOMAINS) => ({
   items: [], del: {}, paid: {},
   ...(id === 'shared' ? { meta: null } : {}),
   schema: 2, domain: domains[id].domain,
+  ...(domains[id].workspaceId ? { workspaceId: domains[id].workspaceId } : {}),
 });
 
 export function createVasteLastenCore({
