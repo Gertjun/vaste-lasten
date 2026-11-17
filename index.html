@@ -1101,9 +1101,14 @@ let view={y:now.getFullYear(),m:now.getMonth()};
 let editing=null;
 let cfg=null;
 try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}
-if(coreMode&&!cfg&&coreProfile&&coreProfile.owner&&coreProfile.repo&&['p1','p2'].includes(coreProfile.me)){
-  cfg={owner:coreProfile.owner,repo:coreProfile.repo,me:coreProfile.me,salt:{},iter:{}};
-  try{localStorage.setItem(CFGKEY,JSON.stringify(cfg));}catch(e){}
+if(coreMode&&coreProfile){
+  if(coreProfile.localOnly){
+    cfg=null;
+    try{localStorage.removeItem(CFGKEY);}catch(e){}
+  }else if(coreProfile.owner&&coreProfile.repo&&['p1','p2'].includes(coreProfile.me)){
+    cfg={owner:coreProfile.owner,repo:coreProfile.repo,me:coreProfile.me,salt:{},iter:{}};
+    try{localStorage.setItem(CFGKEY,JSON.stringify(cfg));}catch(e){}
+  }
 }
 
 const mkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0');
