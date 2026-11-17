@@ -478,6 +478,47 @@ test('workspaces: twee online administraties in dezelfde repository schrijven na
 });
 
 
+test('workspaces: online ontgrendelen haalt latere niet-lege remote wijzigingen op', async () => {
+  const remoteFiles = new Map();
+  const workspaceId = '44444444-4444-4444-8444-444444444444';
+  const first = runtimeHarness({ remoteFiles, workspaceId });
+  const created = await first.core.initializeEmpty({ me: 'p1', passwords, settings: connection });
+  assert.equal(created.complete, true);
+  let state = first.core.getState();
+  state.samen.items.push({ id: 'first-record', name: 'Eerste record' });
+  await first.core.persistState(state);
+  await first.core.sync();
+  await first.core.lock();
+
+  const second = runtimeHarness({ remoteFiles, workspaceId });
+  const joined = await second.core.connectExisting({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  assert.equal(joined.complete, true);
+  await second.core.lock();
+
+  await first.core.unlock({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  state = first.core.getState();
+  state.samen.items.push({ id: 'second-record', name: 'Tweede record' });
+  await first.core.persistState(state);
+  await first.core.sync();
+  await first.core.lock();
+
+  const reopened = await second.core.unlock({
+    me: 'p1',
+    passwords: { shared: passwords.shared, 'personal-p1': passwords['personal-p1'] },
+    settings: connection,
+  });
+  assert.deepEqual(reopened.samen.items.map(item => item.id).sort(), ['first-record', 'second-record']);
+  await second.core.lock();
+});
+
 test('workspaces: een verkeerde kluiscode kan geen andere online administratie openen of overschrijven', async () => {
   const remoteFiles = new Map();
   const owner = runtimeHarness({ remoteFiles, workspaceId: '11111111-1111-4111-8111-111111111111' });
