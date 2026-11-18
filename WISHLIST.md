@@ -2,7 +2,7 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 3.8.3, 18 november 2026
+Laatst bijgewerkt: versie 3.8.4 in voorbereiding, 18 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
@@ -12,6 +12,7 @@ Laatst bijgewerkt: versie 3.8.3, 18 november 2026
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Gerealiseerd
+- **Eenvoudiger inlogscherm** — versie 3.8.4; eerst het persoonlijke wachtwoord controleren, daarna pas het gezamenlijke wachtwoord. Eén login-knop en een aparte passkey-route.
 - **QR-koppeling voor een tweede apparaat** — versie 3.7.0; scan op de iPhone de versleutelde koppelcode van de laptop. Workspace, kluizen en GitHub Sync-instellingen worden overgenomen; beide kluiswachtwoorden blijven vereist.
 
 - **Meerdere benoemde gegevenskluizen** — versie 3.6.0; kies bestaande administraties op naam, met duidelijke lokale/online labels, aparte opslag per administratie en een kluiscode om online administraties op een ander apparaat te koppelen.

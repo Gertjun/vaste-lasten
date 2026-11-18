@@ -5,6 +5,7 @@ import { createSessionLock } from './core/session-lock-factory.js';
 import { createBiometric } from './core/biometric-factory.js';
 import { createBundleBiometric, generateBundleKey, wrapVaultKey, unwrapVaultKey } from './bundle-biometric.js';
 import { createClient } from './core/github.js';
+import * as coreCrypto from './core/crypto.js';
 import {
   VAULT_DOMAINS,
   createVaultDomains,
@@ -233,6 +234,55 @@ export function createVasteLastenCore({
       (error) => { persistFailure = error; },
     );
     return run;
+  }
+
+  /**
+   * Controleert vooraf uitsluitend het persoonlijke wachtwoord.
+   * De envelope wordt alleen in geheugen ontsleuteld: geen kluis wordt geopend,
+   * geïmporteerd, opgeslagen of gesynchroniseerd.
+   */
+  async function verifyPersonalPassword({ me: meValue, password, settings: inputSettings } = {}) {
+    if (!['p1', 'p2'].includes(meValue)) throw new TypeError('Persoon moet p1 of p2 zijn.');
+    if (typeof password !== 'string' || !password) throw new Error('Vul je eigen wachtwoord in.');
+    const id = `personal-${meValue}`;
+    const entry = registry[id];
+    const handle = await entry.lock.acquireSessionLock();
+    if (!handle) throw new Error('Je persoonlijke kluis is al actief in een ander tabblad. Vergrendel dat tabblad eerst.');
+    let localEnvelope = null;
+    try {
+      const raw = entry.storage.getItem(entry.vault.KEYS.vault);
+      if (raw) {
+        try { localEnvelope = JSON.parse(raw); } catch { /* probeer eventueel de remote envelope */ }
+      }
+    } finally {
+      await handle.release();
+    }
+
+    const opensForThisDomain = async (envelope) => {
+      if (!envelope || envelope.format !== 'pwa-vault' || !envelope.kdf
+        || !envelope.wrappedKey || !envelope.payload
+        || envelope.kdf.name !== 'PBKDF2-SHA256'
+        || !Number.isSafeInteger(envelope.kdf.iterations) || envelope.kdf.iterations < 1
+        || typeof envelope.kdf.salt !== 'string') return false;
+      try {
+        const kek = await coreCrypto.passwordKey(password, coreCrypto.b64ToBytes(envelope.kdf.salt), envelope.kdf.iterations);
+        const dataKey = await coreCrypto.unwrapDataKey(envelope.wrappedKey, kek);
+        const payload = await coreCrypto.decryptJSON(envelope.payload, dataKey);
+        validateDomainPayload(payload, id, domains);
+        return true;
+      } catch { return false; }
+    };
+
+    if (localEnvelope && await opensForThisDomain(localEnvelope)) return true;
+    if (inputSettings) {
+      const resolved = await resolveSettings(await inputSettings);
+      const remote = await clientFactory({ ...resolved, path: domains[id].path }).getFile();
+      if (remote?.envelope && await opensForThisDomain(remote.envelope)) return true;
+      if (!localEnvelope && !remote) throw new Error('Je persoonlijke kluis ontbreekt zowel lokaal als in de ingestelde privé-repository.');
+    } else if (!localEnvelope) {
+      throw new Error('Je persoonlijke kluis ontbreekt op dit apparaat. Verbind met internet om de bestaande kluis op te halen.');
+    }
+    throw new Error('Je eigen wachtwoord klopt niet. Controleer het wachtwoord en probeer opnieuw.');
   }
 
   async function unlock({ me: meValue, passwords, settings: inputSettings } = {}) {
@@ -679,6 +729,7 @@ export function createVasteLastenCore({
   return {
     unlock,
     unlockLocal,
+    verifyPersonalPassword,
     unlockWithBiometric,
     unlockWithBiometricLocal,
 
