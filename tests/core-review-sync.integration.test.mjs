@@ -975,3 +975,81 @@ test('S07 a stale offline client acknowledges the remote deletion before tombsto
     globalThis.fetch = previousFetch;
   }
 });
+
+
+test('S08 a newer recreated Vaste Lasten record survives an older deletion through remote sync', async () => {
+  const previousFetch = globalThis.fetch;
+  const deletedAt = 1800000001000;
+  const harness = await createRemoteSyncHarness('s08-recreated-record', {
+    ...base(), items: [{ id: 'recreated-record', name: 'Oude last', amount: 100, u: 1000 }],
+  });
+  try {
+    // Beide clients beginnen met dezelfde bestaande last.
+    await harness.syncA.syncNow(harness.options);
+    await harness.syncB.syncNow(harness.options);
+
+    // A verwijdert de last; B maakt dezelfde ID aantoonbaar later opnieuw aan.
+    await harness.vaultA.setData({
+      ...structuredClone(harness.vaultA.getData()),
+      items: [],
+      del: { 'recreated-record': deletedAt },
+    });
+    await harness.vaultB.setData({
+      ...structuredClone(harness.vaultB.getData()),
+      items: [{ id: 'recreated-record', name: 'Opnieuw aangemaakte last', amount: 125, u: deletedAt + 1 }],
+    });
+
+    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
+
+    const afterB = await harness.vaultB.decryptRemote(harness.remote().envelope);
+    assert.equal(afterB.items.some(item => item.id === 'recreated-record' && item.u === deletedAt + 1), true,
+      'de echte app-merge moet de aantoonbaar nieuwere hercreatie behouden');
+    assert.equal(afterB.del['recreated-record'], deletedAt,
+      'de verwijderhistorie blijft behouden tegen oudere offline kopieën');
+
+    // De eerste client haalt de samengevoegde toestand op en convergeert.
+    assert.equal(await harness.syncA.syncNow(harness.options), 'downloaded');
+    const finalA = harness.vaultA.getData();
+    const finalB = await harness.vaultB.decryptRemote(harness.remote().envelope);
+    for (const data of [finalA, finalB]) {
+      assert.equal(data.items.some(item => item.id === 'recreated-record' && item.u === deletedAt + 1), true);
+      assert.equal(data.del['recreated-record'], deletedAt);
+    }
+  } finally {
+    await harness.dispose();
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('S09 an equal-timestamp Vaste Lasten recreation remains blocked through remote sync', async () => {
+  const previousFetch = globalThis.fetch;
+  const deletedAt = 1800000002000;
+  const harness = await createRemoteSyncHarness('s09-equal-recreation', {
+    ...base(), items: [{ id: 'equal-record', name: 'Oude last', amount: 100, u: 1000 }],
+  });
+  try {
+    await harness.syncA.syncNow(harness.options);
+    await harness.syncB.syncNow(harness.options);
+
+    await harness.vaultA.setData({
+      ...structuredClone(harness.vaultA.getData()),
+      items: [],
+      del: { 'equal-record': deletedAt },
+    });
+    await harness.vaultB.setData({
+      ...structuredClone(harness.vaultB.getData()),
+      items: [{ id: 'equal-record', name: 'Gelijke timestamp', amount: 125, u: deletedAt }],
+    });
+
+    assert.equal(await harness.syncA.syncNow(harness.options), 'uploaded');
+    assert.equal(await harness.syncB.syncNow(harness.options), 'merged');
+    const finalData = await harness.vaultB.decryptRemote(harness.remote().envelope);
+    assert.equal(finalData.items.some(item => item.id === 'equal-record'), false,
+      'een gelijke timestamp mag de verwijdering niet ongedaan maken');
+    assert.equal(finalData.del['equal-record'], deletedAt);
+  } finally {
+    await harness.dispose();
+    globalThis.fetch = previousFetch;
+  }
+});
