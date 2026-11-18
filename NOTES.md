@@ -8,7 +8,7 @@ Laatst bijgewerkt: 18 november 2026 · versie **3.8.3** (PWA-Core v1.2.2).
 
 ## Actuele stand – 18 november 2026
 
-- `main` staat op `ed9a646f3827697fa0e7dc85508a717b5c61c556`; PR #22 is gemerged. Vaste Lasten is versie **3.8.3** en gebruikt de immutable PWA-Core **v1.2.2**.
+- De code-integratie is gemerged via PR #22 (mergecommit `ed9a646f3827697fa0e7dc85508a717b5c61c556`). Daarna zijn documentatiecorrecties gemerged via PR #23 en PR #24. Vaste Lasten is versie **3.8.3** en gebruikt de immutable PWA-Core **v1.2.2**.
 - De Core-pin, module, manifest en service-worker-cache zijn bijgewerkt; de app-specifieke verwijder-/hercreatietests gebruiken de echte ingebedde `merge()` en het eigen gegevensformaat (`del` + recordtijd `u`).
 - De gebruiker heeft op 18 november de fysieke synchronisatieacceptatie uitgevoerd op iPhone Safari en Windows 11 Edge: nieuwe last en wijziging synchroniseerden in beide richtingen; een verwijdering kwam op het andere apparaat aan.
 - S06 is daarna aanvullend fysiek getest met netwerkuitval op de iPhone: lokaal opslaan gaf status “Alleen lokaal”; handmatig synchroniseren meldde “Geen verbinding met Github”; na netwerkherstel synchroniseerde de last naar Windows. Verwijderen op Windows synchroniseerde terug naar de iPhone. De gebruiker bevestigde alle stappen.
@@ -22,7 +22,7 @@ Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Ve
 ## 2. Actuele stand
 
 - Appversie **3.8.3**, PWA-Core **v1.2.2** (immutable release).
-- PR #22 (Core v1.2.2-integratie) en PR #23 (documentatie/acceptatiecorrectie) zijn gemerged.
+- PR #22 (Core v1.2.2-integratie), PR #23 en PR #24 (documentatie/acceptatiecorrecties) zijn gemerged.
 - De fysieke synchronisatieproef op iPhone Safari en Windows 11 Edge is door de gebruiker bevestigd: aanmaken, wijzigen en verwijderen synchroniseerden tussen beide apparaten.
 - S06 is aanvullend fysiek getest met netwerkuitval en herstel; de status bleef lokaal totdat de verbinding terug was en de synchronisatie opnieuw werd gestart.
 - Dit bewijst alleen de expliciet beschreven praktijkscope. De volledige S01–S07-, V01–V06- en CR01–CR09-matrix is niet integraal afgevinkt.
