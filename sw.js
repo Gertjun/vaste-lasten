@@ -1,4 +1,4 @@
-const CACHE='vaste-lasten-3.8.4-core-v1.2.2';
+const CACHE='vaste-lasten-3.8.5-core-v1.3.0';
 const PRECACHE=[
   "./index.html",
   "./manifest.webmanifest",

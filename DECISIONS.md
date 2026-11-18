@@ -94,3 +94,9 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** de aparte Vaste Lasten-bundel gebruikt de gedeelde PWA-Core-functies voor compacte WebAuthn userHandles met expliciete scope `bundle`. Vault-passkeys blijven scope `vault` gebruiken.
 - **Compatibiliteit:** bestaande Vaste Lasten-bundelpasskeys met een legacy `storagePrefix:`-handle of de eerder geïntroduceerde `vl1-<hash>:`-handle blijven herkenbaar. Herkoppelen accepteert alleen de eigen bundel, de actieve gedeelde kluis en de actieve persoonlijke kluis; de kluis van de andere persoon en andere apps blijven geweigerd.
 - **Cryptografie:** PRF-label/zout, HKDF-context, credential-ID, opgeslagen wrappingrecord, bundelsleutel en bestaande kluis-DEK's worden niet gewijzigd of opnieuw afgeleid. De wijziging raakt uitsluitend de WebAuthn userHandle-identificatie en validatie.
+
+
+### D16 – Gedeelde Core-apparaatkoppeling zonder kluisgegevens (18 november 2026)
+- **Besluit:** Vaste Lasten gebruikt PWA-Core v1.3.0 `PWA-CORE-PAIR-2`. De QR-envelop bevat uitsluitend owner, repo, branch, path en token. De workspace-identiteit volgt uit het GitHub-pad; administratienaam en gebruikersrol worden op het ontvangende apparaat apart gekozen.
+- **Gevolg:** gezamenlijke en persoonlijke wachtwoorden worden op het nieuwe apparaat afzonderlijk ingevoerd. Geen kluisinhoud, wachtwoord of rol wordt via de QR-code verstuurd. De drie gescheiden kluizen en toegangsgrenzen blijven intact.
+- **Waarom:** de koppeling hoeft alleen GitHub Sync te configureren; de bestaande Core-connect-route haalt daarna de juiste versleutelde bestanden op en vraagt de lokale wachtwoorden.
