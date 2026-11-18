@@ -131,7 +131,7 @@ mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px}
 .ladd{display:flex;gap:6px;align-items:center;justify-content:center;white-space:nowrap}
 .empty .btns{justify-content:center;margin-top:12px}
 @media (max-width:440px){.ltools{grid-template-columns:minmax(0,1fr) auto}.ltools input{grid-column:1/-1}}
-/* onder 1100 px staat Nieuwe last bij Lasten in de werkbalk, zodat hij geen afschrijving bedekt */
+/* onder 1000 px staat Nieuwe last bij Lasten in de werkbalk, zodat hij geen afschrijving bedekt */
 @media (min-width:1000px){.ladd{display:none}}
 .catlist{display:grid;gap:6px}
 .catrow{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
@@ -460,7 +460,7 @@ button.info .name{display:block}
 }
 @media (min-width:1000px) and (pointer:coarse){.side-tog{width:44px;height:44px}.tab{min-height:44px}.brand-meta .sync-pill,.brand .ver{min-height:32px}}
 @media (min-width:1000px) and (hover:hover) and (pointer:fine){.keys{display:block;line-height:1.9}}
-@media (min-width:1100px) and (hover:hover) and (pointer:fine){.side-mini .keys{display:none}}
+@media (min-width:1000px) and (hover:hover) and (pointer:fine){.side-mini .keys{display:none}}
 
 /* werkvlak: kolommen op basis van de beschikbare breedte */
 @container main (min-width:560px){.x3{display:inline}.x1{display:none}}
