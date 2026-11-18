@@ -1,6 +1,6 @@
 # Sync- en concurrencyacceptatie – Vaste Lasten
 
-**Status: GEDEELTELIJK GEACCEPTEERD – PR #9 blijft draft.** De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
+**Status: GEDEELTELIJK GEACCEPTEERD.** De oude verwijzing naar “PR #9 blijft draft” is historische informatie en beschrijft niet de actuele PR-status. PR #23 met de documentatiecorrectie is gemerged. De praktijktests hieronder blijven begrensd tot de expliciet geregistreerde scenario's. De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
 
 ## Doel en architectuurgrenzen
 
@@ -94,14 +94,13 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 
 ## Huidige status
 
-- PWA-Core v1.1.0-integratie: gemerged in Vaste Lasten PR #5.
-- Automatische codevalidatie van de integratie: 47 tests geslaagd op de gedocumenteerde code-/test-head.
-- Pages-workflow: eerder succesvol; dit bewijst niet dat de volledige live runtime handmatig is geaccepteerd.
-- S01–S05 en S07: zie de afzonderlijke synthetische en fysieke bewijsregistraties hieronder. S06: **PASS voor de gecombineerde synthetische en fysieke scope** (Core-opslag-/flush-fout en remote HTTP 500 synthetisch; UI-foutzichtbaarheid en netwerkuitval/herstel fysiek op iPhone en Windows). De volledige S01–S07- en V01–V06-set is niet integraal afgevinkt.
-- Fysieke acceptatie op iPhone Safari en Windows 11 Edge: **PASS voor de expliciet beschreven praktijkscope**.
-- Productiegegevensmigratie: **NIET UITGEVOERD en afzonderlijk geblokkeerd**.
-
-
+- PWA-Core v1.2.2-integratie: gemerged via Vaste Lasten PR #22.
+- Documentatiecorrectie: PR #23 gemerged op 18 november 2026.
+- Automatische tests en Core-/pin-/precachevalidatie zijn op de daarvoor genoemde PR-heads uitgevoerd; oudere workflowresultaten gelden niet automatisch als bewijs voor latere code-heads.
+- De fysieke synchronisatieacceptatie op iPhone Safari en Windows 11 Edge is PASS voor het aanmaken, wijzigen en verwijderen van een testlast tussen de twee apparaten.
+- S06 is PASS voor de gecombineerde, expliciet beschreven synthetische en fysieke scope (lokale opslag-/flush-/HTTP-foutproeven en netwerkuitval/herstel op iPhone). De fysieke reeks is door de gebruiker bevestigd.
+- De volledige S01–S07-, V01–V06- en CR01–CR09-set is **niet integraal afgevinkt**. Niet-uitgevoerde scenario's blijven NOT RUN/BLOCKED; een gedeeltelijke test wordt niet als volledige acceptatie gepresenteerd.
+- Productiegegevensmigratie is **NIET UITGEVOERD** en blijft afzonderlijk geblokkeerd. Geen productiegegevens of tokens gebruikt.
 ---
 
 ## Acceptatieplan conflictbeoordeling – PR #9 (3.1.1)
