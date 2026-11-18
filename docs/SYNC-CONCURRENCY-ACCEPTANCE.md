@@ -1,6 +1,6 @@
 # Sync- en concurrencyacceptatie – Vaste Lasten
 
-**Status: GEDEELTELIJK GEACCEPTEERD.** De oude verwijzing naar “PR #9 blijft draft” is historische informatie en beschrijft niet de actuele PR-status. PR #23 met de documentatiecorrectie is gemerged. De praktijktests hieronder blijven begrensd tot de expliciet geregistreerde scenario's. De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
+**Status: GEDEELTELIJK GEACCEPTEERD.** De oude verwijzing naar “PR #9 blijft draft” is historische informatie en beschrijft niet de actuele PR-status. PR #23 en PR #24 met documentatiecorrecties zijn gemerged. De praktijktests hieronder blijven begrensd tot de expliciet geregistreerde scenario's. De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
 
 ## Doel en architectuurgrenzen
 
