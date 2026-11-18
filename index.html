@@ -2334,7 +2334,7 @@ function coreFirstStartConnectHtml(){
     '<div class="err" id="core-existing-err"></div><div class="btns"><button class="btn primary" id="core-existing-connect">PWA-Core-kluis koppelen</button></div></div>';
 }
 function corePairingHtml(){
-  if(!coreProfile||coreProfile.localOnly||!coreProfile.workspaceId||coreProfile.workspaceId==='default') return '';
+  if(!coreProfile||coreProfile.localOnly||!coreProfile.workspaceId) return '';
   return '<details class="hist" id="corePairing"><summary><b>Nieuw apparaat koppelen met QR-code</b></summary>'+
     '<p class="note">De QR-code bevat uitsluitend de GitHub Sync-instellingen. Je kluisgegevens en wachtwoorden worden niet overgedragen. Op het nieuwe apparaat kies je zelf de gebruiker en vul je de twee kluiswachtwoorden apart in. De losse pincode is drie minuten geldig.</p>'+
     '<div class="err" id="core-pair-err"></div><div class="btns"><button class="btn primary" id="core-pair-create">QR-code aanmaken</button></div>'+
