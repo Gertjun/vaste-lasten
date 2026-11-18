@@ -1,3 +1,6 @@
+## 3.8.3 — 18 november 2026
+- Verbeterd: Vaste Lasten gebruikt PWA-Core v1.2.2. Een opnieuw aangemaakte last vervangt een oudere verwijdering alleen als de wijziging aantoonbaar nieuwer is; onduidelijke of oudere wijzigingen blijven geblokkeerd.
+
 ## 3.8.2 — 17 november 2026
 - Verbeterd: Vaste Lasten gebruikt PWA-Core v1.2.1 voor WebAuthn-passkeys. Nieuwe bundle-passkeys hebben een eigen Core-scope; oude `storagePrefix:`- en `vl1-...`-passkeys blijven herkenbaar.
 - Beveiliging: PRF-zout, HKDF-context, credential-ID's, verpakte bundelsleutel en kluissleutels blijven ongewijzigd.
