@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVasteLastenCore } from '../js/vastelasten-core.js';
+import { createVault } from '../js/core/vault-factory.js';
 import { webcrypto } from 'node:crypto';
 import { generateDataKey, encryptJSON, decryptJSON, b64ToBytes } from '../js/core/crypto.js';
 import {
@@ -261,7 +262,7 @@ const mergeStore = (a, b) => {
   return out;
 };
 
-function setup() {
+function setup({ remoteEnvelopes = {} } = {}) {
   const events = [];
   const vaults = {};
   const syncCalls = [];
@@ -282,6 +283,7 @@ function setup() {
       let unlocked = false;
       let data = { items: [], del: {}, paid: {}, ...(id === 'shared' ? { meta: null } : {}), schema: 1, domain: id };
       const vault = {
+        KEYS: { vault: `${storagePrefix}:vault` },
         hasVault: () => true,
         isUnlocked: () => unlocked,
         async unlockWithPassword(password) { assert.ok(password); unlocked = true; events.push(id + ':password'); },
@@ -360,7 +362,7 @@ function setup() {
         ? 'shared'
         : settings.path.endsWith('eigen-p1.json') ? 'personal-p1' : 'personal-p2';
       const payload = { items: [], del: {}, paid: {}, ...(id === 'shared' ? { meta: null } : {}), schema: 1, domain: id };
-      return { sha: 'remote-' + id, envelope: { payload } };
+      return { sha: 'remote-' + id, envelope: remoteEnvelopes[id] || { payload } };
     },
   });
   const core = createVasteLastenCore({
@@ -373,6 +375,63 @@ function setup() {
 }
 
 const connection = { owner: 'synthetic-owner', repo: 'synthetic-private-repo', token: 'synthetic-token' };
+
+let fixtureVaultCounter = 0;
+async function makeEncryptedEnvelope(password, payload) {
+  const values = new Map();
+  const fixtureStorage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+    key: (index) => [...values.keys()][index] ?? null,
+    get length() { return values.size; },
+  };
+  const fixture = createVault({ storagePrefix: `verify-fixture-${++fixtureVaultCounter}`, kdfIterations: 1000, storage: fixtureStorage });
+  await fixture.create(password, payload);
+  const envelope = clone(fixture.getEnvelope());
+  await fixture.dispose();
+  return envelope;
+}
+
+test('persoonlijk wachtwoord wordt vooraf gecontroleerd zonder een kluis te openen', async () => {
+  const { core, storage, events, vaults } = setup();
+  const envelope = await makeEncryptedEnvelope('persoonlijk-testwachtwoord', {
+    items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1',
+  });
+  storage.setItem('vaste-lasten-personal-p1:vault', JSON.stringify(envelope));
+  assert.equal(await core.verifyPersonalPassword({ me: 'p1', password: 'persoonlijk-testwachtwoord' }), true);
+  assert.equal(vaults['personal-p1'].isUnlocked(), false);
+  assert.equal(vaults.shared.isUnlocked(), false);
+  assert.ok(events.includes('personal-p1:acquire'));
+  assert.ok(events.includes('personal-p1:release'));
+  assert.equal(events.includes('shared:acquire'), false);
+});
+
+test('onjuist persoonlijk wachtwoord stopt vóór het gezamenlijke domein wordt benaderd', async () => {
+  const { core, storage, events, vaults } = setup();
+  const envelope = await makeEncryptedEnvelope('persoonlijk-testwachtwoord', {
+    items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1',
+  });
+  storage.setItem('vaste-lasten-personal-p1:vault', JSON.stringify(envelope));
+  await assert.rejects(core.verifyPersonalPassword({ me: 'p1', password: 'verkeerd-wachtwoord' }), /eigen wachtwoord klopt niet/i);
+  assert.equal(vaults.shared.isUnlocked(), false);
+  assert.equal(vaults['personal-p1'].isUnlocked(), false);
+  assert.equal(events.includes('shared:acquire'), false);
+});
+
+test('persoonlijk wachtwoord kan op een nieuw apparaat tegen de remote envelope worden gecontroleerd zonder import', async () => {
+  const envelope = await makeEncryptedEnvelope('persoonlijk-testwachtwoord', {
+    items: [], del: {}, paid: {}, schema: 1, domain: 'personal-p1',
+  });
+  const { core, storage, settingsSeen, events, vaults } = setup({ remoteEnvelopes: { 'personal-p1': envelope } });
+  assert.equal(await core.verifyPersonalPassword({ me: 'p1', password: 'persoonlijk-testwachtwoord', settings: connection }), true);
+  assert.equal(storage.getItem('vaste-lasten-personal-p1:vault'), null);
+  assert.equal(settingsSeen.at(-1).path, 'pwa-core-v1/eigen-p1.json');
+  assert.equal(vaults.shared.isUnlocked(), false);
+  assert.equal(vaults['personal-p1'].isUnlocked(), false);
+  assert.equal(events.includes('shared:acquire'), false);
+});
+
 
 test('password unlock opens and syncs only shared plus the active personal vault', async () => {
   const { core, vaults, events, syncCalls } = setup();
