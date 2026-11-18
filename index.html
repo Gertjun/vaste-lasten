@@ -793,13 +793,19 @@ try{
     coreProfiles=[coreProfile];
     localStorage.setItem(CORE_PROFILES_KEY,JSON.stringify(coreProfiles));
   }
-  // Toon bij iedere nieuwe app-start eerst de administratiekeuze.
-  // De laatst gekozen administratie blijft bewaard, maar wordt pas geopend na een expliciete keuze.
+  // Open direct de laatst gebruikte administratie; wisselen of een nieuwe maken
+  // blijft vanaf het inlogscherm mogelijk via de twee secundaire acties.
   if(coreProfiles.length){
-    coreProfile=null;
+    const activeId=localStorage.getItem(CORE_ACTIVE_KEY);
+    let remembered=null;
+    try{
+      const saved=JSON.parse(localStorage.getItem(CORE_MODE_KEY)||'null');
+      if(saved&&saved.version===1) remembered=coreProfiles.find(p=>p.id===saved.id)||null;
+    }catch(e){}
+    coreProfile=coreProfiles.find(p=>p.id===activeId)||remembered||coreProfiles[0];
     coreMode=true;
-    coreSetupMode=true;
-    localStorage.setItem(CORE_ACTIVE_KEY,'__chooser__');
+    coreSetupMode=false;
+    localStorage.setItem(CORE_ACTIVE_KEY,coreProfile.id);
   }else{
     coreProfile=null;
     coreMode=false;
@@ -833,6 +839,7 @@ function selectCoreProfile(id){
   if(cfg) localStorage.setItem(CFGKEY,JSON.stringify(cfg)); else localStorage.removeItem(CFGKEY);
   ui.me=profile.me||ui.me||'p1'; saveUi();
   localStorage.setItem(CORE_ACTIVE_KEY,profile.id);
+  localStorage.setItem(CORE_MODE_KEY,JSON.stringify(profile));
   state={samen:EMPTY(),eigen:EMPTY()};
   renderCoreGate(); renderSyncPanel();
   ensureCoreRuntime().then(()=>renderCoreGate()).catch(e=>{syncError=e.message||'PWA-Core kon niet worden geladen.';renderCoreGate();});
