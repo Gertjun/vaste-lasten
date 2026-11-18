@@ -10,7 +10,7 @@ Laatst bijgewerkt: 18 november 2026 · versie **3.8.4 in voorbereiding** (PWA-Co
 
 - `main` staat op `f4f0df8c7d92b6fd8fb635c9fd4a85ccda835567`; PR #22 en documentatie-PR #24 zijn gemerged. Featurebranch `feat/simplified-login-gate` bereidt versie **3.8.4** voor; nog niet gemerged of gedeployed.
 - Het inlogscherm wordt stapsgewijs: eerst uitsluitend het persoonlijke wachtwoord read-only controleren via de lokale of remote persoonlijke envelope; daarna pas het gezamenlijke wachtwoord. De uiteindelijke Core-sessie blijft beide actieve kluizen gezamenlijk openen.
-- Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
+- Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie. De laatst gebruikte administratie opent direct; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
 - Geen productiekluizen, privé-datarepository, tokens, passkeys of echte gegevens benaderd of gewijzigd.
 - De Core-pin, module, manifest en service-worker-cache zijn bijgewerkt; de app-specifieke verwijder-/hercreatietests gebruiken de echte ingebedde `merge()` en het eigen gegevensformaat (`del` + recordtijd `u`).
 - De gebruiker heeft op 18 november de fysieke synchronisatieacceptatie uitgevoerd op iPhone Safari en Windows 11 Edge: nieuwe last en wijziging synchroniseerden in beide richtingen; een verwijdering kwam op het andere apparaat aan.
