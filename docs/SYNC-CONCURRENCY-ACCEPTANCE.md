@@ -1,6 +1,6 @@
 # Sync- en concurrencyacceptatie – Vaste Lasten
 
-**Status: GEDEELTELIJK GEACCEPTEERD.** De oude verwijzing naar “PR #9 blijft draft” is historische informatie en beschrijft niet de actuele PR-status. PR #23 met de documentatiecorrectie is gemerged. De praktijktests hieronder blijven begrensd tot de expliciet geregistreerde scenario's. De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
+**Status: GEDEELTELIJK GEACCEPTEERD.** De oude verwijzing naar “PR #9 blijft draft” is historische informatie en beschrijft niet de actuele PR-status. PR #23 en #24 met documentatiecorrecties zijn gemerged. De Vaste Lasten-migratie naar PWA-Core v1.3.0 / PAIR-2 is gemerged via PR #28. De praktijktests hieronder blijven begrensd tot de expliciet geregistreerde scenario's. De synthetische automatische tests en de hieronder vastgelegde fysieke acceptatie zijn uitgevoerd voor de genoemde scope. Niet-uitgevoerde of gedeeltelijke scenario's blijven expliciet als zodanig gemarkeerd. Dit document geeft geen toestemming voor een productiegegevensmigratie.
 
 ## Doel en architectuurgrenzen
 
@@ -95,7 +95,9 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 ## Huidige status
 
 - PWA-Core v1.2.2-integratie: gemerged via Vaste Lasten PR #22.
-- Documentatiecorrectie: PR #23 gemerged op 18 november 2026.
+- Documentatiecorrecties: PR #23 en #24 gemerged op 18 november 2026.
+- PWA-Core v1.3.0 / PAIR-2-integratie: gemerged via Vaste Lasten PR #28. De QR-overdracht is beperkt tot de minimale GitHub Sync-configuratie; app- en kluisgegevens worden daarna via de normale synchronisatie opgehaald.
+- De fysieke acceptatie van de nieuwe PAIR-2-koppelprocedure is nog niet als uitgevoerd geregistreerd; de fysieke resultaten hieronder betreffen synchronisatie en S06, niet de nieuwe pairingflow.
 - Automatische tests en Core-/pin-/precachevalidatie zijn op de daarvoor genoemde PR-heads uitgevoerd; oudere workflowresultaten gelden niet automatisch als bewijs voor latere code-heads.
 - De fysieke synchronisatieacceptatie op iPhone Safari en Windows 11 Edge is PASS voor het aanmaken, wijzigen en verwijderen van een testlast tussen de twee apparaten.
 - S06 is PASS voor de gecombineerde, expliciet beschreven synthetische en fysieke scope (lokale opslag-/flush-/HTTP-foutproeven en netwerkuitval/herstel op iPhone). De fysieke reeks is door de gebruiker bevestigd.
