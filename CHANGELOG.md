@@ -21,7 +21,7 @@
 
 ## 3.8.4 — 18 november 2026
 - Vereenvoudigd: het inlogscherm vraagt eerst alleen om je eigen wachtwoord. Pas na een succesvolle controle verschijnt het gezamenlijke wachtwoord.
-- Verbeterd: één knop **Inloggen** kiest automatisch voor online ontgrendelen en synchroniseren, of lokaal ontgrendelen wanneer de app offline of lokaal-only is.
+- Verbeterd: één knop **Inloggen** kiest automatisch voor online ontgrendelen en synchroniseren, of lokaal ontgrendelen wanneer de app offline of lokaal-only is. De laatst gebruikte administratie wordt direct voorgeselecteerd.
 - Verbeterd: passkey blijft éénstaps toegang tot beide actieve kluizen; **Andere kluis kiezen** en **Nieuwe kluis** zijn aparte, kleinere acties.
 - Beveiliging: de eerste controle ontsleutelt uitsluitend de persoonlijke envelope in geheugen. De persoonlijke kluis wordt niet geopend of gewijzigd; het gezamenlijke domein wordt pas bij de tweede stap benaderd.
 
