@@ -1,7 +1,7 @@
 # DECISIONS – Vaste Lasten
 
 ### D16 – Stapsgewijs inloggen in Vaste Lasten (18 nov 2026)
-- **Besluit:** het vergrendelscherm vraagt eerst uitsluitend om het persoonlijke wachtwoord. Pas na een geslaagde controle wordt het gezamenlijke wachtwoord gevraagd. De normale sessie opent daarna nog steeds beide actieve kluizen als één sessie.
+- **Besluit:** het vergrendelscherm vraagt eerst uitsluitend om het persoonlijke wachtwoord. Pas na een geslaagde controle wordt het gezamenlijke wachtwoord gevraagd. De normale sessie opent daarna nog steeds beide actieve kluizen als één sessie. De laatst gebruikte administratie wordt direct voorgeselecteerd; **Andere kluis kiezen** en **Nieuwe kluis** blijven beschikbaar als secundaire acties.
 - **Controle:** de eerste stap ontsleutelt alleen de persoonlijke lokale of remote envelope in geheugen. Ze importeert, schrijft of opent geen kluis en benadert het gezamenlijke domein niet. Een bestaande passkey blijft beide actieve kluizen in één handeling ontgrendelen.
 - **Waarom:** een rustiger, uniformer startscherm zonder wachtwoorden samen te voegen of de privacygrens tussen gezamenlijk en persoonlijk te verzwakken.
 
