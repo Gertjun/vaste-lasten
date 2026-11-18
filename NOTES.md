@@ -2,17 +2,18 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 18 november 2026 · versie **3.8.4 in voorbereiding** (PWA-Core v1.2.2).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.4** (PWA-Core v1.2.2).
 
 ---
 
 ## Actuele stand – 18 november 2026
 
-- `main` staat op `f4f0df8c7d92b6fd8fb635c9fd4a85ccda835567`; PR #22 en documentatie-PR #24 zijn gemerged. Featurebranch `feat/simplified-login-gate` bereidt versie **3.8.4** voor; nog niet gemerged of gedeployed.
-- Het inlogscherm wordt stapsgewijs: eerst uitsluitend het persoonlijke wachtwoord read-only controleren via de lokale of remote persoonlijke envelope; daarna pas het gezamenlijke wachtwoord. De uiteindelijke Core-sessie blijft beide actieve kluizen gezamenlijk openen.
+- `main` staat op `e0cd7904608c650c84844284ce7c06fd5e04e471`; PR #22, #24 en #26 zijn gemerged. Vaste Lasten is nu versie **3.8.4**, gebaseerd op de immutable PWA-Core **v1.2.2**.
+- Het inlogscherm vraagt eerst uitsluitend het persoonlijke wachtwoord en controleert dit read-only via de lokale of remote persoonlijke envelope. Pas na een juiste controle verschijnt het gezamenlijke wachtwoord. De uiteindelijke Core-sessie opent beide actieve kluizen gezamenlijk.
 - Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie. De laatst gebruikte administratie opent direct; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
+- GitHub Actions-run [#770](https://github.com/Gertjun/vaste-lasten/actions/runs/44404198973) op de PR-head is geslaagd: 146/146 tests, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline JavaScript, release-pin en service-worker-precache zijn eveneens groen.
+- De merge is uitgevoerd; ik heb geen afzonderlijke release- of deploymentactie gestart. Fysieke acceptatie van de nieuwe inlogflow op iPhone Safari en Windows Edge moet nog plaatsvinden.
 - Geen productiekluizen, privé-datarepository, tokens, passkeys of echte gegevens benaderd of gewijzigd.
-- PR #26 is open en klaar voor review; GitHub Actions-run #768 op code-head `bbf96dc546b330736b5b91cad525116087da5925` is geslaagd: 146/146 tests, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline JavaScript, release-pin en service-worker-precache zijn eveneens groen.
 - De Core-pin, module, manifest en service-worker-cache zijn bijgewerkt; de app-specifieke verwijder-/hercreatietests gebruiken de echte ingebedde `merge()` en het eigen gegevensformaat (`del` + recordtijd `u`).
 - De gebruiker heeft op 18 november de fysieke synchronisatieacceptatie uitgevoerd op iPhone Safari en Windows 11 Edge: nieuwe last en wijziging synchroniseerden in beide richtingen; een verwijdering kwam op het andere apparaat aan.
 - S06 is daarna aanvullend fysiek getest met netwerkuitval op de iPhone: lokaal opslaan gaf status “Alleen lokaal”; handmatig synchroniseren meldde “Geen verbinding met Github”; na netwerkherstel synchroniseerde de last naar Windows. Verwijderen op Windows synchroniseerde terug naar de iPhone. De gebruiker bevestigde alle stappen.
