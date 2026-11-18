@@ -2,13 +2,16 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 18 november 2026 · versie **3.8.4** (PWA-Core v1.2.2).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.5** in voorbereiding (PWA-Core v1.3.0).
 
 ---
 
 ## Actuele stand – 18 november 2026
 
-- `main` staat op `e0cd7904608c650c84844284ce7c06fd5e04e471`; PR #22, #24 en #26 zijn gemerged. Vaste Lasten is nu versie **3.8.4**, gebaseerd op de immutable PWA-Core **v1.2.2**.
+- In voorbereiding: PWA-Core v1.3.0 met PAIR-2. De QR-code bevat alleen GitHub Sync-configuratie; workspace wordt uitsluitend via het GitHub-pad herkend. Naam en gebruikersrol kiest de gebruiker op het nieuwe apparaat; beide kluiswachtwoorden worden daar apart ingevoerd.
+- Geen kluisgegevens, wachtwoorden of persoonlijke gegevens worden via de QR-code overgedragen. De bestaande drie kluizen en hun rechten blijven ongewijzigd.
+
+- `main` blijft op de bestaande stabiele versie 3.8.4 / PWA-Core v1.2.2. PR voor PWA-Core v1.3.0 apparaatkoppeling wordt voorbereid.
 - Het inlogscherm vraagt eerst uitsluitend het persoonlijke wachtwoord en controleert dit read-only via de lokale of remote persoonlijke envelope. Pas na een juiste controle verschijnt het gezamenlijke wachtwoord. De uiteindelijke Core-sessie opent beide actieve kluizen gezamenlijk.
 - Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie. De laatst gebruikte administratie opent direct; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
 - GitHub Actions-run [#770](https://github.com/Gertjun/vaste-lasten/actions/runs/44404198973) op de PR-head is geslaagd: 146/146 tests, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline JavaScript, release-pin en service-worker-precache zijn eveneens groen.

@@ -1,53 +1,13 @@
-// App-adapter voor Vaste Lasten. De cryptografie en replaybescherming komen uit PWA-Core.
-import {
-  createPairingPayload,
-  openPairingPayload,
-  markPairingUsed,
-  DEVICE_PAIRING_TTL_MS,
-} from './core/device-pairing.js';
-
-const CONTEXT = 'vaste-lasten/device-pairing/v1';
-const USED_KEY = 'vastelasten.v3.pairing.used';
-
-function validatePairingData(profile, token) {
-  if (!profile || typeof profile !== 'object') throw new Error('De koppelgegevens ontbreken.');
-  if (typeof profile.workspaceId !== 'string' || !/^[a-f0-9-]{8,64}$/i.test(profile.workspaceId)) throw new Error('De workspace-code is ongeldig.');
-  if (typeof profile.name !== 'string' || !profile.name.trim() || profile.name.length > 60) throw new Error('De administratienaam is ongeldig.');
-  if (typeof profile.owner !== 'string' || !/^[A-Za-z0-9-]+$/.test(profile.owner)) throw new Error('De GitHub-eigenaar is ongeldig.');
-  if (typeof profile.repo !== 'string' || !/^[A-Za-z0-9._-]+$/.test(profile.repo)) throw new Error('De GitHub-repository is ongeldig.');
-  if (!['p1', 'p2'].includes(profile.me)) throw new Error('De gebruikersrol is ongeldig.');
-  if (typeof token !== 'string' || !token || token.length > 500) throw new Error('De GitHub-token ontbreekt of is ongeldig.');
-}
-
-export async function createPairingQrPayload({ profile, token, passwords, now = Date.now() }) {
-  validatePairingData(profile, token);
-  const created = await createPairingPayload({
-    data: { profile, token },
-    secrets: [passwords?.shared, passwords?.personal],
-    context: CONTEXT,
-    now,
-  });
-  return { payload: created.payload, expiresAt: created.expiresAt, nonce: created.pairingId };
-}
-
-export async function openPairingQrPayload(payload, passwords, now = Date.now()) {
-  const opened = await openPairingPayload({
-    payload,
-    secrets: [passwords?.shared, passwords?.personal],
-    context: CONTEXT,
-    now,
-  });
-  validatePairingData(opened.data?.profile, opened.data?.token);
-  return {
-    profile: opened.data.profile,
-    token: opened.data.token,
-    nonce: opened.pairingId,
-    expiresAt: opened.expiresAt,
-  };
-}
-
-export function markPairingNonceUsed(storage, nonce, now = Date.now()) {
-  markPairingUsed(storage, nonce, { storageKey: USED_KEY, now });
-}
-
-export const PAIRING_QR_TTL_MS = DEVICE_PAIRING_TTL_MS;
+// App-adapter voor Vaste Lasten. De Core-envelop draagt uitsluitend GitHub Sync-configuratie.
+import { createPairingCode, openPairingCode, markPairingUsed, newPin, PAIRING_TTL_MS } from './core/pair.js';
+const CONTEXT='vaste-lasten';
+const USED_KEY='vastelasten.v3.pairing.used';
+function pathForWorkspace(workspaceId){if(workspaceId==='default')return'pwa-core-v1';if(typeof workspaceId!=='string'||!/^[a-f0-9-]{8,64}$/i.test(workspaceId))throw new Error('De workspace-code is ongeldig.');return`workspaces/${workspaceId}/pwa-core-v1`;}
+function workspaceFromPath(path){if(path==='pwa-core-v1')return'default';const m=/^workspaces\/([a-f0-9-]{8,64})\/pwa-core-v1$/i.exec(path||'');if(!m)throw new Error('Het GitHub-pad hoort niet bij een geldige Vaste Lasten-administratie.');return m[1];}
+function validateSyncConfig(c){if(!c||typeof c!=='object'||typeof c.owner!=='string'||!/^[A-Za-z0-9-]{1,39}$/.test(c.owner)||typeof c.repo!=='string'||!/^[A-Za-z0-9._-]{1,100}$/.test(c.repo)||c.branch!=='main'||typeof c.token!=='string'||!c.token.trim()||c.token.length>500)throw new Error('De GitHub Sync-configuratie is ongeldig.');const workspaceId=workspaceFromPath(c.path);return workspaceId;}
+export function newPairingPin(){return newPin();}
+export async function createPairingQrPayload({profile,token,pin,now=Date.now()}={}){if(!profile||typeof profile!=='object'||typeof profile.owner!=='string'||typeof profile.repo!=='string')throw new Error('De GitHub-koppeling ontbreekt.');const syncConfig={owner:profile.owner,repo:profile.repo,branch:'main',path:pathForWorkspace(profile.workspaceId||'default'),token};const c=await createPairingCode({syncConfig,pin,context:CONTEXT,now,transport:'qr'});return{payload:c.payload,expiresAt:c.expiresAt,nonce:c.pairingId};}
+function assertNotUsed(storage,id,now){if(!storage||typeof storage.getItem!=='function')throw new Error('Lokale replaybescherming is niet beschikbaar.');let entries=[];const stored=storage.getItem(USED_KEY);if(stored!==null){try{entries=JSON.parse(stored)}catch{throw new Error('De lokale replayhistorie is beschadigd; koppelen wordt geweigerd.')}if(!Array.isArray(entries)||entries.some(e=>!e||typeof e.pairingId!=='string'||!/^[A-Za-z0-9_-]{32}$/.test(e.pairingId)||!Number.isSafeInteger(e.usedAt)||e.usedAt<0))throw new Error('De lokale replayhistorie is ongeldig; koppelen wordt geweigerd.')}if(entries.some(e=>e.pairingId===id&&now-e.usedAt<=10*60*1000&&e.usedAt<=now+30000))throw new Error('Deze koppelcode is op dit apparaat al gebruikt. Maak een nieuwe code.');}
+export async function openPairingQrPayload(payload,pin,now=Date.now(),storage=globalThis.localStorage){const o=await openPairingCode({payload,pin,context:CONTEXT,now,transport:'qr'});const workspaceId=validateSyncConfig(o.syncConfig);assertNotUsed(storage,o.pairingId,now);return{syncConfig:o.syncConfig,workspaceId,nonce:o.pairingId,expiresAt:o.expiresAt};}
+export function markPairingNonceUsed(storage,nonce,now=Date.now()){markPairingUsed(storage,nonce,{storageKey:USED_KEY,now});}
+export const PAIRING_QR_TTL_MS=PAIRING_TTL_MS;
