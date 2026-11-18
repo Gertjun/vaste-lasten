@@ -97,7 +97,7 @@ Geen geheimen, tokens, wachtwoorden, plaintext productiegegevens of sleutelmater
 - PWA-Core v1.1.0-integratie: gemerged in Vaste Lasten PR #5.
 - Automatische codevalidatie van de integratie: 47 tests geslaagd op de gedocumenteerde code-/test-head.
 - Pages-workflow: eerder succesvol; dit bewijst niet dat de volledige live runtime handmatig is geaccepteerd.
-- S01–S07 en V01–V06: zie de afzonderlijke automatische en fysieke bewijsregistraties hieronder; de volledige set is niet integraal afgevinkt.
+- S01–S05 en S07: zie de afzonderlijke synthetische en fysieke bewijsregistraties hieronder. S06: **PASS voor de gecombineerde synthetische en fysieke scope** (Core-opslag-/flush-fout en remote HTTP 500 synthetisch; UI-foutzichtbaarheid en netwerkuitval/herstel fysiek op iPhone en Windows). De volledige S01–S07- en V01–V06-set is niet integraal afgevinkt.
 - Fysieke acceptatie op iPhone Safari en Windows 11 Edge: **PASS voor de expliciet beschreven praktijkscope**.
 - Productiegegevensmigratie: **NIET UITGEVOERD en afzonderlijk geblokkeerd**.
 
@@ -203,7 +203,7 @@ Aanvullende domeincontroles:
 | V05 | Verkeerd wachtwoord bij envelope-import, geldig versleutelde payload met verkeerd domein en beschadigde remote ciphertext worden fail-closed geweigerd; lokale gebruikersrecords en bekende remote SHA blijven behouden. | **PASS** voor de synthetische Core-import- en remote-syncroutes; geen fysieke apparaten getest. |
 | V06 | Twee clients synchroniseren ieder persoonlijk domein afzonderlijk; p1 en p2 blijven gescheiden. | **PASS** voor de synthetische domeinsync; fysieke apparaten niet getest. |
 
-**Nog niet volledig afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, alle Safari/iOS/iPadOS- en Windows Hello-combinaties en de volledige passkey-/herinstallatie-/herstelproeven. De uitgevoerde fysieke praktijktest hieronder dekt de gedeelde/persoonlijke kluisscheiding, synchronisatie, offline wijziging tegenover verwijdering en biometrisch vergrendelen/ontgrendelen. De handmatige CR03 offline-herstartvariant is niet afzonderlijk bewezen. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
+**Nog niet volledig afgevinkt:** de volledige S01–S07-acceptatie als geheel, alle V01–V06-runtimecontroles, alle Safari/iOS/iPadOS- en Windows Hello-combinaties en de volledige passkey-/herinstallatie-/herstelproeven. De fysieke praktijktests dekken de gedeelde/persoonlijke kluisscheiding, normale synchronisatie, offline wijziging tegenover verwijdering, biometrisch vergrendelen/ontgrendelen en S06-netwerkuitval/herstel. De handmatige CR03 offline-herstartvariant is niet afzonderlijk bewezen. Productiegegevensmigratie blijft afzonderlijk geblokkeerd.
 
 
 ### Fysieke acceptatie – 16 november 2026
@@ -218,3 +218,18 @@ Aanvullende domeincontroles:
 - De gebruiker rapporteerde na uitvoering van de volledige afgesproken praktijktest: “Alles is goed gegaan.”
 
 **Afbakening:** dit PASS-resultaat geldt voor de uitgevoerde praktijkscope en is geen bewijs dat elk scenario S01–S07, V01–V06 of CR01–CR09 fysiek is uitgevoerd. Gelijke-timestampconvergentie en tombstone-acknowledgement zijn aanvullend synthetisch via de echte Core-vault-/syncclientcode en een mock GitHub Contents API getest. De S06 UI-foutzichtbaarheid en fysieke netwerkuitval blijven PARTIAL. De volledige passkey-/herinstallatie-/wachtwoordherstelmatrix en productiegegevensmigratie zijn niet afgevinkt.
+
+
+### Aanvullende fysieke acceptatie – 18 november 2026 (S06)
+
+**Resultaat: PASS voor de gecombineerde S06-scope, op basis van de terugkoppeling van de gebruiker.**
+
+- Apparaten/browsers: iPhone met Safari en Windows 11 met Microsoft Edge.
+- De iPhone was offline. Een nieuwe tijdelijke testlast opslaan resulteerde in de status **“Alleen lokaal”**.
+- Een expliciete synchronisatiepoging toonde de foutmelding **“Geen verbinding met Github”**. De app presenteerde de wijziging dus niet als gesynchroniseerd.
+- Na herstel van de internetverbinding en opnieuw kiezen voor **Opslaan en synchroniseren** veranderde de status naar **“PWA-Core actief”**.
+- De tijdelijke testlast werd daarna zichtbaar op Windows.
+- De testlast is op Windows verwijderd en gesynchroniseerd; de gebruiker bevestigde dat deze daarna ook op de iPhone verdwenen was.
+- De gebruiker heeft bevestigd dat de volledige reeks is geslaagd.
+
+**Afbakening:** dit is gebruikersgerapporteerd fysiek bewijs, geen CI-waarneming. Samen met de eerder vastgelegde synthetische persist/flush- en HTTP-500-tests dekt dit de beschreven S06-scope. Het bewijst niet dat alle overige concurrency-, browser- en herstelvarianten zijn uitgevoerd. Er zijn geen productiegegevens of tokens gebruikt.

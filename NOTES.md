@@ -2,17 +2,18 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 18 november 2026 · versie **3.8.3 in voorbereiding** (PWA-Core v1.2.2).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.3** (PWA-Core v1.2.2).
 
 ---
 
 ## Actuele stand – 18 november 2026
 
-- `main` staat op `2cbab20d9014284078ca901a072ec693065f9fb0`; PR #21 (PWA-Core v1.2.1 WebAuthn-integratie) is gemerged.
-- De tests en GitHub Pages-deployment op `main` zijn geslaagd.
-- Werkbranch `chore/pwa-core-v1.2.2` bereidt appversie 3.8.3 voor met de immutable PWA-Core v1.2.2-release. In de inhoudelijke diff-review bleek dat Vaste Lasten zijn eigen verwijderformaat (`del` + recordtijd `u`) gebruikt; de generieke Core-fix voor `deleted`/`updatedAt` is daarom niet rechtstreeks het app-pad. De tests zijn aangepast om de echte, in `index.html` ingebedde `merge()` te karakteriseren: nieuwere hercreatie blijft behouden en gelijke timestamps blijven verwijderd.
-- De productiekluizen, privé-datarepository, tokens en echte gegevens zijn niet benaderd of gewijzigd. Merge, release en eventuele productieacties blijven afzonderlijk geblokkeerd tot expliciet akkoord.
-- Na CI volgt nog de resterende synthetische en fysieke acceptatie. De eerdere fysieke praktijktest van synchronisatie, kluisisolatie en passkeygebruik op iPhone Safari en Windows 11 Edge is op 16 november als geslaagd gemeld; S06 (UI-foutzichtbaarheid en fysieke netwerkuitval) bleef toen gedeeltelijk open.
+- `main` staat op `ed9a646f3827697fa0e7dc85508a717b5c61c556`; PR #22 is gemerged. Vaste Lasten is versie **3.8.3** en gebruikt de immutable PWA-Core **v1.2.2**.
+- De Core-pin, module, manifest en service-worker-cache zijn bijgewerkt; de app-specifieke verwijder-/hercreatietests gebruiken de echte ingebedde `merge()` en het eigen gegevensformaat (`del` + recordtijd `u`).
+- De gebruiker heeft op 18 november de fysieke synchronisatieacceptatie uitgevoerd op iPhone Safari en Windows 11 Edge: nieuwe last en wijziging synchroniseerden in beide richtingen; een verwijdering kwam op het andere apparaat aan.
+- S06 is daarna aanvullend fysiek getest met netwerkuitval op de iPhone: lokaal opslaan gaf status “Alleen lokaal”; handmatig synchroniseren meldde “Geen verbinding met Github”; na netwerkherstel synchroniseerde de last naar Windows. Verwijderen op Windows synchroniseerde terug naar de iPhone. De gebruiker bevestigde alle stappen.
+- Deze fysieke resultaten vullen de synthetische tests aan. Ze bewijzen de beschreven praktijkscope, niet de volledige S01–S07/V01–V06/CR01–CR09-matrix.
+- Productiekluizen, privé-datarepository, tokens en echte gegevens zijn niet benaderd of gewijzigd. Productiegegevensmigratie blijft een afzonderlijk, niet-uitgevoerd traject waarvoor expliciet akkoord nodig is.
 
 ## 1. Werkwijze
 
@@ -44,15 +45,13 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 
 ## 3. Open punten
 
-0. PR #10: lege Core-start is geïmplementeerd op featurebranch `feat/empty-pwa-core-vault-setup`; draft review en volledige CI moeten nog groen worden. Geautomatiseerde synthetische tests zijn toegevoegd. Geen legacydata of productiekluis aangeraakt. Zie `docs/EMPTY-CORE-SETUP.md`.
-
-1. Aanvullende browser-/apparaatacceptatie van de volledige Vaste Lasten-runtime: wachtwoordmigratie, herstel, herinstallatie/herkoppeling en de resterende passkey-/PRF-combinaties. De fysieke praktijkscope op iPhone Safari en Windows 11 Edge is op 16 november 2026 door de gebruiker als geslaagd gemeld.
-2. De resterende S01–S07- en V01–V06-acceptatiepunten integraal afvinken; S06 blijft PARTIAL voor UI-foutzichtbaarheid en fysieke netwerkuitval.
-3. Geïsoleerde synthetische acceptatie afronden vóór enige echte data-cutover. De integratie is al gemerged en de Pages-deploymentworkflow is geslaagd; een echte productiegegevensmigratie blijft afzonderlijk geblokkeerd. Geen test gebruikt de echte privé-datarepository, tokens, passkeys of productiegegevens.
-
-Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
+1. De volledige passkey-/PRF-matrix is nog niet integraal fysiek afgevinkt, waaronder herinstallatie/herkoppeling en alle relevante browser-/apparaatcombinaties.
+2. Aanvullende scenario's uit S01–S07, V01–V06 en CR01–CR09 zijn niet allemaal fysiek uitgevoerd. Zie `docs/SYNC-CONCURRENCY-ACCEPTANCE.md` voor het onderscheid tussen synthetisch bewijs, fysieke praktijktests en niet-uitgevoerde scenario's.
+3. Productiegegevensmigratie is **niet uitgevoerd** en blijft afzonderlijk geblokkeerd. Geen productiegegevens, tokens of privé-datarepository gebruiken voor ontwikkeltests.
 
 ## 4. Sessielog
+- **18 nov 2026 – fysieke sync- en S06-acceptatie:** op iPhone Safari en Windows 11 Edge zijn nieuwe records, wijzigingen en verwijderingen tussen apparaten gesynchroniseerd. Aanvullend is netwerkuitval op de iPhone getest: lokaal opslaan toonde “Alleen lokaal”; een expliciete sync-poging toonde “Geen verbinding met Github”; na netwerkherstel werd de last op Windows zichtbaar. Verwijderen op Windows en synchroniseren liet de last ook op de iPhone verdwijnen. S06 is hiermee PASS voor de gecombineerde synthetische en beschreven fysieke scope; niet alle overige acceptatiescenario's zijn daarmee afgevinkt. Geen productiegegevens of tokens gebruikt.
+
 
 - **18 nov 2026 – PWA-Core v1.2.2 (3.8.3 in voorbereiding):** appmodule `js/core/deletions.js`, lockbestand en manifest bijgewerkt naar de immutable Core-release. Diff-review wees uit dat Vaste Lasten voor lasten een eigen `del`/`u`-mergepad gebruikt; de generieke Core-test met `deleted`/`updatedAt` bewees dat app-pad niet. Die twee tests zijn verplaatst naar de karakterisatietest die de exacte `merge()` uit `index.html` uitvoert. Geen productiegegevens of bestaande kluizen aangeraakt.
 

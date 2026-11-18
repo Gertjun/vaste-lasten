@@ -2,13 +2,13 @@
 
 Ideeën voor volgende versies van Vaste Lasten. Deze lijst wordt bij elke versie bijgewerkt: wat gebouwd is, verhuist naar Gerealiseerd en staat in de changelog. Elk punt houdt zijn nummer, ook als andere punten klaar zijn.
 
-Laatst bijgewerkt: versie 3.8.3 in voorbereiding, 18 november 2026
+Laatst bijgewerkt: versie 3.8.3, 18 november 2026
 
 ## Gepland
 - #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
 - #3 **Buffer voor de gezamenlijke rekening** (middel) — Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden.
 - #5 **Herinneringen via je agenda** (klein) — Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt.
-- #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID en versleutelde lokale opslag. De Core-runtime ondersteunt passkeys per kluis en het opnieuw koppelen van een bestaande passkey na herinstallatie. Beperking in de huidige v3.0.0-voorbereiding: na herinstallatie moet je beide Core-wachtwoorden één keer invoeren om de remote kluizen te importeren en de bestaande passkeys opnieuw aan dit apparaat te koppelen; daarna kan biometrisch worden ontgrendeld. Fysieke B07-acceptatie op iPhone/iPad volgt pas nadat alle appmigraties klaar zijn.
+- #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID en versleutelde lokale opslag. De Core-runtime ondersteunt passkeys per kluis en het opnieuw koppelen van een bestaande passkey na herinstallatie. De basiswerking is fysiek getest op iPhone Safari en Windows 11 Edge; de volledige matrix voor herinstallatie/herkoppeling en alle passkey-/PRF-combinaties staat nog open.
 - #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Gerealiseerd
