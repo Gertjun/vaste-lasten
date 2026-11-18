@@ -10,7 +10,7 @@ Laatst bijgewerkt: 18 november 2026 · versie **3.8.3 in voorbereiding** (PWA-Co
 
 - `main` staat op `2cbab20d9014284078ca901a072ec693065f9fb0`; PR #21 (PWA-Core v1.2.1 WebAuthn-integratie) is gemerged.
 - De tests en GitHub Pages-deployment op `main` zijn geslaagd.
-- Werkbranch `chore/pwa-core-v1.2.2` bereidt appversie 3.8.3 voor met de immutable PWA-Core v1.2.2-release. De update bevat de Core-fix voor opnieuw aangemaakte records na een verwijdering.
+- Werkbranch `chore/pwa-core-v1.2.2` bereidt appversie 3.8.3 voor met de immutable PWA-Core v1.2.2-release. In de inhoudelijke diff-review bleek dat Vaste Lasten zijn eigen verwijderformaat (`del` + recordtijd `u`) gebruikt; de generieke Core-fix voor `deleted`/`updatedAt` is daarom niet rechtstreeks het app-pad. De tests zijn aangepast om de echte, in `index.html` ingebedde `merge()` te karakteriseren: nieuwere hercreatie blijft behouden en gelijke timestamps blijven verwijderd.
 - De productiekluizen, privé-datarepository, tokens en echte gegevens zijn niet benaderd of gewijzigd. Merge, release en eventuele productieacties blijven afzonderlijk geblokkeerd tot expliciet akkoord.
 - Na CI volgt nog de resterende synthetische en fysieke acceptatie. De eerdere fysieke praktijktest van synchronisatie, kluisisolatie en passkeygebruik op iPhone Safari en Windows 11 Edge is op 16 november als geslaagd gemeld; S06 (UI-foutzichtbaarheid en fysieke netwerkuitval) bleef toen gedeeltelijk open.
 
@@ -54,7 +54,7 @@ Geen echte privé-datarepository, productie-token, echte passkey of productiegeg
 
 ## 4. Sessielog
 
-- **18 nov 2026 – PWA-Core v1.2.2 (3.8.3 in voorbereiding):** appmodule `js/core/deletions.js`, lockbestand en manifest bijgewerkt naar de immutable Core-release. Regressietests voor opnieuw aanmaken na verwijdering worden toegevoegd. Geen productiegegevens of bestaande kluizen aangeraakt.
+- **18 nov 2026 – PWA-Core v1.2.2 (3.8.3 in voorbereiding):** appmodule `js/core/deletions.js`, lockbestand en manifest bijgewerkt naar de immutable Core-release. Diff-review wees uit dat Vaste Lasten voor lasten een eigen `del`/`u`-mergepad gebruikt; de generieke Core-test met `deleted`/`updatedAt` bewees dat app-pad niet. Die twee tests zijn verplaatst naar de karakterisatietest die de exacte `merge()` uit `index.html` uitvoert. Geen productiegegevens of bestaande kluizen aangeraakt.
 
 - **17 nov 2026 – PWA-Core v1.2.1 WebAuthn-integratie (3.8.2, in voorbereiding):** Core v1.2.1 wordt vastgepind. De app-bundel gebruikt voortaan de Core-functies voor compacte WebAuthn-identificaties met scope `bundle`; oude `storagePrefix:`- en `vl1-...`-handles blijven expliciet toegestaan. Regressietests controleren lange workspaces, scope-isolatie en behoud van de bestaande PRF-invoer. Geen productiegegevens, passkeys of kluissleutels gewijzigd.
 
