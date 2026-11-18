@@ -45,3 +45,45 @@ test('S07 a stale offline client cannot resurrect a record after the deletion is
   assert.equal(cleaned.items.length, 0,
     'na bevestiging door alle actieve apparaten mag de tombstone worden opgeruimd');
 });
+
+
+test('S08 a newer recreated record supersedes an older deletion', () => {
+  const key = 'items:recreated-record';
+  const deletionState = emptySyncState();
+  deletionState.deletions[key] = 200;
+
+  const local = {
+    items: [{ id: 'recreated-record', name: 'Opnieuw aangemaakte last', updatedAt: 300 }],
+    __pwaSync: deletionState,
+  };
+  const remote = {
+    items: [],
+    __pwaSync: { ...emptySyncState(), deletions: { [key]: 200 } },
+  };
+  const merged = reconcileData(local, remote, (a, b) => ({
+    ...a,
+    ...b,
+    items: [...(a.items || []), ...(b.items || [])],
+  }));
+
+  assert.equal(merged.items.some(item => item.id === 'recreated-record'), true,
+    'een aantoonbaar nieuwere last moet behouden blijven');
+  assert.equal(Object.hasOwn(merged.__pwaSync.deletions, key), false,
+    'de achterhaalde tombstone moet uit de ledger verdwijnen');
+});
+
+test('S09 an equal-timestamp recreation remains blocked by the deletion', () => {
+  const key = 'items:equal-record';
+  const state = emptySyncState();
+  state.deletions[key] = 200;
+  const merged = reconcileData({
+    items: [{ id: 'equal-record', name: 'Gelijke tijd', updatedAt: 200 }],
+    __pwaSync: state,
+  }, {
+    items: [],
+    __pwaSync: { ...emptySyncState(), deletions: { [key]: 200 } },
+  }, (a, b) => ({ ...a, ...b, items: [...(a.items || []), ...(b.items || [])] }));
+
+  assert.equal(merged.items.some(item => item.id === 'equal-record'), false,
+    'gelijke tijdstempels mogen een verwijdering niet ongedaan maken');
+});
