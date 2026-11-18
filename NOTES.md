@@ -2,9 +2,17 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 17 november 2026 · versie **3.8.2 in voorbereiding** (PWA-Core v1.2.1 WebAuthn-integratie).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.3 in voorbereiding** (PWA-Core v1.2.2).
 
 ---
+
+## Actuele stand – 18 november 2026
+
+- `main` staat op `2cbab20d9014284078ca901a072ec693065f9fb0`; PR #21 (PWA-Core v1.2.1 WebAuthn-integratie) is gemerged.
+- De tests en GitHub Pages-deployment op `main` zijn geslaagd.
+- Werkbranch `chore/pwa-core-v1.2.2` bereidt appversie 3.8.3 voor met de immutable PWA-Core v1.2.2-release. De update bevat de Core-fix voor opnieuw aangemaakte records na een verwijdering.
+- De productiekluizen, privé-datarepository, tokens en echte gegevens zijn niet benaderd of gewijzigd. Merge, release en eventuele productieacties blijven afzonderlijk geblokkeerd tot expliciet akkoord.
+- Na CI volgt nog de resterende synthetische en fysieke acceptatie. De eerdere fysieke praktijktest van synchronisatie, kluisisolatie en passkeygebruik op iPhone Safari en Windows 11 Edge is op 16 november als geslaagd gemeld; S06 (UI-foutzichtbaarheid en fysieke netwerkuitval) bleef toen gedeeltelijk open.
 
 ## 1. Werkwijze
 
@@ -45,6 +53,8 @@ Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df89
 Geen echte privé-datarepository, productie-token, echte passkey of productiegegevens gebruikt tijdens ontwikkeling en tests.
 
 ## 4. Sessielog
+
+- **18 nov 2026 – PWA-Core v1.2.2 (3.8.3 in voorbereiding):** appmodule `js/core/deletions.js`, lockbestand en manifest bijgewerkt naar de immutable Core-release. Regressietests voor opnieuw aanmaken na verwijdering worden toegevoegd. Geen productiegegevens of bestaande kluizen aangeraakt.
 
 - **17 nov 2026 – PWA-Core v1.2.1 WebAuthn-integratie (3.8.2, in voorbereiding):** Core v1.2.1 wordt vastgepind. De app-bundel gebruikt voortaan de Core-functies voor compacte WebAuthn-identificaties met scope `bundle`; oude `storagePrefix:`- en `vl1-...`-handles blijven expliciet toegestaan. Regressietests controleren lange workspaces, scope-isolatie en behoud van de bestaande PRF-invoer. Geen productiegegevens, passkeys of kluissleutels gewijzigd.
 
