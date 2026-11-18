@@ -19,29 +19,15 @@ Laatst bijgewerkt: 18 november 2026 · versie **3.8.3** (PWA-Core v1.2.2).
 
 Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Vervolgwijzigingen lopen via afzonderlijke branches/PR's. Geen productiegegevensmigratie of productie-write zonder expliciet akkoord.
 
-## 2. Stand
+## 2. Actuele stand
 
-- **PR #13 – 3.6.0:** de Core-runtime ondersteunt per administratie een eigen namespace en versleutelde workspace-identiteit. De standaardadministratie behoudt de bestaande prefixes, remote paden en payloadstructuur; extra administraties krijgen unieke lokale prefixes en online paden onder `workspaces/<kluiscode>/pwa-core-v1/`. Bij iedere app-start verschijnt eerst de administratiekeuze. Tests controleren standaardpadbehoud, gescheiden remote bestanden, bescherming tegen een verkeerde workspace-identiteit, online heropening met latere remote wijzigingen, vrijgave van workspace-vaultinstanties en passkey-prefixen. Workflow #627 op code-head `7eb883706f8fa1b6bae8b8fbbd31a25bcec97c81` is groen: 125/125 tests, 0 fouten en 0 overgeslagen. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn eveneens geslaagd. PR #13 is inmiddels gemerged naar main op 17 november 2026. De daaropvolgende herstel-/back-upverbetering staat apart op featurebranch; niet mergen of deployen zonder akkoord.
+- Appversie **3.8.3**, PWA-Core **v1.2.2** (immutable release).
+- PR #22 (Core v1.2.2-integratie) en PR #23 (documentatie/acceptatiecorrectie) zijn gemerged.
+- De fysieke synchronisatieproef op iPhone Safari en Windows 11 Edge is door de gebruiker bevestigd: aanmaken, wijzigen en verwijderen synchroniseerden tussen beide apparaten.
+- S06 is aanvullend fysiek getest met netwerkuitval en herstel; de status bleef lokaal totdat de verbinding terug was en de synchronisatie opnieuw werd gestart.
+- Dit bewijst alleen de expliciet beschreven praktijkscope. De volledige S01–S07-, V01–V06- en CR01–CR09-matrix is niet integraal afgevinkt.
+- Productiegegevensmigratie is niet uitgevoerd en blijft afzonderlijk geblokkeerd. Ontwikkeltests gebruiken geen productiegegevens, tokens of privé-datarepository.
 
-Vaste Lasten gebruikt op `main` PWA-Core v1.2.0 als vastgepinde, meegeleverde basis; de integratie van v1.2.1 staat op de huidige featurebranch. PR #5 is op 15 november 2026 gemerged; de actuele `main`-head vóór deze documentatie-PR is `77591c46404698371d11f04e4c5c05c77feb58f2`. De GitHub Actions-testworkflow (#43750295899) en Pages-deployment (#43750288231) zijn succesvol. Dit bevestigt de workflow, niet een handmatige runtimecontrole van de live pagina. De Core-modules worden door de service worker geprecachet; de app haalt tijdens gebruik geen Core-code op uit de Core-repository.
-
-De runtime is aangesloten op drie afzonderlijke kluizen:
-- gedeeld: `pwa-core-v1/samen.json`;
-- persoonlijk p1: `pwa-core-v1/eigen-p1.json`;
-- persoonlijk p2: `pwa-core-v1/eigen-p2.json`.
-
-Elk apparaat opent alleen de gedeelde kluis en de persoonlijke kluis van de gebruiker van dat apparaat. De bestaande legacybestanden blijven als terugvalbron behouden. De app zet bij de eerste migratie `minApp: 3.0.0` in het oude gedeelde bestand, zodat oudere versies niet meer kunnen terugschrijven.
-
-De branch bevat:
-- multi-vault-adapter en migratiecoördinator;
-- runtime bridge voor online/offline ontgrendelen, opslaan, synchroniseren, wachtwoordbeheer, herstel en passkeybeheer;
-- één apparaatgebonden passkeybundel voor gedeeld + de actieve persoonlijke kluis, met afzonderlijke DEK-wrappers en een app-eigen WebAuthn PRF-module;
-- behoud van Core-deletion/device metadata tijdens app-saves;
-- bescherming tegen het opnieuw publiceren van ontbrekende remote kluizen;
-- herstel van lokale wijzigingen bij een remote wachtwoordwijziging;
-- CI-controle op Core-modules, de volledige inline app-JavaScript, release-pin, service-worker-precache en tests.
-
-Laatste geverifieerde PR #9-code-/test-head `686a44ac1e9138836a56ceaf5604ae3df8989839`: CI **#469 en #470**, elk 89 tests geslaagd, 0 mislukt. Core-modulecontrole, inline app-JavaScript, release-pin en service-worker-precache zijn groen. S01/S02 en nu ook S03/S04/S07 zijn via de echte Core-vault-/syncclientcode met twee onafhankelijke synthetische clients en een mock GitHub Contents API getest; S03 controleert beide uploadvolgordes, S04 een oudere offline bewerking tegenover een nieuwere verwijdering en S07 device-acknowledgement plus tombstone-opruiming. V05 blijft PASS; S06 blijft PARTIAL (UI-foutzichtbaarheid en fysieke netwerkuitval niet getest). De fysieke acceptatietest op iPhone Safari en Windows 11 Edge is op 16 november 2026 door de gebruiker als geslaagd gemeld voor synchronisatie, scheiding van gedeelde/persoonlijke kluizen, offline wijziging tegenover verwijdering en biometrisch vergrendelen/ontgrendelen. Dit is geen volledige afvinking van alle S01–S07/V01–V06/CR01–CR09-scenario's. Productiegegevensmigratie is NIET UITGEVOERD en blijft afzonderlijk geblokkeerd.
 
 ## 3. Open punten
 
