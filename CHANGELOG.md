@@ -1,3 +1,6 @@
+## 3.8.3 — 18 november 2026
+- Technisch: bijgewerkt naar de immutable PWA-Core v1.2.2-release. De verwijderafhandeling van Vaste Lasten gebruikt de eigen gegevensvelden `del` en `u`; regressietests controleren rechtstreeks de bestaande app-samenvoegfunctie: een aantoonbaar nieuwere hercreatie blijft behouden, terwijl een gelijke timestamp door de verwijdering wordt geblokkeerd.
+
 ## 3.8.2 — 17 november 2026
 - Verbeterd: Vaste Lasten gebruikt PWA-Core v1.2.1 voor WebAuthn-passkeys. Nieuwe bundle-passkeys hebben een eigen Core-scope; oude `storagePrefix:`- en `vl1-...`-passkeys blijven herkenbaar.
 - Beveiliging: PRF-zout, HKDF-context, credential-ID's, verpakte bundelsleutel en kluissleutels blijven ongewijzigd.

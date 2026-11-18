@@ -127,3 +127,29 @@ test('probe: gelijktijdige verwijdering wint nu stilzwijgend van een bewerking',
     assert.equal(result.del['same-record'], timestamp);
   }
 });
+
+test('Vaste Lasten: aantoonbaar nieuwere hercreatie blijft bestaan naast oudere verwijdering', () => {
+  const deletedAt = timestamp;
+  const a = base(), b = base();
+  a.items = [{ id: 'recreated-record', u: deletedAt + 1, amount: 125 }];
+  b.del = { 'recreated-record': deletedAt };
+
+  for (const [left, right] of [[a, b], [b, a]]) {
+    const result = merge(left, right);
+    assert.equal(result.items.some((item) => item.id === 'recreated-record'), true);
+    assert.equal(result.del['recreated-record'], deletedAt,
+      'de oorspronkelijke tombstone blijft bewaard tegen oudere offline kopieën');
+  }
+});
+
+test('Vaste Lasten: hercreatie met gelijke timestamp blijft geblokkeerd door verwijdering', () => {
+  const a = base(), b = base();
+  a.items = [{ id: 'equal-record', u: timestamp, amount: 125 }];
+  b.del = { 'equal-record': timestamp };
+
+  for (const [left, right] of [[a, b], [b, a]]) {
+    const result = merge(left, right);
+    assert.equal(result.items.some((item) => item.id === 'equal-record'), false);
+    assert.equal(result.del['equal-record'], timestamp);
+  }
+});
