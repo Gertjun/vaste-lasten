@@ -2,16 +2,16 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 18 november 2026 · versie **3.8.5** in voorbereiding (PWA-Core v1.3.0).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.5** op `main` (PWA-Core v1.3.0).
 
 ---
 
 ## Actuele stand – 18 november 2026
 
-- In voorbereiding: PWA-Core v1.3.0 met PAIR-2. De QR-code bevat alleen GitHub Sync-configuratie; workspace wordt uitsluitend via het GitHub-pad herkend. Naam en gebruikersrol kiest de gebruiker op het nieuwe apparaat; beide kluiswachtwoorden worden daar apart ingevoerd.
-- Geen kluisgegevens, wachtwoorden of persoonlijke gegevens worden via de QR-code overgedragen. De bestaande drie kluizen en hun rechten blijven ongewijzigd.
-
-- `main` blijft op de bestaande stabiele versie 3.8.4 / PWA-Core v1.2.2. PR voor PWA-Core v1.3.0 apparaatkoppeling wordt voorbereid.
+- `main` bevat appversie **3.8.5** en PWA-Core **v1.3.0**; de migratie van de apparaatkoppeling is gemerged via PR #28. PWA-Core v1.3.0 bevat de gedeelde PAIR-2-implementatie.
+- De QR-code draagt uitsluitend de minimale GitHub Sync-configuratie over. Kluisgegevens, workspace-inhoud, wachtwoorden, passkeys en persoonlijke gegevens worden niet via de QR-code overgedragen. Na koppeling worden gegevens via de bestaande GitHub Sync-route opgehaald.
+- De gebruiker kiest op het nieuwe apparaat de naam en rol en voert de benodigde kluiswachtwoorden daar afzonderlijk in. De bestaande drie kluizen en hun rechten blijven ongewijzigd.
+- PR #22 (Core v1.2.2-integratie), PR #23 en #24 (documentatiecorrecties) en PR #28 (Core v1.3.0 / PAIR-2) zijn gemerged. De actuele `main`-head is de mergecommit van PR #28.
 - Het inlogscherm vraagt eerst uitsluitend het persoonlijke wachtwoord en controleert dit read-only via de lokale of remote persoonlijke envelope. Pas na een juiste controle verschijnt het gezamenlijke wachtwoord. De uiteindelijke Core-sessie opent beide actieve kluizen gezamenlijk.
 - Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie. De laatst gebruikte administratie opent direct; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
 - GitHub Actions-run [#770](https://github.com/Gertjun/vaste-lasten/actions/runs/44404198973) op de PR-head is geslaagd: 146/146 tests, 0 mislukt, 0 overgeslagen. Core-modulecontrole, inline JavaScript, release-pin en service-worker-precache zijn eveneens groen.
@@ -29,8 +29,8 @@ Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Ve
 
 ## 2. Actuele stand
 
-- Appversie **3.8.4 in voorbereiding**, PWA-Core **v1.2.2** (immutable release).
-- PR #22 (Core v1.2.2-integratie) en PR #23 (documentatie/acceptatiecorrectie) zijn gemerged.
+- Appversie **3.8.5** staat op `main`, met PWA-Core **v1.3.0** (immutable release).
+- PR #22 (Core v1.2.2-integratie), PR #23 en #24 (documentatiecorrecties) en PR #28 (Core v1.3.0 / PAIR-2-integratie) zijn gemerged.
 - De fysieke synchronisatieproef op iPhone Safari en Windows 11 Edge is door de gebruiker bevestigd: aanmaken, wijzigen en verwijderen synchroniseerden tussen beide apparaten.
 - S06 is aanvullend fysiek getest met netwerkuitval en herstel; de status bleef lokaal totdat de verbinding terug was en de synchronisatie opnieuw werd gestart.
 - Dit bewijst alleen de expliciet beschreven praktijkscope. De volledige S01–S07-, V01–V06- en CR01–CR09-matrix is niet integraal afgevinkt.
