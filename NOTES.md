@@ -2,13 +2,16 @@
 
 De **actuele stand**: versie, open punten en sessielog. Werk dit bij aan het eind van elke sessie (zie `CLAUDE.md`). Besluiten staan in `DECISIONS.md`, wensen in `WISHLIST.md`.
 
-Laatst bijgewerkt: 18 november 2026 · versie **3.8.3** (PWA-Core v1.2.2).
+Laatst bijgewerkt: 18 november 2026 · versie **3.8.4 in voorbereiding** (PWA-Core v1.2.2).
 
 ---
 
 ## Actuele stand – 18 november 2026
 
-- `main` staat op `ed9a646f3827697fa0e7dc85508a717b5c61c556`; PR #22 is gemerged. Vaste Lasten is versie **3.8.3** en gebruikt de immutable PWA-Core **v1.2.2**.
+- `main` staat op `f4f0df8c7d92b6fd8fb635c9fd4a85ccda835567`; PR #22 en documentatie-PR #24 zijn gemerged. Featurebranch `feat/simplified-login-gate` bereidt versie **3.8.4** voor; nog niet gemerged of gedeployed.
+- Het inlogscherm wordt stapsgewijs: eerst uitsluitend het persoonlijke wachtwoord read-only controleren via de lokale of remote persoonlijke envelope; daarna pas het gezamenlijke wachtwoord. De uiteindelijke Core-sessie blijft beide actieve kluizen gezamenlijk openen.
+- Eén knop **Inloggen** kiest automatisch online synchroniseren of lokaal ontgrendelen. Passkey blijft één actie; andere kluis kiezen en nieuwe kluis aanmaken zijn kleinere secundaire acties.
+- Geen productiekluizen, privé-datarepository, tokens, passkeys of echte gegevens benaderd of gewijzigd.
 - De Core-pin, module, manifest en service-worker-cache zijn bijgewerkt; de app-specifieke verwijder-/hercreatietests gebruiken de echte ingebedde `merge()` en het eigen gegevensformaat (`del` + recordtijd `u`).
 - De gebruiker heeft op 18 november de fysieke synchronisatieacceptatie uitgevoerd op iPhone Safari en Windows 11 Edge: nieuwe last en wijziging synchroniseerden in beide richtingen; een verwijdering kwam op het andere apparaat aan.
 - S06 is daarna aanvullend fysiek getest met netwerkuitval op de iPhone: lokaal opslaan gaf status “Alleen lokaal”; handmatig synchroniseren meldde “Geen verbinding met Github”; na netwerkherstel synchroniseerde de last naar Windows. Verwijderen op Windows synchroniseerde terug naar de iPhone. De gebruiker bevestigde alle stappen.
@@ -21,7 +24,7 @@ Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Ve
 
 ## 2. Actuele stand
 
-- Appversie **3.8.3**, PWA-Core **v1.2.2** (immutable release).
+- Appversie **3.8.4 in voorbereiding**, PWA-Core **v1.2.2** (immutable release).
 - PR #22 (Core v1.2.2-integratie) en PR #23 (documentatie/acceptatiecorrectie) zijn gemerged.
 - De fysieke synchronisatieproef op iPhone Safari en Windows 11 Edge is door de gebruiker bevestigd: aanmaken, wijzigen en verwijderen synchroniseerden tussen beide apparaten.
 - S06 is aanvullend fysiek getest met netwerkuitval en herstel; de status bleef lokaal totdat de verbinding terug was en de synchronisatie opnieuw werd gestart.
@@ -36,6 +39,8 @@ Zie `CLAUDE.md`. De multi-vault-integratie is via PR #5 gemerged naar `main`. Ve
 3. Productiegegevensmigratie is **niet uitgevoerd** en blijft afzonderlijk geblokkeerd. Geen productiegegevens, tokens of privé-datarepository gebruiken voor ontwikkeltests.
 
 ## 4. Sessielog
+- **18 nov 2026 – eenvoudiger inlogscherm (3.8.4 in voorbereiding):** persoonlijke wachtwoordcontrole vóór de gezamenlijke wachtwoordvraag; read-only envelopevalidatie; één online/offline-loginactie; passkey blijft beide actieve kluizen in één handeling openen. Regressietests toegevoegd voor juiste/verkeerde persoonlijke wachtwoorden en remote-only kluizen. Nog niet gemerged of gedeployed.
+
 - **18 nov 2026 – fysieke sync- en S06-acceptatie:** op iPhone Safari en Windows 11 Edge zijn nieuwe records, wijzigingen en verwijderingen tussen apparaten gesynchroniseerd. Aanvullend is netwerkuitval op de iPhone getest: lokaal opslaan toonde “Alleen lokaal”; een expliciete sync-poging toonde “Geen verbinding met Github”; na netwerkherstel werd de last op Windows zichtbaar. Verwijderen op Windows en synchroniseren liet de last ook op de iPhone verdwijnen. S06 is hiermee PASS voor de gecombineerde synthetische en beschreven fysieke scope; niet alle overige acceptatiescenario's zijn daarmee afgevinkt. Geen productiegegevens of tokens gebruikt.
 
 
