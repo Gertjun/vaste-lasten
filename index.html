@@ -131,8 +131,8 @@ mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px}
 .ladd{display:flex;gap:6px;align-items:center;justify-content:center;white-space:nowrap}
 .empty .btns{justify-content:center;margin-top:12px}
 @media (max-width:440px){.ltools{grid-template-columns:minmax(0,1fr) auto}.ltools input{grid-column:1/-1}}
-/* onder 1100 px staat Nieuwe last bij Lasten in de werkbalk, zodat hij geen afschrijving bedekt */
-@media (min-width:1100px){.ladd{display:none}}
+/* onder 1000 px staat Nieuwe last bij Lasten in de werkbalk, zodat hij geen afschrijving bedekt */
+@media (min-width:1000px){.ladd{display:none}}
 .catlist{display:grid;gap:6px}
 .catrow{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .catrow summary{color:var(--ink);display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;list-style:none}
@@ -382,7 +382,7 @@ button.info .name{display:block}
 }
 
 /* telefoon: tabbladen als balk onderin, binnen bereik van de duim */
-@media (max-width:719.98px){
+@media (max-width:699.98px), (min-width:700px) and (max-width:999.98px) and (max-height:699px){
   .wrap{padding-block:0 calc(env(safe-area-inset-bottom,0px) + 96px)}
   .tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border-top:1px solid var(--line);border-bottom:0;
     padding:4px max(8px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 4px) max(8px,env(safe-area-inset-left,0px))}
@@ -392,15 +392,15 @@ button.info .name{display:block}
 }
 
 /* tablet en groter: samenvatting als brede band */
-@media (min-width:720px){
-  .wrap{max-width:1040px}
+@media (min-width:700px) and (max-width:999.98px) and (min-height:700px){
+  .wrap{max-width:960px}
 }
 
 /* laptop en iPad liggend: zijbalk als eigen vlak over de volle hoogte (in te klappen tot pictogrammen), werkvlak met paginakop */
 .phead,.side-tog,.side .padd{display:none}
 .brand-meta{display:contents}
-@media (min-width:1100px){
-  .wrap{max-width:none;padding:0 max(28px,env(safe-area-inset-right,0px)) 0 0;display:grid;grid-template-columns:clamp(240px,15vw,264px) minmax(0,1fr);column-gap:28px;align-items:start}
+@media (min-width:1000px){
+  .wrap{max-width:none;padding:0 max(28px,env(safe-area-inset-right,0px)) 0 0;display:grid;grid-template-columns:236px minmax(0,1fr);column-gap:28px;align-items:start}
   .side{display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto;scrollbar-width:thin;
     padding:20px 12px 18px max(12px,env(safe-area-inset-left,0px));background:color-mix(in srgb,var(--surface) 55%,var(--bg));border-right:1px solid var(--line)}
   header.top{position:static;padding:0 0 0 6px;background:transparent;flex-wrap:nowrap;align-items:flex-start;gap:8px}
@@ -434,13 +434,13 @@ button.info .name{display:block}
   .tab[aria-selected="true"]{background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);font-weight:600}
   .tab[aria-selected="true"] svg{color:var(--accent)}
   .keys{margin-top:auto;padding:0 6px;font-size:12px}
-  .main{padding-block:22px 48px}
+  .main{padding-block:22px 48px;max-width:1100px;width:100%;margin-inline:auto}
   .phead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;min-height:44px}
   .phead h1{font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:-.01em;line-height:1.15;margin:0 auto 0 0}
   .padd{display:flex;align-items:center;gap:8px;padding:10px 16px;border:0}
   .btn.primary.padd:hover{background:var(--accent);filter:brightness(1.08)}
   /* ingeklapt: alleen pictogrammen; de namen blijven voor de schermlezer en als tooltip */
-  .side-mini .wrap{grid-template-columns:72px minmax(0,1fr)}
+  .side-mini .wrap{grid-template-columns:68px minmax(0,1fr)}
   .side-mini .side{padding-inline:max(12px,env(safe-area-inset-left,0px)) 12px;align-items:center}
   .side-mini header.top{flex-direction:column;align-items:center;padding:0;gap:14px}
   .side-mini .brand{display:flex;flex-direction:column;align-items:center;gap:4px;margin:0}
@@ -458,9 +458,9 @@ button.info .name{display:block}
   .side-mini .tab{justify-content:center;padding:11px 0}
   .side-mini .tab span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 }
-@media (min-width:1100px) and (pointer:coarse){.side-tog{width:44px;height:44px}.tab{min-height:44px}.brand-meta .sync-pill,.brand .ver{min-height:32px}}
-@media (min-width:1100px) and (hover:hover) and (pointer:fine){.keys{display:block;line-height:1.9}}
-@media (min-width:1100px) and (hover:hover) and (pointer:fine){.side-mini .keys{display:none}}
+@media (min-width:1000px) and (pointer:coarse){.side-tog{width:44px;height:44px}.tab{min-height:44px}.brand-meta .sync-pill,.brand .ver{min-height:32px}}
+@media (min-width:1000px) and (hover:hover) and (pointer:fine){.keys{display:block;line-height:1.9}}
+@media (min-width:1000px) and (hover:hover) and (pointer:fine){.side-mini .keys{display:none}}
 
 /* werkvlak: kolommen op basis van de beschikbare breedte */
 @container main (min-width:560px){.x3{display:inline}.x1{display:none}}
@@ -502,7 +502,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .ver[data-update]:hover{color:var(--accent-ink)}
 .update-line{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:9px;padding:10px 12px}
 .pill-short{display:none}
-@media (max-width:719.98px){.ver-long,.pill-long{display:none}.pill-short{display:inline}}
+@media (max-width:699.98px), (min-width:700px) and (max-width:999.98px) and (max-height:699px){.ver-long,.pill-long{display:none}.pill-short{display:inline}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* afschrijvingsregel: naam en bedrag (met jouw deel) bovenaan, labels over de volle breedte eronder */
@@ -542,7 +542,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .set-st[data-s="warn"]::before{background:var(--warn)}
 .set-body{display:grid;gap:10px;padding-top:4px}
 .set-body .panel h4:first-child{margin-top:0}
-/* laptop (vanaf 1100 px, sinds 2.23.2): Instellingen als lijst met koppen links en de gekozen groep rechts */
+/* desktop (vanaf 1000 px): Instellingen als lijst met koppen links en de gekozen groep rechts */
 .set-nav{display:none}
 #v-instellingen.set-md:not([hidden]){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto;column-gap:20px;align-items:start}
 .set-md .set-nav{display:grid;gap:2px;grid-column:1;grid-row:1;position:sticky;top:22px}
@@ -1003,7 +1003,7 @@ function applyTheme(){
 }
 applyTheme();
 /* zijbalk op laptop en iPad liggend: uit- of ingeklapt, per apparaat onthouden (ui.side) */
-const WIDE=window.matchMedia('(min-width:1100px)');
+const WIDE=window.matchMedia('(min-width:1000px)');
 function applySide(){
   const mini=ui.side==='mini', b=$('sideTog'), l=mini?'Zijbalk uitklappen':'Zijbalk inklappen';
   document.documentElement.classList.toggle('side-mini',mini);
@@ -3227,7 +3227,7 @@ function showTab(name){
 function toTop(){ if(window.scrollY>0) window.scrollTo({top:0}); }
 document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(!b) return;
   const same=b.dataset.tab===ui.tab; showTab(b.dataset.tab);
-  if(window.matchMedia('(max-width:719.98px)').matches&&(!same||window.scrollY>0)) window.scrollTo({top:0,behavior:same?'smooth':'auto'});});
+  if(window.matchMedia('(max-width:699.98px), (min-width:700px) and (max-width:999.98px) and (max-height:699px)').matches&&(!same||window.scrollY>0)) window.scrollTo({top:0,behavior:same?'smooth':'auto'});});
 /* sneltoetsen voor laptop */
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey||!$('scrim').hidden) return;
