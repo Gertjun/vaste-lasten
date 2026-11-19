@@ -2602,7 +2602,10 @@ async function createDevicePairingQr(){
   const qr=qrcode(0,'M'); qr.addData(created.payload,'Byte'); qr.make();
   const output=$('core-pair-output');
   if(!output) throw new SyncError('Het QR-codeveld is niet meer beschikbaar. Open het koppelvenster opnieuw.');
-  output.innerHTML='<img alt="Versleutelde koppel-QR-code" style="width:min(100%,320px);height:auto;image-rendering:pixelated;background:white;padding:12px;border-radius:8px" src="'+qr.createDataURL(5,8)+'"><p class="note"><b>Pincode: '+pin+'</b></p><p class="note">Geldig tot '+new Date(created.expiresAt).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+'. Maak een nieuwe code als deze verloopt of als koppelen mislukt.</p>';
+  output.innerHTML='<div id="core-pair-qr-panel"><img alt="Versleutelde koppel-QR-code" style="width:min(100%,320px);height:auto;image-rendering:pixelated;background:white;padding:12px;border-radius:8px" src="'+qr.createDataURL(5,8)+'"><button type="button" class="btn" id="core-pair-show-pin">Pincode tonen (QR verbergen)</button></div><div id="core-pair-pin-panel" hidden><p class="note"><b>Pincode: '+pin+'</b></p><button type="button" class="btn" id="core-pair-copy-pin">Pincode kopiëren</button><button type="button" class="btn" id="core-pair-back-qr">Terug naar QR-code</button></div><p class="note">Geldig tot '+new Date(created.expiresAt).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+'. Maak een nieuwe code als deze verloopt of als koppelen mislukt.</p>';
+  $('core-pair-show-pin').onclick=()=>{$('core-pair-qr-panel').hidden=true;$('core-pair-pin-panel').hidden=false;};
+  $('core-pair-back-qr').onclick=()=>{$('core-pair-pin-panel').hidden=true;$('core-pair-qr-panel').hidden=false;};
+  $('core-pair-copy-pin').onclick=async()=>{try{await navigator.clipboard.writeText(pin);toast('Pincode gekopieerd.')}catch(e){toast('Kopiëren lukte niet. Selecteer de pincode en kopieer hem zelf.')}};
   $('core-pair-err').textContent='';
 }
 async function startDevicePairingScanner(){
