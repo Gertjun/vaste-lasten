@@ -14,3 +14,21 @@ test('een verkeerde PIN wordt geweigerd',async()=>{const c=await createPairingQr
 test('verlopen, beschadigde en oude codes worden geweigerd',async()=>{const c=await createPairingQrPayload({profile,token,pin,now});const s=new MemoryStorage();await assert.rejects(openPairingQrPayload(c.payload,pin,c.expiresAt,s),/verlopen/);await assert.rejects(openPairingQrPayload(c.payload+'x',pin,now,s),/beschadigd|ongeldige/);await assert.rejects(openPairingQrPayload('PWA-CORE-PAIR-1:legacy',pin,now,s),/oude koppelcode wordt niet meer geaccepteerd/)});
 test('een gebruikte pairing-ID kan op hetzelfde apparaat niet opnieuw worden geopend',async()=>{const c=await createPairingQrPayload({profile,token,pin,now});const s=new MemoryStorage();const opened=await openPairingQrPayload(c.payload,pin,now+1,s);markPairingNonceUsed(s,opened.nonce,now+2);await assert.rejects(openPairingQrPayload(c.payload,pin,now+3,s),/al gebruikt/)});
 test('de standaardadministratie gebruikt het bestaande standaardpad',async()=>{const c=await createPairingQrPayload({profile:{...profile,workspaceId:'default'},token,pin,now});const o=await openPairingQrPayload(c.payload,pin,now+1,new MemoryStorage());assert.equal(o.workspaceId,'default');assert.equal(o.syncConfig.path,'pwa-core-v1')});
+
+import { readFile } from 'node:fs/promises';
+const pairingUiSource = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+test('QR en PIN worden in aparte schermen getoond',()=>{
+  const fn=pairingUiSource.slice(pairingUiSource.indexOf('async function createDevicePairingQr()'),pairingUiSource.indexOf('async function startDevicePairingScanner()'));
+  assert.match(fn,/id="core-pair-qr-panel"/);
+  assert.match(fn,/id="core-pair-pin-panel" hidden/);
+  assert.match(fn,/core-pair-show-pin/);
+  assert.match(fn,/core-pair-qr-panel'\)\.hidden=true/);
+  assert.match(fn,/core-pair-pin-panel'\)\.hidden=false/);
+  assert.match(fn,/core-pair-back-qr/);
+});
+test('PIN is apart kopieerbaar en QR-code wordt verborgen voordat de PIN verschijnt',()=>{
+  const fn=pairingUiSource.slice(pairingUiSource.indexOf('async function createDevicePairingQr()'),pairingUiSource.indexOf('async function startDevicePairingScanner()'));
+  assert.match(fn,/core-pair-copy-pin/);
+  assert.match(fn,/navigator\.clipboard\.writeText\(pin\)/);
+  assert.match(fn,/Pincode tonen \(QR verbergen\)/);
+});
