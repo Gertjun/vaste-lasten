@@ -2270,7 +2270,7 @@ function renderCoreGate(){
   let gate=$('coreGate');
   if(!gate){
     gate=document.createElement('div'); gate.id='coreGate';
-    gate.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--bg,#fff);display:grid;place-items:center;padding:24px;overflow:auto;';
+    gate.className='core-gate-overlay';
     document.body.appendChild(gate);
   }
   const me=cfg?.me||coreProfile?.me||ui.me||'p1';
