@@ -3,9 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const match = html.match(/async function syncStore\(st\)\s*\{[\s\S]*?\n\}\nasync function sync\(\)/);
-assert.ok(match, 'syncStore moet in index.html aanwezig zijn');
+assert.ok(match, 'syncStore moet in js/app.js aanwezig zijn');
 const source = match[0].replace(/\nasync function sync\(\)$/, '');
 
 function makeHarness({ env = null, remote = null, results = [] } = {}) {
