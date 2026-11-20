@@ -1,27 +1,31 @@
 # Roadmap – wat moet of kan er nog gebeuren
 
 > **Dit bestand (toekomst):** alles wat nog moet of kan gebeuren: wensen, praktijktests en open punten. Het is de enige takenlijst.
-> **Niet hier:** wat al gebouwd is → [`CHANGELOG.md`](CHANGELOG.md); waarom → [`DECISIONS.md`](DECISIONS.md); de stand van nu en hoe het werkt → [`README.md`](README.md).
+> **Niet hier:** wat al gebouwd is → [`CHANGELOG.md`](CHANGELOG.md); waarom → [`DECISIONS.md`](DECISIONS.md); de stand van nu → [`README.md`](README.md); hoe het in elkaar zit → [`ARCHITECTUUR.md`](ARCHITECTUUR.md).
 
 Bijgewerkt: 20 november 2026 · versie 3.8.5
 
-Elk punt houdt zijn nummer, ook in de app. Is een punt gebouwd, dan haal je het hier weg en zet je het nummer in de changelog achter de versie. Volgende vrije nummer: #44.
+Elk punt houdt zijn W-nummer, ook in de app. Is een punt gebouwd, dan haal je het hier weg (`tools/release.py --wens W5` of `tools/wish.py W5`) en zet je het nummer in de changelog achter de versie. Tot 20 november 2026 heetten de nummers `#1`, `#3` enzovoort; het getal is gelijk gebleven. Volgende vrije nummer: W48.
 
 ## Eerst
-- #41 **Nieuwe versie voor PR #30 en #31** (klein) — De aangepaste indeling (#30) en de aparte weergave van QR-code en pincode (#31) zijn na 3.8.5 gemerged zonder nieuw versienummer. Geïnstalleerde apps halen ze daardoor misschien niet op. Versie ophogen op alle plekken (zie `CLAUDE.md`).
-- #42 **Changelog op orde** (klein) — Bij de volgende versie ook het commentaar bij `WISHLIST` in `index.html` naar `ROADMAP.md` laten verwijzen. `CHANGELOG.md` mist 3.8.5 en de volgorde klopt niet (3.8.3 staat boven 3.8.4). De lijst in de app (`CHANGELOG` in `index.html`) is wel compleet.
+- W41 **Nieuwe versie voor PR #30 en #31** (klein) — De aangepaste indeling (#30) en de aparte weergave van QR-code en pincode (#31) zijn na 3.8.5 gemerged zonder nieuw versienummer. Geïnstalleerde apps halen ze daardoor misschien niet op. Versie ophogen met `tools/release.py` (zie `CLAUDE.md`).
+- W42 **Wishlist in de app op orde** (klein) — Bij de volgende versie: het commentaar bij `WISHLIST` in `index.html` naar `ROADMAP.md` laten verwijzen (doet `tools/release.py` vanzelf) en de nummers in de app als W-nummers tonen (nu `#1`). `CHANGELOG.md` is op 20 november op volgorde gezet en aangevuld met 3.8.5.
+- W47 **Code uit index.html en een strikte CSP** (middel) — Zoals in de andere apps: het inline script naar `js/app.js` en de CSS naar `css/app.css`, en een Content-Security-Policy in `index.html` (`script-src 'self'`, `connect-src` met `api.github.com`, en de lettertypen en SheetJS lokaal of expliciet toegestaan). Nu staat er geen CSP en is er één groot inline script, terwijl de projectregels een strikte CSP zonder inline scripts vragen. Raakt de app zelf: eigen versie, CI-controle op het inline script aanpassen, `PRECACHE` bijwerken. Eerst Geert laten kiezen.
 
-## Praktijktests
-- #43 **Overige synchronisatiescenario's** (middel) — Niet alle scenario's uit S01–S07, V01–V06 en CR01–CR09 zijn fysiek uitgevoerd (S06 en de basissynchronisatie wel, op 18 november). Zie `docs/SYNC-CONCURRENCY-ACCEPTANCE.md` voor wat synthetisch, fysiek of niet getest is. De passkey-/PRF-matrix staat bij #6.
+## Testen
+- W44 **Tweede tabblad maakt de lijst leeg (oude synchronisatie)** (middel) — In de modus *Oude synchronisatie-instellingen openen* begint een tweede tabblad zonder lasten en maakt het daarna ook de lijst in het eerste tabblad leeg. In 2.x werden de tabbladen samengevoegd (`fromOtherTab()`). `tests/ui/test_tabbladen.py` laat het zien en staat daarom als bekend probleem in `tests/ui/alle_tests.py`. Uitzoeken of dit ook in Core-mode gebeurt; zo niet, besluiten of de oude modus dit nog moet kunnen.
+- W45 **Voorbeeldlasten weg na koppelen (oude synchronisatie)** (klein) — Na koppelen via de oude synchronisatie zijn de voorbeeldlasten weg; in 2.x bleven ze lokaal staan. `test_bundelen.py` en `test_bijwerken.py` vinken die voorbeelden af en lopen daardoor vast (bekend probleem in de runner). Besluiten of dit zo hoort; dan de tests eigen lasten laten aanmaken in plaats van voorbeelden te gebruiken.
+- W46 **UI-tests ook in Core-mode** (middel) — De Playwright-tests in `tests/ui/` sluiten het kluisscherm via *Oude synchronisatie-instellingen openen* en testen dus de schermen in de oude modus. Een hulpfunctie in `_vl.py` die een lokale Core-kluis aanmaakt en de voorbeeldgegevens laadt, maakt het mogelijk dezelfde schermtests in Core-mode te draaien, en twee tabbladen en vergrendelen/ontgrendelen in Core-mode te testen.
+- W43 **Overige synchronisatiescenario's** (middel) — Niet alle scenario's uit S01–S07, V01–V06 en CR01–CR09 zijn fysiek uitgevoerd (S06 en de basissynchronisatie wel, op 18 november). Zie `docs/SYNC-CONCURRENCY-ACCEPTANCE.md` voor wat synthetisch, fysiek of niet getest is. De passkey-/PRF-matrix staat bij W6.
 
 ## Wensen
-Deze punten staan ook in de app onder "Op de wishlist" (`WISHLIST` in `index.html`); houd die gelijk.
+Deze punten staan ook in de app onder "Op de wishlist" (`WISHLIST` in `index.html`); `tools/release.py` houdt die gelijk.
 
-- #1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
-- #3 **Buffer voor de gezamenlijke rekening** (middel) — Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden.
-- #5 **Herinneringen via je agenda** (klein) — Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt.
-- #6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID en versleutelde lokale opslag. De Core-runtime ondersteunt passkeys per kluis en het opnieuw koppelen van een bestaande passkey na herinstallatie. De basiswerking is fysiek getest op iPhone Safari en Windows 11 Edge; de volledige matrix voor herinstallatie/herkoppeling en alle passkey-/PRF-combinaties staat nog open.
-- #11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
+- W1 **Bankafschrift importeren** (groot) — Download een CSV van je bank (ING, Rabobank, ABN AMRO) en laat de app afschrijvingen herkennen: bekende lasten automatisch afvinken en nieuwe terugkerende betalingen voorstellen. Alles wordt op je apparaat verwerkt.
+- W3 **Buffer voor de gezamenlijke rekening** (middel) — Verloop per maand van wat er minimaal op de gezamenlijke rekening moet staan, zodat kwartaal-, halfjaar- en jaarlasten nooit tot een tekort leiden.
+- W5 **Herinneringen via je agenda** (klein) — Agendabestand met alle afschrijvingen als terugkerende afspraken, plus een badge op het app-icoon met het aantal lasten dat nog moet worden afgevinkt.
+- W6 **Vergrendelen met Face ID** (middel) — Ontgrendelen met Face ID of Touch ID en versleutelde lokale opslag. De Core-runtime ondersteunt passkeys per kluis en het opnieuw koppelen van een bestaande passkey na herinstallatie. De basiswerking is fysiek getest op iPhone Safari en Windows 11 Edge; de volledige matrix voor herinstallatie/herkoppeling en alle passkey-/PRF-combinaties staat nog open.
+- W11 **Zien wat je partner heeft gewijzigd** (klein) — Bij het openen een melding zoals "Anne heeft Energie aangepast en Hypotheek afgevinkt", en een logboek van wijzigingen in de gezamenlijke lasten. Eigen lasten blijven privé.
 
 ## Geblokkeerd
 - **Productiegegevensmigratie** — Niet uitgevoerd en afzonderlijk geblokkeerd; alleen na expliciet akkoord van Geert. Geen productiegegevens, tokens of privé-datarepository gebruiken voor ontwikkeltests.

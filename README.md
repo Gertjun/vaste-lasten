@@ -8,35 +8,42 @@ Elk onderwerp staat op één plek.
 
 | | Vraag | Bestand |
 | --- | --- | --- |
-| Heden | Waar staan we nu, wat doet de app, hoe zit hij in elkaar? | dit bestand, `README.md` |
+| Heden | Waar staan we nu, wat doet de app? | dit bestand, `README.md` |
+| Heden | Hoe zit de code in elkaar (opbouw, datamodel, conventies, stijl)? | [`ARCHITECTUUR.md`](ARCHITECTUUR.md) |
 | Toekomst | Wat moet of kan er nog gebeuren? | [`ROADMAP.md`](ROADMAP.md) |
 | Verleden | Wat is er per versie veranderd? | [`CHANGELOG.md`](CHANGELOG.md) |
 | Verleden | Waarom is iets zo gekozen? | [`DECISIONS.md`](DECISIONS.md) |
 
-Werkafspraken voor Claude: [`CLAUDE.md`](CLAUDE.md). Technische achtergrond bij PWA-Core en synchronisatie: map `docs/`.
+Werkafspraken voor Claude: [`CLAUDE.md`](CLAUDE.md). Testen: [`tests/README.md`](tests/README.md). Achtergrond bij de overstap naar PWA-Core en de synchronisatietests (momentopnamen): map `docs/`.
 
 ## Stand
 
 Bijgewerkt: 20 november 2026 · `main` **3.8.5** met PWA-Core v1.3.0 (immutable release). Dit blok wordt aan het eind van elke sessie overschreven.
 
-- QR-koppeling via PAIR-2 (PR #28) is gemerged: de QR-code draagt alleen de GitHub Sync-instellingen over, geen kluisgegevens, wachtwoorden of passkeys. Op het nieuwe apparaat kies je naam en rol en vul je de kluiswachtwoorden zelf in.
-- Eenvoudiger inlogscherm (3.8.4): eerst het persoonlijke wachtwoord, daarna pas het gezamenlijke; één knop Inloggen, passkey blijft één actie.
-- Daarna gemerged zonder nieuw versienummer: indeling (PR #30) en aparte weergave van QR-code en pincode (PR #31), zie ROADMAP #41.
-- Laatste testrun in de oude notities: 146 tests geslaagd op GitHub (bij het nieuwe inlogscherm). Fysiek getest door Geert op 18 november op iPhone Safari en Windows 11 Edge: aanmaken, wijzigen en verwijderen synchroniseren in beide richtingen, ook na netwerkuitval (S06). De volledige testmatrix is niet afgevinkt (ROADMAP #6 en #43).
+- De repository heeft de uniforme opbouw van Geerts apps (D19): `ARCHITECTUUR.md` erbij, roadmappunten met W-nummers, `CHANGELOG.md` op volgorde en aangevuld met 3.8.5, en wijzigingen via een pull request (D20).
+- De 30 Playwright-tests die alleen in het claude.ai-project stonden, staan nu in `tests/ui/` en draaien mee op GitHub. Tegen 3.8.5: 27 geslaagd (1051 keer OK); 3 lopen vast op gedrag van de oude synchronisatie (W44, W45). De 150 node-tests slagen.
+- Gevonden bij het testen: in de modus *Oude synchronisatie-instellingen openen* maakt een tweede tabblad de lijst leeg (W44). `index.html` heeft geen CSP en één groot inline script, anders dan de andere apps (W47).
+- QR-koppeling via PAIR-2 (PR #28): alleen de GitHub Sync-instellingen gaan over, geen kluisgegevens, wachtwoorden of passkeys. Eenvoudiger inlogscherm sinds 3.8.4.
+- Na 3.8.5 gemerged zonder nieuw versienummer: indeling (PR #30) en aparte weergave van QR-code en pincode (PR #31), zie W41.
+- Fysiek getest door Geert op 18 november op iPhone Safari en Windows 11 Edge: aanmaken, wijzigen en verwijderen synchroniseren in beide richtingen, ook na netwerkuitval (S06). De volledige testmatrix is niet afgevinkt (W6 en W43).
 - Productiegegevensmigratie is niet uitgevoerd en blijft geblokkeerd.
 
-## Bestanden
+## Wat staat er in deze repository
 
-| Bestand | Doel |
+| Bestand of map | Inhoud |
 |---|---|
-| `index.html` | De app zelf |
-| `manifest.webmanifest` | Naam, kleuren en iconen voor installatie |
-| `sw.js` | Service worker: laat de app offline werken |
-| `version.json` | Het actuele versienummer; hiermee ziet de app dat er een update is |
-| `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
-| `ROADMAP.md` | Wat er nog moet gebeuren: wensen, praktijktests, open punten |
-| `DECISIONS.md` | Besluiten en waarom |
-| `icon-*.png`, `apple-touch-icon.png` | App-iconen |
+| `index.html` | De app: opmaak, schermen en het app-script. |
+| `js/` | Aansluiting op PWA-Core (kluizen, synchronisatie, passkey, koppelen, back-up); `js/core/` is PWA-Core zelf. |
+| `css/base.css` | Gedeelde basisopmaak uit PWA-Core. |
+| `sw.js`, `version.json` | Laten de app offline werken en updates binnenkomen. |
+| `manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png` | Naam en iconen voor het beginscherm. |
+| `core-manifest.json`, `pwa-core.lock.json` | Welke PWA-Core-release erin zit, met controlegetallen. |
+| `tests/` | Automatische tests (zie [tests/README.md](tests/README.md)). |
+| `tools/` | Hulpscripts: PWA-Core controleren, een nieuwe versie uitbrengen, een roadmappunt afvinken. |
+| `docs/` | Achtergrond bij PWA-Core en de synchronisatietests. |
+| `ARCHITECTUUR.md`, `ROADMAP.md`, `CHANGELOG.md`, `DECISIONS.md`, `CLAUDE.md` | Opbouw, plannen, versies, besluiten en werkafspraken. |
+
+De app is gewoon HTML, CSS en JavaScript, zonder framework of bouwstap. GitHub Pages publiceert de bestanden in de hoofdmap.
 
 ## Onderdelen
 
@@ -176,8 +183,13 @@ Vorige versies van vóór de wijziging kun je nog terugzetten op apparaten die t
 
 Elke versie heeft een eigen versienummer. Je ziet het klein naast de naam, linksboven; tik erop voor de lijst met wijzigingen. Alles staat ook in `CHANGELOG.md`.
 
-1. Upload bij een nieuwe versie altijd deze drie bestanden naar de publieke repo: `index.html`, `sw.js` en `version.json`.
+1. Een nieuwe versie komt via een pull request in `main` (na jouw akkoord); GitHub Pages zet hem binnen een paar minuten online.
 2. Op je apparaten verandert het label linksboven binnen een paar minuten in **Update beschikbaar** (op de iPhone: **Update**). Tik erop en de app werkt zichzelf bij.
 3. Werk ook de apparaten van je partner bij, zeker bij een versie met *Let op* in de changelog.
 
 De app controleert op updates bij openen, als je hem weer naar voren haalt en als je weer online komt.
+
+## Versies en tests
+
+- Versienummers hebben de vorm `MAJOR.MINOR.PATCH`. **MAJOR** betekent dat je iets moet doen (bijvoorbeeld alle apparaten bijwerken), **MINOR** een nieuwe functie, **PATCH** een verbetering of foutoplossing. Zie de [changelog](CHANGELOG.md).
+- Bij elke wijziging draaien op GitHub automatisch tests (tabblad **Actions**): de aansluiting op PWA-Core, synchronisatie en beveiliging, en alle schermen op telefoon-, iPad- en laptopformaat in licht en donker.

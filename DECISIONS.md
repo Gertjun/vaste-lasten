@@ -1,10 +1,7 @@
 # DECISIONS – Vaste Lasten
 
-### D16 – Stapsgewijs inloggen in Vaste Lasten (18 nov 2026)
-- **Besluit:** het vergrendelscherm vraagt eerst uitsluitend om het persoonlijke wachtwoord. Pas na een geslaagde controle wordt het gezamenlijke wachtwoord gevraagd. De normale sessie opent daarna nog steeds beide actieve kluizen als één sessie. De laatst gebruikte administratie wordt direct voorgeselecteerd; **Andere kluis kiezen** en **Nieuwe kluis** blijven beschikbaar als secundaire acties.
-- **Controle:** de eerste stap ontsleutelt alleen de persoonlijke lokale of remote envelope in geheugen. Ze importeert, schrijft of opent geen kluis en benadert het gezamenlijke domein niet. Een bestaande passkey blijft beide actieve kluizen in één handeling ontgrendelen.
-- **Waarom:** een rustiger, uniformer startscherm zonder wachtwoorden samen te voegen of de privacygrens tussen gezamenlijk en persoonlijk te verzwakken.
-
+> **Dit bestand (verleden):** waarom iets zo gekozen is.
+> **Niet hier:** wat er per versie veranderde → [`CHANGELOG.md`](CHANGELOG.md); hoe het nu in elkaar zit → [`ARCHITECTUUR.md`](ARCHITECTUUR.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md).
 
 Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; een nieuw besluit vervangt een oud ("vervangt D3").
 
@@ -101,9 +98,28 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Gevolg:** gezamenlijke en persoonlijke wachtwoorden worden op het nieuwe apparaat afzonderlijk ingevoerd. Geen kluisinhoud, wachtwoord of rol wordt via de QR-code verstuurd. De drie gescheiden kluizen en toegangsgrenzen blijven intact.
 - **Waarom:** de koppeling hoeft alleen GitHub Sync te configureren; de bestaande Core-connect-route haalt daarna de juiste versleutelde bestanden op en vraagt de lokale wachtwoorden.
 
+### D16 – Stapsgewijs inloggen in Vaste Lasten (18 nov 2026)
+- **Besluit:** het vergrendelscherm vraagt eerst uitsluitend om het persoonlijke wachtwoord. Pas na een geslaagde controle wordt het gezamenlijke wachtwoord gevraagd. De normale sessie opent daarna nog steeds beide actieve kluizen als één sessie. De laatst gebruikte administratie wordt direct voorgeselecteerd; **Andere kluis kiezen** en **Nieuwe kluis** blijven beschikbaar als secundaire acties.
+- **Controle:** de eerste stap ontsleutelt alleen de persoonlijke lokale of remote envelope in geheugen. Ze importeert, schrijft of opent geen kluis en benadert het gezamenlijke domein niet. Een bestaande passkey blijft beide actieve kluizen in één handeling ontgrendelen.
+- **Waarom:** een rustiger, uniformer startscherm zonder wachtwoorden samen te voegen of de privacygrens tussen gezamenlijk en persoonlijk te verzwakken.
+
 ### D17 – Documenten naar verleden, heden en toekomst (20 nov 2026)
 - **Besluit:** vier bestanden houden de app bij. Heden: `README.md`, met een blok "Stand" (vervangt `NOTES.md`; geen sessielog meer). Toekomst: `ROADMAP.md`, de enige takenlijst (vervangt `WISHLIST.md`); punten houden hun nummer, ook in de app. Verleden: `CHANGELOG.md` (wat, met achter de versie de nummers van de gebouwde punten; de lijst "Gerealiseerd" vervalt) en `DECISIONS.md` (waarom). Een wijziging alleen aan deze documenten krijgt geen nieuwe appversie. Vervangt het deel van D3 over de wishlist. (Het commentaar bij `WISHLIST` in `index.html` noemt nog `WISHLIST.md`; dat gaat mee bij de volgende appversie.)
 - **Waarom:** NOTES, WISHLIST en de changelog herhaalden elkaar en liepen uit de pas (NOTES noemde PR #30 en #31 niet). Dezelfde indeling geldt voor al Geerts projecten.
 
 ### D18 – Map backup/ opgeruimd (20 nov 2026)
 - **Besluit:** de kopieën van vóór de overstap naar PWA-Core (`backup/`, 112 bestanden) zijn verwijderd. De overstap is klaar en Git bewaart elke eerdere versie. `_config.yml` sluit `backup/` nog uit van GitHub Pages, voor het geval er ooit weer zo'n map komt.
+
+### D19 – Uniforme opbouw van de repository (20 nov 2026)
+- **Besluit:** Vaste Lasten volgt dezelfde indeling als Geerts andere apps (zoals Cryptotracker). Documenten: `README.md` (wat de app doet en het blok Stand), `ARCHITECTUUR.md` (nieuw: opbouw, datamodel, rekenregels, conventies en stijl; vervangt `vaste-lasten-architectuur.md` en het stijldeel van `vaste-lasten-werkafspraken.md` uit het claude.ai-project), `ROADMAP.md`, `CHANGELOG.md`, `DECISIONS.md` en `CLAUDE.md`. In het claude.ai-project staan kopieën onder `claude/README.md`, `claude/ARCHITECTUUR.md`, `claude/ROADMAP.md` en `claude/DECISIONS.md`. Vult D17 aan.
+- **Roadmapnummers:** de punten heten voortaan W1, W3 enzovoort; het getal is gelijk gebleven (`#41` is nu W41). In de app staan ze nog als `#`-nummers tot de volgende versie (W42).
+- **Testtools in de repository:** de 30 Playwright-tests in Python die alleen in het claude.ai-project stonden (`claude/tools/test_*.py`) staan nu in `tests/ui/`, met `_vl.py` voor de gedeelde instellingen en `alle_tests.py` als runner. Ze draaien op GitHub mee. Verouderde verwachtingen zijn aangepast aan wat bewust veranderde (PR #30: zijbalk 236/68 px, omslagpunt 1000 px, werkvlak maximaal 1100 px; `DATA_NEEDS` 3.1.0); drie tests die vastlopen op gedrag van de oude synchronisatie staan als bekend probleem in de runner (W44, W45).
+- **Hulpscripts:** `build.py`, `release.py`, `herstel_werkomgeving.py` en `publiceer.py` uit de oude werkmap vervallen. Er is geen aparte `app.js`/`app.html` meer om terug te zetten of te bouwen, en rechtstreeks naar `main` publiceren past niet bij D20. In de plaats komen `tools/release.py` (versie, ingebouwde changelog en wishlist, `sw.js`, `version.json`, `CHANGELOG.md` en `ROADMAP.md` in één keer; met `--zip` de zip met het versienummer) en `tools/wish.py`.
+- **Nummering:** D8 en D16 komen elk twee keer voor. Die blijven staan zoals ze zijn; verwijs ernaar met nummer en titel. De tweede D16 (Stapsgewijs inloggen) stond bovenaan het bestand en is zonder tekstwijziging naar zijn plek verhuisd.
+- **Niet nu:** de code uit `index.html` halen (`js/app.js`, `css/app.css`) met een strikte CSP, zoals de andere apps. Dat raakt de app zelf en wacht op een keuze van Geert (W47).
+- **Waarom:** Geert wil al zijn apps op dezelfde manier opgebouwd. De tests stonden alleen in de projectkennis, draaiden niet op GitHub en moesten elke sessie worden overgetypt.
+
+### D20 – Wijzigingen via een pull request, pas na akkoord naar `main` (20 nov 2026, vervangt D4)
+- **Besluit:** Claude zet elke wijziging op een eigen branch (`claude/...`) en biedt die aan als pull request. Eerst draaien de tests lokaal (`node --test tests/*.test.mjs` en `python3 tests/ui/alle_tests.py`), daarna op GitHub. Mergen, een versie uitbrengen (`tools/release.py`) en publiceren gebeuren pas na een afzonderlijk, expliciet akkoord van Geert. Alleen documenten gewijzigd: geen nieuwe appversie, wel een pull request.
+- **Waarom:** zo staat het in de projectinstructies en zo werkt het bij de andere apps (Cryptotracker D64). D4 (Claude pusht zelf naar `main`) was nooit vervangen.
+- **Niet gekozen:** rechtstreeks naar `main` pushen (D4).
