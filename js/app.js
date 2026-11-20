@@ -102,6 +102,7 @@ const BASE_CATS=[
   {id:'overig',name:'Overig',c:'c9'}];
 /* acht gecontroleerde kleuren (ook voor kleurenblinden te onderscheiden) plus grijs */
 const PALETTE=[['c1','blauw'],['c2','oranje'],['c3','zeegroen'],['c4','geel'],['c5','roze'],['c6','groen'],['c7','paars'],['c8','rood'],['c9','grijs']];
+const safeCatColor=(value,fallback='c9')=>PALETTE.some(([token])=>token===value)?value:fallback;
 const MONTHS=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const FREQ={m:'maandelijks',q:'per kwartaal',h:'per half jaar',y:'jaarlijks',o:'eenmalig'};
 const PERIOD={m:1,q:3,h:6,y:12};
@@ -412,9 +413,9 @@ function cats(){
   if(_cats) return _cats;
   const over=state.samen.cats||{}, out=[];
   for(const b of BASE_CATS){const o=over[b.id]; if(o&&o.del&&b.id!=='overig') continue;
-    out.push({id:b.id,name:(o&&o.name)||b.name,c:'--'+((o&&o.c)||b.c),base:true});}
+    out.push({id:b.id,name:(o&&o.name)||b.name,c:'--'+safeCatColor(o&&o.c,b.c),base:true});}
   Object.values(over).filter(o=>o&&!o.del&&!BASE_CATS.some(b=>b.id===o.id)).sort((a,b)=>(a.ord||0)-(b.ord||0))
-    .forEach(o=>out.push({id:o.id,name:o.name,c:'--'+(o.c||'c9')}));
+    .forEach(o=>out.push({id:o.id,name:o.name,c:'--'+safeCatColor(o.c,'c9')}));
   const ov=out.findIndex(c=>c.id==='overig'); out.push(out.splice(ov,1)[0]);   // Overig altijd onderaan
   return _cats=out;
 }
