@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+const index = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
 test('GitHub-token wordt niet in de configuratie van localStorage opgenomen', () => {
   assert.match(html, /function saveCfg\(\)\{[^\n]*const \{token,\.\.\.safe\}=cfg; localStorage\.setItem\(CFGKEY,JSON\.stringify\(safe\)\)/);
@@ -45,4 +46,15 @@ test('restored category colors are restricted to the CSS palette', () => {
   assert.match(html, /const safeCatColor=.*PALETTE\.some/);
   assert.match(html, /safeCatColor\(o&&o\.c,b\.c\)/);
   assert.match(html, /safeCatColor\(o\.c,'c9'\)/);
+});
+
+
+test('CSP limits scripts to same-origin and the required XLSX CDN', () => {
+  const match = index.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
+  assert.ok(match, 'CSP meta tag is present');
+  const policy = match[1];
+  assert.match(policy, /script-src 'self' https:\/\/cdnjs\.cloudflare\.com/);
+  assert.doesNotMatch(policy, /script-src[^;]*unsafe-inline/);
+  assert.match(policy, /connect-src 'self' https:\/\/api\.github\.com/);
+  assert.match(policy, /object-src 'none'/);
 });
