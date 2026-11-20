@@ -125,3 +125,14 @@ Het script is één IIFE; zoek op functienaam in plaats van het hele bestand te 
 - **Mobiel eerst:** tikvlakken minimaal 44 px, invoervelden 16 px, safe areas, geen zwevende knoppen over de inhoud. Nooit breder dan het scherm (controleer `document.documentElement.scrollWidth` tegen de schermbreedte).
 - **Toegankelijkheid (WCAG 2.2 AA):** knoppen met alleen een icoon krijgen een `aria-label`, formulieren hebben zichtbare labels.
 - Voor HTML en CSS gelden ook de regels in `html-best-practices.md` in het claude.ai-project.
+
+## 10. W47 – beveiligde bestanden en CSP
+
+De eerste inventarisatie op 20 november 2026:
+
+- `index.html` bevat één inline app-script van circa 259 kB en één inline CSS-blok van circa 44,5 kB.
+- Er zijn 39 style-attributen; een deel wordt door JavaScript in dynamische HTML opgebouwd. Daarnaast worden `style.cssText` en directe stijlproperties gebruikt.
+- Externe bronnen: Google Fonts (stylesheet en fonts), GitHub API (synchronisatie) en SheetJS voor Excel-export.
+- De QR-codebibliotheken en de overige vendor-code staan al lokaal in `js/vendor/`.
+
+Daarom is alleen het script en CSS naar bestanden verplaatsen onvoldoende voor een strikte CSP. De migratie moet ook dynamische styling en externe afhankelijkheden aanpakken. Doel is scripts en styles uitsluitend vanaf de eigen origin, zonder `unsafe-inline`; noodzakelijke externe bronnen worden expliciet beperkt. SheetJS bij voorkeur lokaal, Google Fonts eventueel lokaal, en `connect-src` beperkt tot de GitHub API. De CSP wordt pas aangescherpt nadat inline stijlen zijn verwijderd en de volledige regressietest is uitgevoerd.
