@@ -3,7 +3,7 @@ import os, subprocess, time
 import _vl
 from playwright.sync_api import sync_playwright
 
-srv=subprocess.Popen(['python3','-m','http.server','8784','-d',_vl.APP],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+srv=subprocess.Popen(['python3','-m','http.server','8792','-d',_vl.APP],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 time.sleep(1)
 with sync_playwright() as p:
     browser=p.chromium.launch()
@@ -18,7 +18,7 @@ with sync_playwright() as p:
     """)
     page=context.new_page(); dialogs=[]
     page.on('dialog',lambda d:(dialogs.append(d.message),d.dismiss()))
-    page.goto('http://localhost:8784/')
+    page.goto('http://localhost:8792/')
     page.wait_for_timeout(500)
     page.click('#t-lasten')
     page.wait_for_selector('#lastenList')
