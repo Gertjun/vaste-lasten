@@ -2918,7 +2918,7 @@ $('scenForm').addEventListener('submit',e=>{
 const XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 function loadXLSX(){
   if(window.XLSX) return Promise.resolve(window.XLSX);
-  return new Promise((res,rej)=>{const s=document.createElement('script'); s.src=XLSX_URL; s.onload=()=>window.XLSX?res(window.XLSX):rej(); s.onerror=()=>rej(); document.head.appendChild(s);});
+  return new Promise((res,rej)=>{const s=document.createElement('script'); s.src=XLSX_URL; s.integrity='sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw'; s.crossOrigin='anonymous'; s.referrerPolicy='no-referrer'; s.onload=()=>window.XLSX?res(window.XLSX):rej(); s.onerror=()=>rej(); document.head.appendChild(s);});
 }
 function fillYears(){const y=today().y, sel=$('x-year'); if(sel.options.length) return; sel.innerHTML=[y-1,y,y+1].map(v=>'<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'</option>').join('');}
 const soort=i=>i.joint?'Gezamenlijk':'Eigen';
