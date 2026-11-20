@@ -104,3 +104,6 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 ### D17 – Documenten naar verleden, heden en toekomst (20 nov 2026)
 - **Besluit:** vier bestanden houden de app bij. Heden: `README.md`, met een blok "Stand" (vervangt `NOTES.md`; geen sessielog meer). Toekomst: `ROADMAP.md`, de enige takenlijst (vervangt `WISHLIST.md`); punten houden hun nummer, ook in de app. Verleden: `CHANGELOG.md` (wat, met achter de versie de nummers van de gebouwde punten; de lijst "Gerealiseerd" vervalt) en `DECISIONS.md` (waarom). Een wijziging alleen aan deze documenten krijgt geen nieuwe appversie. Vervangt het deel van D3 over de wishlist. (Het commentaar bij `WISHLIST` in `index.html` noemt nog `WISHLIST.md`; dat gaat mee bij de volgende appversie.)
 - **Waarom:** NOTES, WISHLIST en de changelog herhaalden elkaar en liepen uit de pas (NOTES noemde PR #30 en #31 niet). Dezelfde indeling geldt voor al Geerts projecten.
+
+### D18 – Map backup/ opgeruimd (20 nov 2026)
+- **Besluit:** de kopieën van vóór de overstap naar PWA-Core (`backup/`, 112 bestanden) zijn verwijderd. De overstap is klaar en Git bewaart elke eerdere versie. `_config.yml` sluit `backup/` nog uit van GitHub Pages, voor het geval er ooit weer zo'n map komt.
