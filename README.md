@@ -2,6 +2,29 @@
 
 Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. Je onderscheidt **gezamenlijke** lasten (die je met je partner deelt) van **eigen** lasten. De app synchroniseert versleuteld via een privé GitHub-repository.
 
+## Waar vind je wat
+
+Elk onderwerp staat op één plek.
+
+| | Vraag | Bestand |
+| --- | --- | --- |
+| Heden | Waar staan we nu, wat doet de app, hoe zit hij in elkaar? | dit bestand, `README.md` |
+| Toekomst | Wat moet of kan er nog gebeuren? | [`ROADMAP.md`](ROADMAP.md) |
+| Verleden | Wat is er per versie veranderd? | [`CHANGELOG.md`](CHANGELOG.md) |
+| Verleden | Waarom is iets zo gekozen? | [`DECISIONS.md`](DECISIONS.md) |
+
+Werkafspraken voor Claude: [`CLAUDE.md`](CLAUDE.md). Technische achtergrond bij PWA-Core en synchronisatie: map `docs/`.
+
+## Stand
+
+Bijgewerkt: 20 november 2026 · `main` **3.8.5** met PWA-Core v1.3.0 (immutable release). Dit blok wordt aan het eind van elke sessie overschreven.
+
+- QR-koppeling via PAIR-2 (PR #28) is gemerged: de QR-code draagt alleen de GitHub Sync-instellingen over, geen kluisgegevens, wachtwoorden of passkeys. Op het nieuwe apparaat kies je naam en rol en vul je de kluiswachtwoorden zelf in.
+- Eenvoudiger inlogscherm (3.8.4): eerst het persoonlijke wachtwoord, daarna pas het gezamenlijke; één knop Inloggen, passkey blijft één actie.
+- Daarna gemerged zonder nieuw versienummer: indeling (PR #30) en aparte weergave van QR-code en pincode (PR #31), zie ROADMAP #41.
+- Laatste testrun in de oude notities: 146 tests geslaagd op GitHub (bij het nieuwe inlogscherm). Fysiek getest door Geert op 18 november op iPhone Safari en Windows 11 Edge: aanmaken, wijzigen en verwijderen synchroniseren in beide richtingen, ook na netwerkuitval (S06). De volledige testmatrix is niet afgevinkt (ROADMAP #6 en #43).
+- Productiegegevensmigratie is niet uitgevoerd en blijft geblokkeerd.
+
 ## Bestanden
 
 | Bestand | Doel |
@@ -11,7 +34,8 @@ Een installeerbare web-app om maandelijks terugkerende uitgaven bij te houden. J
 | `sw.js` | Service worker: laat de app offline werken |
 | `version.json` | Het actuele versienummer; hiermee ziet de app dat er een update is |
 | `CHANGELOG.md` | Alle versies en wat er per versie veranderde |
-| `WISHLIST.md` | Ideeën voor volgende versies, bijgewerkt bij elke versie |
+| `ROADMAP.md` | Wat er nog moet gebeuren: wensen, praktijktests, open punten |
+| `DECISIONS.md` | Besluiten en waarom |
 | `icon-*.png`, `apple-touch-icon.png` | App-iconen |
 
 ## Onderdelen
