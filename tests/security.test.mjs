@@ -39,3 +39,10 @@ test('ingebouwde changelog is geldige JSON', () => {
   assert.ok(match, 'ingebouwde changelog is aanwezig');
   assert.doesNotThrow(() => JSON.parse(match[1]));
 });
+
+
+test('restored category colors are restricted to the CSS palette', () => {
+  assert.match(html, /const safeCatColor=.*PALETTE\.some/);
+  assert.match(html, /safeCatColor\(o&&o\.c,b\.c\)/);
+  assert.match(html, /safeCatColor\(o\.c,'c9'\)/);
+});
