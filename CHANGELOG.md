@@ -63,7 +63,7 @@
 - Beveiliging: lokale lege kluizen worden nooit over bestaande niet-lege lokale kluizen heen geschreven; gedeeltelijke aanmaak kan veilig worden hervat.
 
 
-## 3.2.0 — 16 november 2026
+## 3.2.0 — 16 november 2026 · #40
 - Nieuw: veilige schone start van Vaste Lasten met drie onafhankelijke lege PWA-Core-kluizen. Het eerste apparaat maakt de gedeelde en eigen kluis aan; het tweede apparaat sluit aan op de gedeelde kluis en maakt alleen de eigen persoonlijke kluis aan.
 - Beveiliging: bestaande Core-kluizen met inhoud worden geweigerd; er is geen automatische reset of overschrijving. Oude lokale en remote gegevens worden niet geïmporteerd of verwijderd.
 - Verbeterd: na een schone start worden oude lokale gegevens expliciet buiten de automatische legacy-samenvoeging gehouden totdat de afzonderlijke opruimstap is uitgevoerd.
@@ -116,13 +116,13 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 ## 2.28.1 — 10 november 2026
 - Verbeterd: de wishlist heeft bij #6 Vergrendelen met Face ID een extra eis: verwijder je de app en installeer je hem opnieuw, bijvoorbeeld voor een nieuw icoon, dan werkt je bestaande passkey meteen weer en hoef je geen nieuwe aan te maken.
 
-## 2.28.0 — 10 november 2026
+## 2.28.0 — 10 november 2026 · #39
 - Nieuw: maken jullie ieder een vast percentage over naar de gezamenlijke rekening, dan rekent de app jullie aandeel in de gezamenlijke lasten zelf uit op basis van wat ieder overmaakt. Maak jij € 3.123,56 over en Wies € 1.678,00, dan is jouw aandeel 65%. Dat werkt ook met een ingevuld bedrag voor je partner.
 - Verbeterd: het berekende aandeel geldt overal waar het vaste percentage gold: de labels Samen · jij, Inzicht, Wat als en verrekenen. Een eigen verdeling bij een last blijft voorgaan.
 - Verbeterd: jullie inkomens zijn voortaan zichtbaar voor elkaar. Het vinkje Deel mijn inkomen is weg; een ingevuld inkomen staat versleuteld in jullie gezamenlijke bestand, zodat beide apparaten met dezelfde bedragen rekenen. Je eigen lasten blijven alleen voor jou.
 - Let op: werk ook het apparaat van je partner bij. Een oudere versie rekent nog met het vaste percentage.
 
-## 2.27.0 — 10 november 2026
+## 2.27.0 — 10 november 2026 · #38
 - Nieuw: deelt je partner het inkomen niet, vul dan zelf in hoeveel je partner per maand naar de gezamenlijke rekening overmaakt. Dat doe je onder Instellingen → Huishouden → Verdeling. Het blok Gezamenlijke rekening rekent daar dan mee, met het label Ingevuld.
 - Verbeterd: het ingevulde bedrag is gedeeld, dus je partner ziet het ook en kan het aanpassen. Deelt je partner later het inkomen, dan rekent de app weer met het afgesproken percentage daarvan.
 - Opgelost: een bedrag met een punt als duizendtal, zoals 1.800, werd gelezen als € 1,80. Nu is het € 1.800,00, in alle bedragvelden. Een bedrag als 152.35 blijft € 152,35.
@@ -136,58 +136,58 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - Verbeterd: het bedrag van je partner zie je zodra je partner het inkomen deelt onder Inkomen. Je eigen inkomen blijft privé tot je zelf kiest voor delen.
 - Let op: had je in 2.25.0 een percentage ingevuld bij Inkomen, dan staat dat nu bij Verdeling. Tik daar op Verdeling opslaan, dan geldt het ook voor je partner.
 
-## 2.25.0 — 10 november 2026
+## 2.25.0 — 10 november 2026 · #37
 - Nieuw: maken jullie elk een vast deel van je netto inkomen over naar de gezamenlijke rekening, vul dat percentage dan in bij Instellingen → Huishouden → Inkomen, bijvoorbeeld 75. Inzicht rekent je vaste lasten dan als die bijdrage plus je eigen lasten, in plaats van je deel van de gezamenlijke lasten.
 - Verbeterd: onder Inkomen en wat overblijft zie je hoe je vaste lasten zijn opgebouwd: je bijdrage aan de gezamenlijke rekening en je eigen lasten. Wat als rekent vrij te besteden op dezelfde manier.
 - Verbeterd: de bijdrage staat net als je inkomen alleen in je eigen versleutelde bestand. Laat je het veld leeg, dan blijft alles zoals het was.
 
-## 2.24.4 — 9 november 2026
+## 2.24.4 — 9 november 2026 · #36
 - Verbeterd: op de laptop en de iPad liggend staat de knop Nieuwe last in de zijbalk, onder de naam van de app en boven Overzicht. Ingeklapt is het een plusknop.
 - Verbeterd: de synchronisatiestatus staat in de zijbalk direct onder het versienummer. Ingeklapt zie je hem als gekleurde stip; wijs hem aan voor de status. Boven het werkvlak staat nu alleen de naam van het onderdeel.
 - Opgelost: op de iPad liggend stond het pictogram van de app in de ingeklapte zijbalk niet precies in het midden.
 
-## 2.24.3 — 9 november 2026
+## 2.24.3 — 9 november 2026 · #35
 - Verbeterd: de code voor de overstap van versie 1 naar 2 uit oktober is opgeruimd, want alle apparaten zijn al over. Een back-up van vóór die tijd kun je nog steeds terugzetten.
 
-## 2.24.2 — 9 november 2026
+## 2.24.2 — 9 november 2026 · #34
 - Verbeterd: overbodige regels uit het sjabloon waarmee de app ooit begon, zijn opgeruimd. Je ziet geen verschil.
 
-## 2.24.1 — 9 november 2026
+## 2.24.1 — 9 november 2026 · #33
 - Verbeterd: opmaak die nergens meer gebruikt werd, is uit de app gehaald. Je ziet geen verschil.
 
-## 2.24.0 — 5 november 2026
+## 2.24.0 — 5 november 2026 · #32
 - Nieuw: Wachtwoord wijzigen onder Instellingen → Synchronisatie. Kies het gezamenlijke of je eigen wachtwoord, vul het huidige in en twee keer het nieuwe. De app versleutelt je gegevens in GitHub opnieuw met het nieuwe wachtwoord.
 - Nieuw: is een wachtwoord op een ander apparaat gewijzigd, dan vraagt de app één keer om het nieuwe wachtwoord, alleen dat ene. Wat je op dat apparaat had gewijzigd blijft bewaard.
 - Verbeterd: een vorige versie van vóór een wachtwoordwijziging kun je nog terugzetten op apparaten die toen al gekoppeld waren.
 - Let op: werk eerst alle apparaten bij, ook die van je partner, voordat je het gezamenlijke wachtwoord wijzigt. Een oudere versie vraagt je anders om te ontkoppelen en opnieuw te koppelen.
 
-## 2.23.3 — 5 november 2026
+## 2.23.3 — 5 november 2026 · #31
 - Verbeterd: op de laptop staan de blokken in Instellingen netjes in een raster. Blokken naast elkaar zijn even hoog en hun knoppen, zoals Inkomen opslaan en Loondag opslaan, staan onderaan op één lijn.
 - Opgelost: bij Over de app stond het blok Op je startscherm iets lager dan het blok met de versie.
 
-## 2.23.2 — 5 november 2026
+## 2.23.2 — 5 november 2026 · #30
 - Verbeterd: op de laptop staat Instellingen nu als een lijst. Links de koppen Synchronisatie, Huishouden, Weergave, Gegevens en Over de app, met een korte omschrijving en de status; rechts, over twee kolommen, de blokken van de kop die je kiest. Op een breed scherm staan die blokken naast elkaar. De app onthoudt je keuze per apparaat.
 - Verbeterd: op de iPhone en de iPad staand blijft Instellingen zoals het was, met groepen die je in- en uitklapt.
 
-## 2.23.1 — 5 november 2026
+## 2.23.1 — 5 november 2026 · #29
 - Verbeterd: de labels Samen en Eigen zijn beter van elkaar te onderscheiden. Samen is nu gevuld in je accentkleur, Eigen blijft omlijnd. Dat werkt in elke accentkleur, ook Leisteen, en in licht en donker.
 
-## 2.23.0 — 4 november 2026
+## 2.23.0 — 4 november 2026 · #28
 - Verbeterd: op de laptop en de iPad liggend is de zijbalk een eigen vlak over de volle hoogte van het scherm, smaller en rustiger, met de versie onder de naam. Op de iPhone en de iPad staand blijft alles zoals het was.
 - Nieuw: boven het werkvlak staat nu de naam van het onderdeel, met rechts de synchronisatiestatus en de knop Nieuwe last.
 - Nieuw: klap de zijbalk in met het pijltje bovenin of de toets [. Je ziet dan alleen de pictogrammen en het werkvlak wordt breder; wijs een pictogram aan om de naam te zien. De app onthoudt je keuze per apparaat.
 
-## 2.22.2 — 4 november 2026
+## 2.22.2 — 4 november 2026 · #27
 - Opgelost: op de laptop sprongen de groepen in Instellingen naar een andere kolom als je er een in- of uitklapte. Elke groep heeft nu een vaste plek: Synchronisatie en Huishouden links, Weergave, Gegevens en Over de app rechts, en op een breed scherm Huishouden in een eigen kolom ertussen. Uitklappen maakt alleen die kolom langer.
 
-## 2.22.1 — 30 oktober 2026
+## 2.22.1 — 30 oktober 2026 · #26
 - Verbeterd: in Maand en het Overzicht zijn alle afschrijvingen even hoog, ook als er geen jouw deel onder het bedrag staat. Een heel lange naam wordt na twee regels afgekort; tik erop om hem helemaal te zien.
 
-## 2.22.0 — 30 oktober 2026
+## 2.22.0 — 30 oktober 2026 · #25
 - Nieuw: tik in Lasten op het gekleurde bolletje voor een categorie om meteen een andere kleur te kiezen. De blokken en het bolletje krijgen direct de nieuwe kleur, en je partner ziet hem ook.
 - Verbeterd: de kleurvakjes bij Instellingen → Huishouden → Categorieën zijn groter, zodat je ze op de iPhone makkelijker raakt.
 
-## 2.21.1 — 30 oktober 2026
+## 2.21.1 — 30 oktober 2026 · #24
 - Verbeterd: in Lasten krijgt elk blok een lichte tint van de kleur van zijn categorie, net als het bolletje bij de categorie. Zo zie je in één oogopslag waar een last bij hoort, ook als je op bedrag of naam sorteert.
 
 ## 2.21.0 — 30 oktober 2026
@@ -218,44 +218,44 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 - Opgelost: had je de app in twee tabbladen of vensters open, bijvoorbeeld op je laptop, dan kon het ene tabblad de wijzigingen van het andere overschrijven. Tabbladen nemen elkaars wijzigingen nu direct over.
 - Verbeterd: de app vraagt de browser je gegevens blijvend te bewaren, zodat iOS ze niet opruimt als er weinig ruimte is. Onder Instellingen → Gegevens zie je of dat gelukt is.
 
-## 2.18.1 — 30 oktober 2026
+## 2.18.1 — 30 oktober 2026 · #23
 - Verbeterd: op een breed scherm, zoals een laptop of externe monitor, gebruikt de app nu de volle breedte. De zijbalk is wat smaller.
 - Verbeterd: op een heel breed scherm staat het Overzicht in drie kolommen, zodat je alles in één keer ziet.
 
-## 2.18.0 — 29 oktober 2026
+## 2.18.0 — 29 oktober 2026 · #22
 - Nieuw: stel onder Instellingen → Huishouden je loondag in. Valt die in het weekend of op een feestdag, dan rekent de app met de werkdag ervoor, zoals vrijdag 23 oktober in plaats van zondag 25 oktober.
 - Nieuw: Tot je loon in het Overzicht. Je ziet hoeveel er tot je volgende loon nog van je eigen rekening afgaat: je eigen lasten en gezamenlijke lasten die je zelf betaalt. Gezamenlijke lasten van de gezamenlijke rekening tellen niet mee.
 - Verbeterd: met een loondag loopt Eerstvolgende in het Overzicht door tot je volgende loon, in plaats van twee weken vooruit.
 - Verbeterd: je loondag staat net als je inkomen alleen in je eigen versleutelde bestand.
 
-## 2.17.0 — 29 oktober 2026
+## 2.17.0 — 29 oktober 2026 · #21
 - Nieuw: thema's. Kies onder Instellingen → Weergave tussen Automatisch, Licht en Donker. Automatisch volgt je iPhone, iPad of laptop.
 - Nieuw: een accentkleur: Petrol, Blauw, Paars, Terracotta of Leisteen. Knoppen, tabbladen en het label Samen kleuren mee; de kleuren van categorieën, grafieken en meldingen blijven gelijk.
 - Verbeterd: je thema geldt alleen voor het apparaat waarop je het kiest, zodat je partner haar eigen keuze houdt.
 
-## 2.16.1 — 29 oktober 2026
+## 2.16.1 — 29 oktober 2026 · #20
 - Verbeterd: eigen lasten hebben nu ook een label, Eigen, net zoals gezamenlijke lasten het label Samen hebben. In Maand, het Overzicht en Lasten zie je zo meteen wat van jou alleen is.
 
-## 2.16.0 — 29 oktober 2026
+## 2.16.0 — 29 oktober 2026 · #19
 - Nieuw: het tabblad Inzicht, tussen Lasten en Instellingen. Daar staan de jaargrafiek, de vergelijking met vorig jaar, per categorie, inkomen en wat overblijft, en Wat als. Het filter Alles, Gezamenlijk, Eigen werkt er ook.
 - Verbeterd: het Overzicht is korter en laat zien wat er nu moet gebeuren: contracten die aandacht vragen, deze maand, de afschrijvingen om af te vinken, de gezamenlijke rekening en verrekenen.
 - Verbeterd: het Overzicht heeft een huisje als pictogram; Inzicht krijgt de grafiek. Op de laptop openen de toetsen 1 tot en met 5 de onderdelen.
 
-## 2.15.1 — 29 oktober 2026
+## 2.15.1 — 29 oktober 2026 · #18
 - Verbeterd: Instellingen is ingedeeld in vier groepen die je in- en uitklapt: Synchronisatie, Huishouden, Gegevens en Over de app. De app onthoudt welke je open hebt.
 - Verbeterd: Synchronisatie staat bovenaan, met in de kop of je gekoppeld bent. Is er een wachtwoord nodig, dan klapt de groep vanzelf open.
 - Verbeterd: exporteren en back-up staan samen onder Gegevens.
 
-## 2.15.0 — 29 oktober 2026
+## 2.15.0 — 29 oktober 2026 · #17
 - Nieuw: Datum voorbij. Lasten waarvan de datum geweest is en die je nog niet hebt afgevinkt, staan in Maand en het Overzicht apart bovenaan. Zo zie je meteen wat je nog moet controleren.
 - Nieuw: aan het eind van de maand toont het Overzicht bij Eerstvolgende ook de afschrijvingen van de komende twee weken in de volgende maand. Die kun je daar meteen afvinken.
 - Nieuw: in de eerste twee weken van een maand zie je ook wat er van eind vorige maand nog niet is afgevinkt.
 
-## 2.14.4 — 29 oktober 2026
+## 2.14.4 — 29 oktober 2026 · #16
 - Verbeterd: afschrijvingen in Maand en het Overzicht nemen minder ruimte in. Naam en bedrag staan bovenaan, met jouw deel onder het bedrag, en de labels over de volle breedte eronder. Op de iPhone zie je zo veel meer lasten tegelijk.
 - Verbeterd: het label Nog afvinken is weg; het lege vinkje zegt hetzelfde.
 
-## 2.14.3 — 29 oktober 2026
+## 2.14.3 — 29 oktober 2026 · #15
 - Verbeterd: op de iPhone en iPad staat de knop Nieuwe last bij Lasten, naast het zoekveld. Hij zweeft niet meer over de afschrijvingen, zodat je elk vinkje kunt raken. Op de laptop staat hij zoals altijd in de zijbalk.
 
 ## 2.14.2 — 29 oktober 2026
@@ -264,50 +264,50 @@ Versienummers hebben de vorm `MAJOR.MINOR.PATCH`:
 ## 2.14.1 — 27 oktober 2026
 - Verbeterd: de handleiding in de download heet nu README.md in plaats van LEESMIJ.md, zodat GitHub hem op de pagina van je repository toont. Het oude bestand LEESMIJ.md kun je uit de repository verwijderen.
 
-## 2.14.0 — 27 oktober 2026
+## 2.14.0 — 27 oktober 2026 · #7
 - Nieuw: exporteren onder Instellingen → Exporteren. Het Excel-bestand bevat al je lasten, alle afschrijvingen van het gekozen jaar met gepland en werkelijk bedrag, een overzicht per maand en per categorie.
 - Nieuw: een CSV met alle afschrijvingen van een jaar, met puntkomma's en komma's zodat Excel in het Nederlands hem goed opent.
 - Verbeterd: bij Wat als staat de knop Weg op de telefoon naast het bedrag.
 
-## 2.13.0 — 27 oktober 2026
+## 2.13.0 — 27 oktober 2026 · #13
 - Nieuw: Wat als in het Overzicht. Reken een verandering door zonder je lasten aan te passen: een ander bedrag voor bestaande lasten, lasten die vervallen of nieuwe lasten erbij.
 - Nieuw: je ziet direct het verschil in totale vaste lasten, jouw deel, de inleg per persoon en, als je je inkomen hebt ingevuld, wat je vrij te besteden hebt. Scenario's bewaar je met een naam; ze staan in je eigen bestand en zijn alleen voor jou zichtbaar.
 - Opgelost: op de iPhone was de pagina bij Overzicht en Instellingen iets breder dan het scherm, waardoor Safari een beetje uitzoomde. Dat kwam door verborgen tooltips in de grafiek en de keuzerondjes bij de standaardverdeling.
 
-## 2.12.0 — 27 oktober 2026
+## 2.12.0 — 27 oktober 2026 · #14
 - Nieuw: het Overzicht vergelijkt je kosten met vorig jaar: hoeveel procent duurder of goedkoper, de grootste stijgers en dalers per last en de verschillen per categorie.
 - Nieuw: de jaargrafiek toont vorig jaar als gestippelde omtrek achter elke balk, zodra er verschil is.
 
-## 2.11.0 — 27 oktober 2026
+## 2.11.0 — 27 oktober 2026 · #10
 - Nieuw: tik in Maand of Overzicht op het bedrag van een afschrijving om het werkelijk afgeschreven bedrag in te vullen, bijvoorbeeld bij een variabele rekening. De last wordt dan meteen afgevinkt en het geplande bedrag staat doorgestreept ernaast.
 - Nieuw: Eenmalig bij Hoe vaak, voor een afrekening, naheffing of andere afschrijving die één keer voorkomt. Die telt mee in de maand zelf en in het jaar, maar niet als vaste last per maand. Bij Lasten staan ze onder Eenmalig.
 - Nieuw: Maand en het Overzicht tonen gepland tegenover werkelijk als die verschillen. De jaargrafiek en het verrekenen rekenen met het werkelijke bedrag.
 - Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.11.0 toont een eenmalige post als maandelijkse last.
 
-## 2.10.0 — 27 oktober 2026
+## 2.10.0 — 27 oktober 2026 · #4
 - Nieuw: kies bij een gezamenlijke last wie hem betaalt: de gezamenlijke rekening, of één van jullie van een eigen rekening.
 - Nieuw: het Overzicht houdt bij wat de ander moet bijdragen, bijvoorbeeld Anne betaalt jou € 572,50, met de laatste betalingen. Met Markeer als verrekend zet je het saldo op nul; dat kun je ongedaan maken.
 - Nieuw: bij het afvinken legt de app vast wie betaalde, het bedrag en de verdeling op dat moment. Latere wijzigingen aan de last veranderen het saldo dus niet.
 - Verbeterd: de inleg op de gezamenlijke rekening telt alleen lasten die van die rekening gaan.
 
-## 2.9.0 — 27 oktober 2026
+## 2.9.0 — 27 oktober 2026 · #2
 - Nieuw: vul onder Instellingen → Huishouden je netto inkomen in. Het staat versleuteld in je eigen bestand en is alleen voor jou zichtbaar.
 - Nieuw: het Overzicht toont welk deel van je inkomen naar vaste lasten gaat en wat er per maand vrij te besteden is.
 - Nieuw: gezamenlijke lasten naar inkomen verdelen. Delen jullie allebei je inkomen, dan berekent de app de standaardverdeling automatisch. Tot die tijd geldt het vaste percentage.
 - Verbeterd: de namen van categorieën in Instellingen staan in gewone tekstkleur.
 
-## 2.8.0 — 27 oktober 2026
+## 2.8.0 — 27 oktober 2026 · #12
 - Nieuw: eigen categorieën. Onder Instellingen → Huishouden voeg je categorieën toe, zoals Kinderopvang of Huisdieren, en wijzig je de naam en kleur van elke categorie. Ze worden gedeeld met je partner.
 - Nieuw: een categorie verwijderen kan ook; de lasten erin gaan dan naar Overig.
 - Verbeterd: nieuwe kleuren voor de categorieën, die ook voor kleurenblinden goed van elkaar te onderscheiden zijn.
 - Let op: werk alle apparaten bij, ook dat van je partner. Een versie ouder dan 2.6.2 toont de eigen categorieën als Overig.
 
-## 2.7.0 — 27 oktober 2026
+## 2.7.0 — 27 oktober 2026 · #8
 - Nieuw: zoeken in Lasten op naam, notitie of contract- en polisnummer. Hoofdletters en accenten maken niet uit, en de zoekterm wordt gemarkeerd.
 - Nieuw: sorteren in Lasten per categorie, op bedrag, naam, dag van afschrijving of einddatum van het contract. Je keuze wordt onthouden.
 - Nieuw: sneltoets / om op de laptop direct te zoeken; Esc maakt het zoekveld leeg.
 
-## 2.6.2 — 27 oktober 2026
+## 2.6.2 — 27 oktober 2026 · #9
 - Verbeterd: het blok Per categorie in het Overzicht volgt het filter, net als het kostenblok. Bij Alles en Gezamenlijk tellen gezamenlijke lasten volledig mee, bij Eigen zie je je eigen kosten. De percentages tellen op tot 100%.
 - Verbeterd: de app bewaart voortaan gegevens die een nieuwere versie toevoegt, ook op een apparaat dat nog niet is bijgewerkt. Zo raak je bij volgende uitbreidingen niets kwijt.
 - Verbeterd: wishlistpunten houden een vast nummer, ook in de app.
