@@ -58,3 +58,10 @@ test('CSP limits scripts to same-origin and the required XLSX CDN', () => {
   assert.match(policy, /connect-src 'self' https:\/\/api\.github\.com/);
   assert.match(policy, /object-src 'none'/);
 });
+
+
+test('XLSX CDN script uses SRI and anonymous CORS', () => {
+  assert.match(html, /s\.integrity='sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw'/);
+  assert.match(html, /s\.crossOrigin='anonymous'/);
+  assert.match(html, /s\.referrerPolicy='no-referrer'/);
+});
