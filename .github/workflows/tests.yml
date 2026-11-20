@@ -20,17 +20,18 @@ jobs:
       - name: PWA-Core-modules controleren
         run: |
           for file in js/core/*.js js/vastelasten-core.js js/bundle-biometric.js js/conflict-review.js; do node --experimental-default-type=module --check "$file"; done
-      - name: Inline app-JavaScript controleren
+      - name: Extern app-JavaScript controleren
+        run: node --check js/app.js
+      - name: HTML verwijst naar externe app-assets
         run: |
           node <<'NODE'
           const fs = require('node:fs');
           const html = fs.readFileSync('index.html', 'utf8');
-          const start = html.indexOf('<script>');
-          const end = html.indexOf('</script>', start + 8);
-          if (start < 0 || end < 0 || html.indexOf('<script>', start + 8) !== -1) throw new Error('Verwacht precies één inline app-script.');
-          fs.writeFileSync('/tmp/vaste-lasten-app.js', html.slice(start + 8, end));
+          if (!/<script src="\.\/js\/app\.js"><\/script>/.test(html)) throw new Error('App-script ontbreekt als extern bestand.');
+          if (/<script>/.test(html)) throw new Error('Inline app-script gevonden.');
+          if (!/<link rel="stylesheet" href="\.\/css\/app\.css">/.test(html)) throw new Error('App-CSS ontbreekt als extern bestand.');
+          if (/<style(?:\s|>)/i.test(html)) throw new Error('Inline CSS gevonden.');
           NODE
-          node --check /tmp/vaste-lasten-app.js
       - name: Release-pin controleren
         run: node tools/pin.mjs verify
       - name: Service-worker-precache controleren
