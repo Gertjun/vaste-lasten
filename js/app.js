@@ -1830,7 +1830,7 @@ function closeDevicePairingOverlay(){stopDevicePairingCamera();$('devicePairingO
 async function createDevicePairingQr(){
   if(!coreReady||!cfg||!coreProfile||coreProfile.localOnly) throw new SyncError('Ontgrendel eerst de online administratie.');
   const token=await tokenFor(cfg);
-  const {createPairingQrPayload,newPairingPin}=await import('./js/device-pairing.js');
+  const {createPairingQrPayload,newPairingPin}=await import('./device-pairing.js');
   const pin=newPairingPin();
   const created=await createPairingQrPayload({profile:{workspaceId:coreProfile.workspaceId,owner:cfg.owner,repo:cfg.repo},token,pin});
   const qr=qrcode(0,'M'); qr.addData(created.payload,'Byte'); qr.make();
@@ -1877,7 +1877,7 @@ async function startDevicePairingScanner(){
 async function completeDevicePairing(){
   const pin=$('devicePairingPin')?.value||'';
   if(!pin) throw new SyncError('Vul de losse pincode in.');
-  const {openPairingQrPayload}=await import('./js/device-pairing.js');
+  const {openPairingQrPayload}=await import('./device-pairing.js');
   const opened=await openPairingQrPayload(window.devicePairingPayload,pin);
   const fields={
     'core-existing-name':coreProfile?.name||'Mijn administratie',
@@ -1922,7 +1922,7 @@ async function connectExistingCore(){
   state=result.state;
   coreProfile={version:1,id:workspaceId,workspaceId,name,storageType:'online',owner,repo,me,coreRelease:'v1.3.0',emptySetup:true};
   saveCoreProfile();
-  if(pendingDevicePairingNonce){const {markPairingNonceUsed}=await import('./js/device-pairing.js');markPairingNonceUsed(localStorage,pendingDevicePairingNonce);pendingDevicePairingNonce=null;}
+  if(pendingDevicePairingNonce){const {markPairingNonceUsed}=await import('./device-pairing.js');markPairingNonceUsed(localStorage,pendingDevicePairingNonce);pendingDevicePairingNonce=null;}
   pendingWorkspaceId=null; localStorage.removeItem(CORE_DRAFT_KEY);
   if(workspaceId==='default') localStorage.setItem(CORE_EMPTY_SETUP_KEY,'1');
   coreMode=true; coreSetupMode=false; coreReady=true; coreConnected=true; corePersistError=''; syncError=''; lastSync=new Date();
@@ -1970,7 +1970,7 @@ async function ensureCoreRuntime(){
     coreRuntime=null;
     coreRuntimeWorkspaceId=null;
   }
-  const mod=await import('./js/vastelasten-core.js');
+  const mod=await import('./vastelasten-core.js');
   coreRuntime=mod.createVasteLastenCore({storage:localStorage,kdfIterations:ITER,mergeStore:merge,workspaceId});
   coreRuntimeWorkspaceId=workspaceId;
   return coreRuntime;
@@ -2004,7 +2004,7 @@ async function replaceCoreToken(){
 }
 async function ensureLegacyKeysForMigration(passwords){
   if(!cfg) throw new SyncError('Er is geen bestaande GitHub-koppeling.');
-  const {requireLegacyEnvelope}=await import('./js/multi-vault-adapter.js');
+  const {requireLegacyEnvelope}=await import('./multi-vault-adapter.js');
   const next={...keys}, salt={...(cfg.salt||{})}, iter={samen:cfgIter(cfg,'samen'),eigen:cfgIter(cfg,'eigen')};
   for(const st of STORES){
     const password=passwords[st];
@@ -2034,7 +2034,7 @@ async function syncLegacyBeforeMigration(){
   if(!hasKeys()) throw new SyncError('De bestaande synchronisatie is nog niet ontgrendeld.');
 }
 async function raiseCoreLegacyBarrier(){
-  const {raiseLegacyUpdateBarrier}=await import('./js/multi-vault-adapter.js');
+  const {raiseLegacyUpdateBarrier}=await import('./multi-vault-adapter.js');
   return raiseLegacyUpdateBarrier({
     minApp:'3.0.0',
     currentAppVersion:APP_VERSION,
@@ -2629,7 +2629,7 @@ async function restore(txt){
     return;
   }
   try{
-    const {mergeBackupState,persistBackupState}=await import('./js/backup-restore.js');
+    const {mergeBackupState,persistBackupState}=await import('./backup-restore.js');
     const {state:next,count}=mergeBackupState({
       backup,currentState:state,stores:STORES,merge,now:Date.now(),
     });
