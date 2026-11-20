@@ -65,7 +65,7 @@
         <div><div class="lbl" id="dueLbl">Af te schrijven</div><div class="big" id="dueTotal">€ 0,00</div><div class="note num" id="planNote"></div></div>
         <div class="note" id="countNote"></div>
       </div>
-      <div class="bar" aria-hidden="true"><b id="paidBar" style="width:0%"></b></div>
+      <div class="bar" aria-hidden="true"><progress id="paidBar" max="100" value="0"></progress></div>
       <div class="sum-grid">
         <div><span class="lbl">Betaald</span><span class="num" id="paidAmt">€ 0,00</span></div>
         <div><span class="lbl">Nog open</span><span class="num" id="openAmt">€ 0,00</span></div>
@@ -86,7 +86,7 @@
         <option value="day">Dag van afschrijving</option>
         <option value="end">Einddatum contract</option>
       </select>
-      <button class="btn primary ladd" id="addBtn2" type="button"><span aria-hidden="true" style="font-size:18px;line-height:1">+</span>Nieuwe last</button>
+      <button class="btn primary ladd" id="addBtn2" type="button"><span aria-hidden="true" class="inline-plus">+</span>Nieuwe last</button>
     </div>
     <div id="lastenList"></div>
   </section>
@@ -110,7 +110,7 @@
       </div>
       <div class="panel" id="backupPanel"><h4>Back-up</h4>
         <div class="note">Een back-up bevat al je gegevens, onversleuteld. Bewaar hem op een veilige plek en nooit in een openbare repository.</div>
-        <div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button><button class="btn" id="dlBk" hidden>Download als bestand</button><label class="btn" for="fileBk" style="display:inline-block">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>
+        <div class="btns"><button class="btn" id="copyBk">Kopieer back-up</button><button class="btn" id="dlBk" hidden>Download als bestand</button><label class="btn file-label" for="fileBk">Bestand terugzetten</label><input type="file" id="fileBk" accept="application/json,.json" hidden></div>
         <div class="note" id="bkShareNote" hidden>Het deelmenu opent: kies Bewaar in Bestanden, of AirDrop naar je laptop. Dat werkt ook voor de Excel- en CSV-export.</div>
         <textarea id="bkText" placeholder="Of plak hier een back-up en kies Terugzetten" aria-label="Back-up tekst"></textarea>
         <div class="btns"><button class="btn" id="restoreBk">Terugzetten</button></div>
@@ -164,9 +164,9 @@
       </div>
     </details>
     <div class="err" id="formErr"></div>
-    <div class="btns" style="justify-content:space-between">
+    <div class="btns btns-space-between">
       <button type="button" class="btn danger" id="delBtn" hidden>Verwijderen</button>
-      <div class="btns" style="margin-left:auto">
+      <div class="btns btns-auto">
         <button type="button" class="btn" id="cancelBtn">Annuleren</button>
         <button type="submit" class="btn primary">Opslaan</button>
       </div>
@@ -182,9 +182,9 @@
     <details class="fdetails" open><summary>Bestaande lasten aanpassen</summary><div class="fbody"><div class="hint">Vul een nieuw bedrag in, of vink Vervalt aan.</div><div id="sc-items" class="sc-list"></div></div></details>
     <details class="fdetails" open><summary>Nieuwe lasten</summary><div class="fbody"><div id="sc-adds" class="sc-list"></div><div><button type="button" class="btn" id="sc-add">+ Last toevoegen</button></div></div></details>
     <div class="err" id="sc-err"></div>
-    <div class="btns" style="justify-content:space-between">
+    <div class="btns btns-space-between">
       <button type="button" class="btn danger" id="sc-del" hidden>Verwijderen</button>
-      <div class="btns" style="margin-left:auto"><button type="button" class="btn" id="sc-cancel">Sluiten</button><button type="submit" class="btn primary">Opslaan</button></div>
+      <div class="btns btns-auto"><button type="button" class="btn" id="sc-cancel">Sluiten</button><button type="submit" class="btn primary">Opslaan</button></div>
     </div>
   </form>
 </div>
@@ -194,9 +194,9 @@
     <div class="note" id="amtInfo"></div>
     <div class="field"><label for="amt-v">Afgeschreven bedrag (€)</label><input id="amt-v" inputmode="decimal" autocomplete="off"></div>
     <div class="err" id="amtErr"></div>
-    <div class="btns" style="justify-content:space-between">
+    <div class="btns btns-space-between">
       <button type="button" class="btn" id="amtReset">Gepland bedrag gebruiken</button>
-      <div class="btns" style="margin-left:auto"><button type="button" class="btn" id="amtCancel">Annuleren</button><button type="submit" class="btn primary">Opslaan als betaald</button></div>
+      <div class="btns btns-auto"><button type="button" class="btn" id="amtCancel">Annuleren</button><button type="submit" class="btn primary">Opslaan als betaald</button></div>
     </div>
   </form>
 </div>
