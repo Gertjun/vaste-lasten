@@ -3,11 +3,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-// Characterize the exact merge() implementation embedded in index.html.
+// Characterize the exact merge() implementation embedded in js/app.js.
 // Synthetic records only: no browser, credentials, network, or real vaults.
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const match = html.match(/function merge\(a,b\)\s*\{[\s\S]*?\n\}/);
-assert.ok(match, 'merge(a,b) moet in index.html aanwezig zijn');
+assert.ok(match, 'merge(a,b) moet in js/app.js aanwezig zijn');
 
 const mergeById = (x, y) => {
   const out = {};
