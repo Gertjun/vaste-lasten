@@ -556,3 +556,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .conflict-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}
 .conflict-choice{white-space:normal;text-align:left;min-height:42px}
 .conflict-value{font-size:.88rem;overflow-wrap:anywhere;background:var(--surface);padding:8px;border-radius:8px;margin-top:5px}
+
+/* CSP-safe overlays and QR presentation */
+.core-pair-output{text-align:center}
+.core-pair-qr{width:min(100%,320px);height:auto;image-rendering:pixelated;background:#fff;padding:12px;border-radius:8px}
+.device-pairing-overlay,.core-gate-overlay{position:fixed;inset:0;background:var(--bg,#fff);display:grid;place-items:center;overflow:auto;z-index:12000;padding:18px}
+.core-gate-overlay{z-index:10000;padding:24px}
+.device-pairing-card{width:min(100%,520px);padding:20px}
+.core-gate-card{width:min(100%,460px);padding:24px}
+.device-pairing-video{width:100%;max-height:45vh;object-fit:cover;background:#111;border-radius:10px}
+.core-token-details{margin-top:16px}
