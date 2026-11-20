@@ -1,0 +1,4 @@
+# Testuitvoer van tests/ui
+tests/ui/screens/
+tests/ui/uitvoer.txt
+__pycache__/

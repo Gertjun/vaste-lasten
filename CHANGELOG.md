@@ -1,3 +1,17 @@
+# Changelog – wat er per versie veranderde
+
+> **Dit bestand (verleden):** per versie wat er voor de gebruiker veranderde, nieuwste bovenaan, met achter de versie de roadmappunten die erin zijn gebouwd.
+> **Niet hier:** waarom → [`DECISIONS.md`](DECISIONS.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md).
+
+## 3.8.5 — 18 november 2026
+- Beveiliging: de QR-koppeling gebruikt PWA-Core v1.3.0 en draagt uitsluitend GitHub Sync-instellingen over. Kluisgegevens en wachtwoorden worden niet meegestuurd; de gebruiker en wachtwoorden worden op het nieuwe apparaat apart gekozen en ingevoerd.
+
+## 3.8.4 — 18 november 2026
+- Vereenvoudigd: het inlogscherm vraagt eerst alleen om je eigen wachtwoord. Pas na een succesvolle controle verschijnt het gezamenlijke wachtwoord.
+- Verbeterd: één knop **Inloggen** kiest automatisch voor online ontgrendelen en synchroniseren, of lokaal ontgrendelen wanneer de app offline of lokaal-only is. De laatst gebruikte administratie wordt direct voorgeselecteerd.
+- Verbeterd: passkey blijft éénstaps toegang tot beide actieve kluizen; **Andere kluis kiezen** en **Nieuwe kluis** zijn aparte, kleinere acties.
+- Beveiliging: de eerste controle ontsleutelt uitsluitend de persoonlijke envelope in geheugen. De persoonlijke kluis wordt niet geopend of gewijzigd; het gezamenlijke domein wordt pas bij de tweede stap benaderd.
+
 ## 3.8.3 — 18 november 2026
 - Technisch: bijgewerkt naar de immutable PWA-Core v1.2.2-release. De verwijderafhandeling van Vaste Lasten gebruikt de eigen gegevensvelden `del` en `u`; regressietests controleren rechtstreeks de bestaande app-samenvoegfunctie: een aantoonbaar nieuwere hercreatie blijft behouden, terwijl een gelijke timestamp door de verwijdering wordt geblokkeerd.
 
@@ -16,30 +30,17 @@
 - Nieuw: een tweede apparaat koppelen door een QR-code vanaf de laptop te scannen. De workspace, administratie, GitHub-repository en GitHub-token worden als één versleuteld pakket overgedragen; de twee kluiswachtwoorden zijn nodig op beide apparaten.
 - Beveiliging: de QR-code bevat geen leesbare wachtwoorden of token, verloopt na drie minuten en kan op hetzelfde ontvangende apparaat maar één keer worden gebruikt. De token wordt na koppelen weer met de apparaatspecifieke sleutel in IndexedDB opgeslagen.
 
-
-# Changelog
-
-## 3.8.4 — 18 november 2026
-- Vereenvoudigd: het inlogscherm vraagt eerst alleen om je eigen wachtwoord. Pas na een succesvolle controle verschijnt het gezamenlijke wachtwoord.
-- Verbeterd: één knop **Inloggen** kiest automatisch voor online ontgrendelen en synchroniseren, of lokaal ontgrendelen wanneer de app offline of lokaal-only is. De laatst gebruikte administratie wordt direct voorgeselecteerd.
-- Verbeterd: passkey blijft éénstaps toegang tot beide actieve kluizen; **Andere kluis kiezen** en **Nieuwe kluis** zijn aparte, kleinere acties.
-- Beveiliging: de eerste controle ontsleutelt uitsluitend de persoonlijke envelope in geheugen. De persoonlijke kluis wordt niet geopend of gewijzigd; het gezamenlijke domein wordt pas bij de tweede stap benaderd.
-
-
 ## 3.6.3 — 17 november 2026
 - Verbeterd: een fout door een afwijkende workspace-identiteit toont nu het betrokken kluisdomein en de verwachte en aangetroffen kluiscode. Zo is zichtbaar of de code ontbreekt of naar een andere administratie verwijst.
 - Beveiliging: de validatie blijft strikt; er wordt niets automatisch aangepast of overschreven.
-
 
 ## 3.6.2 — 17 november 2026
 - Opgelost: back-upherstel en andere volledige state-opslagen behouden nu de workspace-identiteit van benoemde administraties. Core accepteert de inhoud daardoor in de juiste kluis, terwijl gegevens uit een andere administratie geweigerd blijven.
 - Nieuw: regressietests controleren zowel benoemde administraties als behoud van de bestaande standaardadministratie.
 
-
 ## 3.6.1 — 17 november 2026
 - Opgelost: een back-up terugzetten in PWA-Core wacht nu op bevestigde lokale opslag in beide actieve kluizen voordat de app succes meldt.
 - Verbeterd: een opslagfout wordt apart gemeld en niet langer verward met een ongeldige back-up.
-
 
 ## 3.6.0 — 17 november 2026
 - Nieuw: meerdere benoemde administraties naast elkaar. Kies bij het openen welke kluis je wilt gebruiken; iedere administratie heeft een eigen naam en een duidelijk label voor lokaal of online.
@@ -56,12 +57,10 @@
 - Nieuw: op een tweede apparaat kun je rechtstreeks een bestaande PWA-Core-kluis koppelen. De gedeelde kluis wordt opgehaald en alleen de persoonlijke kluis van de gekozen gebruiker wordt geopend of zo nodig leeg aangemaakt.
 - Beveiliging: bestaande onbekende GitHub-bestanden worden nooit overschreven. Een gedeeltelijke eerste publicatie kan na SHA-controle veilig worden hervat; oude legacybestanden worden niet gelezen of gewijzigd.
 
-
 ## 3.3.0 — 16 november 2026
 - Nieuw: de app vraagt bij een niet-gekoppelde installatie eerst om een bewuste kluiskeuze: een bestaande kluis koppelen via GitHub Sync of een nieuwe lokale kluis aanmaken.
 - Nieuw: een volledig nieuwe lokale PWA-Core-start werkt zonder GitHub Sync; gedeelde en persoonlijke gegevens blijven afzonderlijk versleuteld op dit apparaat.
 - Beveiliging: lokale lege kluizen worden nooit over bestaande niet-lege lokale kluizen heen geschreven; gedeeltelijke aanmaak kan veilig worden hervat.
-
 
 ## 3.2.0 — 16 november 2026 · #40
 - Nieuw: veilige schone start van Vaste Lasten met drie onafhankelijke lege PWA-Core-kluizen. Het eerste apparaat maakt de gedeelde en eigen kluis aan; het tweede apparaat sluit aan op de gedeelde kluis en maakt alleen de eigen persoonlijke kluis aan.
@@ -94,7 +93,6 @@
 - Verbeterd: de GitHub-token staat niet meer leesbaar in de lokale configuratie. De app bewaart hem versleuteld in IndexedDB met AES-GCM en een niet-exporteerbare sleutel.
 - Verbeterd: bestaande koppelingen worden bij het openen automatisch naar de nieuwe tokenopslag overgezet. Ontkoppelen wist ook de token en de lokale sleutel.
 - Nieuw: automatische controles voor het versleuteld opslaan, ontsleutelen en opruimen van de token.
-
 
 ## 2.29.1 — 12 november 2026
 - Opgelost: synchroniseren meldt nu een fout als GitHub een wijziging na vier pogingen nog niet heeft bevestigd. De app toont dan niet langer ten onrechte 'Gesynchroniseerd'.

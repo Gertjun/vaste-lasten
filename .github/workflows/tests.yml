@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [main, "fix/**", "feat/**"]
+    branches: [main, "fix/**", "feat/**", "claude/**"]
   pull_request:
     branches: [main]
 
@@ -37,3 +37,32 @@ jobs:
         run: node tools/precache.mjs --manifest core-manifest.json --service-worker sw.js
       - name: Tests uitvoeren
         run: node --test tests/*.test.mjs
+
+  ui-tests:
+    name: UI-tests (Playwright)
+    # vast op 24.04: Playwright ondersteunt nieuwere Ubuntu-versies nog niet altijd
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Repository ophalen
+        uses: actions/checkout@v4
+      - name: Python instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Playwright en Chromium installeren
+        run: |
+          python -m pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+      - name: UI-tests uitvoeren
+        run: python tests/ui/alle_tests.py -j 4 2>&1 | tee tests/ui/uitvoer.txt; exit ${PIPESTATUS[0]}
+        shell: bash
+      - name: Testrapport bewaren bij een fout
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-testrapport
+          path: |
+            tests/ui/uitvoer.txt
+            tests/ui/screens
+          retention-days: 14
