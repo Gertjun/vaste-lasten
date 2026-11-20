@@ -11,7 +11,7 @@ with sync_playwright() as p:
     context.add_init_script("""
       localStorage.setItem('vastelasten.v2',JSON.stringify({
         samen:{items:[{id:'probe',name:'Kleurtest',amount:10,cat:'probe',freq:'m',day:1}],
-          cats:{probe:{id:'probe',name:'Onveilige kleur',c:'c9\\\") onmouseover=\\\"alert(1)',u:1}},
+          cats:{probe:{id:'probe',name:'Onveilige kleur',c:'c9\\\" onmouseover=\\\"alert(1)',u:1}},
           del:{},paid:{},meta:null},
         eigen:{items:[],del:{},paid:{},meta:null}
       }));
