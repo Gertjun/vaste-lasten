@@ -658,7 +658,7 @@ function render(){
   $('paidAmt').textContent=fmt(paid);
   $('openAmt').textContent=fmt(total-paid);
   $('avgAmt').textContent=fmt(mine);
-  $('paidBar').style.width=(total?paid/total*100:0)+'%';
+  $('paidBar').value=total?paid/total*100:0;
   const nPaid=list.filter(i=>i.paid).length;
   $('countNote').textContent=list.length?nPaid+' van '+list.length+' afgevinkt':'';
   renderMonth(list); renderLasten(items); renderOverview(items);
