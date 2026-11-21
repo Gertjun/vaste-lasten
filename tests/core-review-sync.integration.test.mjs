@@ -11,7 +11,7 @@ import { mergeDomainPayload, validateDomainPayload } from '../js/multi-vault-ada
 
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const match = html.match(/function merge\(a,b\)\s*\{[\s\S]*?\n\}/);
 assert.ok(match, 'de app-mergefunctie moet aanwezig zijn');
 const applyChoiceMatch = html.match(/function applyConflictChoice\(store,item,value\)\s*\{[\s\S]*?\n\}/);
@@ -225,7 +225,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
       };
     };
 
-    // A gebruikt exact de conflictkeuzefuncties uit index.html en slaat offline op.
+    // A gebruikt exact de conflictkeuzefuncties uit js/app.js en slaat offline op.
     const appA = makeAppClient(coreA, coreA.getState(), 1600, 'p1');
     for (const currentTask of [task, categoryTask]) appA.choose('samen', currentTask.id, 0);
     await coreA.flushLocal();

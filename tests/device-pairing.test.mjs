@@ -16,7 +16,7 @@ test('een gebruikte pairing-ID kan op hetzelfde apparaat niet opnieuw worden geo
 test('de standaardadministratie gebruikt het bestaande standaardpad',async()=>{const c=await createPairingQrPayload({profile:{...profile,workspaceId:'default'},token,pin,now});const o=await openPairingQrPayload(c.payload,pin,now+1,new MemoryStorage());assert.equal(o.workspaceId,'default');assert.equal(o.syncConfig.path,'pwa-core-v1')});
 
 import { readFile } from 'node:fs/promises';
-const pairingUiSource = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const pairingUiSource = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 test('QR en PIN worden in aparte schermen getoond',()=>{
   const fn=pairingUiSource.slice(pairingUiSource.indexOf('async function createDevicePairingQr()'),pairingUiSource.indexOf('async function startDevicePairingScanner()'));
   assert.match(fn,/id="core-pair-qr-panel"/);

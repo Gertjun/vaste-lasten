@@ -9,6 +9,8 @@ const PRECACHE=[
   "./core-manifest.json",
   "./pwa-core.lock.json",
   "./css/base.css",
+  "./css/app.css",
+  "./js/app.js",
   "./js/core/biometric-factory.js",
   "./js/core/biometric.js",
   "./js/core/crypto.js",

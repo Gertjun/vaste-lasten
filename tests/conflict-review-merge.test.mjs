@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const match = html.match(/function merge\(a,b\)\s*\{[\s\S]*?\n\}/);
 assert.ok(match, 'de app-mergefunctie moet aanwezig zijn');
 const moduleSource = await readFile(new URL('../js/conflict-review.js', import.meta.url), 'utf8');
