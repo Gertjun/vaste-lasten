@@ -20,9 +20,9 @@ Werkafspraken voor Claude: [`CLAUDE.md`](CLAUDE.md). Testen: [`tests/README.md`]
 
 Bijgewerkt: 20 november 2026 · `main` **3.8.5** met PWA-Core v1.3.0 (immutable release). Dit blok wordt aan het eind van elke sessie overschreven.
 
-- De repository heeft de uniforme opbouw van Geerts apps (D19): `ARCHITECTUUR.md` erbij, roadmappunten met W-nummers, `CHANGELOG.md` op volgorde en aangevuld met 3.8.5, en wijzigingen via een pull request (D20).
+- PR #34 is gemerged: de repository heeft de uniforme opbouw van Geerts apps (D19): `ARCHITECTUUR.md` erbij, roadmappunten met W-nummers, `CHANGELOG.md` op volgorde en aangevuld met 3.8.5, en wijzigingen via een pull request (D20).
 - De 30 Playwright-tests die alleen in het claude.ai-project stonden, staan nu in `tests/ui/` en draaien mee op GitHub. Tegen 3.8.5: 27 geslaagd (1051 keer OK); 3 lopen vast op gedrag van de oude synchronisatie (W44, W45). De 150 node-tests slagen.
-- Gevonden bij het testen: in de modus *Oude synchronisatie-instellingen openen* maakt een tweede tabblad de lijst leeg (W44). `index.html` heeft geen CSP en één groot inline script, anders dan de andere apps (W47).
+- Gevonden bij het testen: in de modus *Oude synchronisatie-instellingen openen* maakt een tweede tabblad de lijst leeg (W44). W47 is gestart: inventarisatie bevestigt één inline app-script, inline CSS, dynamische stijlen en externe bronnen; dit wordt stapsgewijs aangepakt.
 - QR-koppeling via PAIR-2 (PR #28): alleen de GitHub Sync-instellingen gaan over, geen kluisgegevens, wachtwoorden of passkeys. Eenvoudiger inlogscherm sinds 3.8.4.
 - Na 3.8.5 gemerged zonder nieuw versienummer: indeling (PR #30) en aparte weergave van QR-code en pincode (PR #31), zie W41.
 - Fysiek getest door Geert op 18 november op iPhone Safari en Windows 11 Edge: aanmaken, wijzigen en verwijderen synchroniseren in beide richtingen, ook na netwerkuitval (S06). De volledige testmatrix is niet afgevinkt (W6 en W43).
