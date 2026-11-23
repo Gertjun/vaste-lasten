@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 function extract(name) {
   const match = html.match(new RegExp('function ' + name + '\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n\\}', 'm'));
   assert.ok(match, name + ' moet in de app aanwezig zijn');
