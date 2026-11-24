@@ -39,6 +39,8 @@ jobs:
         run: node tools/pin.mjs verify
       - name: Service-worker-precache controleren
         run: node tools/precache.mjs --manifest core-manifest.json --service-worker sw.js
+      - name: Tests uitvoeren
+        run: node --test tests/*.test.mjs
 
   ui-tests:
     name: UI-tests (Playwright)
