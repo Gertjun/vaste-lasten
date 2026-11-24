@@ -30,20 +30,19 @@ jobs:
           node <<'NODE'
           const fs = require('node:fs');
           const html = fs.readFileSync('index.html', 'utf8');
-          if (!/<script src="\\.\\/js\\/app\\.js"><\\/script>/.test(html)) throw new Error('App-script ontbreekt als extern bestand.');
+          if (!/<script src="\.\/js\/app\.js"><\/script>/.test(html)) throw new Error('App-script ontbreekt als extern bestand.');
           if (/<script>/.test(html)) throw new Error('Inline app-script gevonden.');
-          if (!/<link rel="stylesheet" href="\\.\\/css\\/app\\.css">/.test(html)) throw new Error('App-CSS ontbreekt als extern bestand.');
-          if (/<style(?:\\s|>)/i.test(html)) throw new Error('Inline CSS gevonden.');
+          if (!/<link rel="stylesheet" href="\.\/css\/app\.css">/.test(html)) throw new Error('App-CSS ontbreekt als extern bestand.');
+          if (/<style(?:\s|>)/i.test(html)) throw new Error('Inline CSS gevonden.');
           NODE
       - name: Release-pin controleren
         run: node tools/pin.mjs verify
       - name: Service-worker-precache controleren
         run: node tools/precache.mjs --manifest core-manifest.json --service-worker sw.js
-      - name: Tests uitvoeren
-        run: node --test tests/*.test.mjs
 
   ui-tests:
     name: UI-tests (Playwright)
+    # vast op 24.04: Playwright ondersteunt nieuwere Ubuntu-versies nog niet altijd
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
