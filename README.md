@@ -18,7 +18,7 @@ Werkafspraken voor Claude: [`CLAUDE.md`](CLAUDE.md). Testen: [`tests/README.md`]
 
 ## Stand
 
-Bijgewerkt: 25 november 2026 · kandidaat 3.9.0 met PWA-Core v1.4.0. Main blijft ongewijzigd totdat de PR is goedgekeurd.
+Bijgewerkt: 25 november 2026 · kandidaat 3.9.1 met PWA-Core v1.4.0. Versie 3.9.0 is gemerged; praktijktest vond een CSS-conflict in beide QR-vensters. Deze patch herstelt de weergave.
 
 - Twee afzonderlijke QR- of tekstcodes voor de gezamenlijke en actieve persoonlijke kluis; geen PIN of wachtwoord bij overdracht. De codes geven volledige toegang en mogen niet gedeeld worden.
 - Bestaande kluizen, paden en wachtwoorden blijven behouden. Handmatige koppeling blijft mogelijk. Automatische en fysieke acceptatie nog vereist.

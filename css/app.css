@@ -150,7 +150,7 @@ mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px}
 .sheet-sm{max-width:440px}
 .bars button{isolation:isolate}
 .ghost{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:72%;max-width:30px;height:var(--g);border:1.5px dashed var(--muted);border-bottom:0;border-radius:4px 4px 0 0;z-index:0;pointer-events:none}
-.stack{position:relative;z-index:1}
+.vl-chart-stack{position:relative;z-index:1}
 .sw.prev{background:none;border:1.5px dashed var(--muted)}
 .yoy-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .yoy-big .big{font-size:clamp(28px,7vw,34px)}
@@ -335,11 +335,11 @@ button.info .name{display:block}
 .plot .avg{position:absolute;left:0;right:0;border-top:2px dashed var(--muted);opacity:.75;z-index:2;pointer-events:none}
 .bars{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px;align-items:end}
 .bars button{height:100%;border:0;background:transparent;padding:0;display:flex;align-items:flex-end;justify-content:center;position:relative;cursor:pointer;min-width:0}
-.stack{display:flex;flex-direction:column;gap:2px;width:72%;max-width:30px;height:var(--h);min-height:2px;border-radius:4px 4px 0 0;overflow:hidden}
-.stack i{display:block;min-height:0;flex-basis:0}
-.stack .o{background:var(--bar-open)}
-.stack .p{background:var(--bar-paid)}
-.bars button:hover .stack,.bars button:focus-visible .stack{filter:brightness(1.12) saturate(1.1)}
+.vl-chart-stack{display:flex;flex-direction:column;gap:2px;width:72%;max-width:30px;height:var(--h);min-height:2px;border-radius:4px 4px 0 0;overflow:hidden}
+.vl-chart-stack i{display:block;min-height:0;flex-basis:0}
+.vl-chart-stack .o{background:var(--bar-open)}
+.vl-chart-stack .p{background:var(--bar-paid)}
+.bars button:hover .vl-chart-stack,.bars button:focus-visible .vl-chart-stack{filter:brightness(1.12) saturate(1.1)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:10px;height:10px;border-radius:2px;display:inline-block}
