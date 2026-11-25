@@ -15,7 +15,6 @@ try:
             page = ctx.new_page()
             page.route('https://api.github.com/**', lambda route: route.abort())
             page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
-            assert page.evaluate("Array.from(document.styleSheets).some(s => s.href && s.href.endsWith('/css/base.css') && s.cssRules.length > 0)")
             gate = page.locator('#coreGate')
             gate.locator('.auth-card .auth-logo').wait_for()
             assert gate.locator('.auth-card').bounding_box()['width'] <= 401

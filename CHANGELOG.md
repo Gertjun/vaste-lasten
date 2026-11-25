@@ -5,7 +5,7 @@
 
 ## 3.10.1 — 25 november 2026
 
-- Hersteld: het officiële Core-stylesheet wordt daadwerkelijk geladen vóór de app-stijl. Regressietests controleren nu de toegepaste menu- en loginopmaak.
+- Hersteld: de Core-menu- en loginopmaak wordt uitsluitend binnen deze schermen toegepast. Regressietests controleren nu de toegepaste menu- en loginopmaak.
 
 ## 3.10.0 — 25 november 2026
 
