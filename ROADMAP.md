@@ -3,7 +3,7 @@
 > **Dit bestand (toekomst):** alles wat nog moet of kan gebeuren: wensen, praktijktests en open punten. Het is de enige takenlijst.
 > **Niet hier:** wat al gebouwd is → [`CHANGELOG.md`](CHANGELOG.md); waarom → [`DECISIONS.md`](DECISIONS.md); de stand van nu → [`README.md`](README.md); hoe het in elkaar zit → [`ARCHITECTUUR.md`](ARCHITECTUUR.md).
 
-Bijgewerkt: 25 november 2026 · kandidaat 3.9.0
+Bijgewerkt: 25 november 2026 · kandidaat 3.9.1
 
 Elk punt houdt zijn W-nummer, ook in de app. Is een punt gebouwd, dan haal je het hier weg (`tools/release.py --wens W5` of `tools/wish.py W5`) en zet je het nummer in de changelog achter de versie. Tot 20 november 2026 heetten de nummers `#1`, `#3` enzovoort; het getal is gelijk gebleven. Volgende vrije nummer: W49.
 
