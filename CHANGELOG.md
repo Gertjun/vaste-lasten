@@ -3,6 +3,10 @@
 > **Dit bestand (verleden):** per versie wat er voor de gebruiker veranderde, nieuwste bovenaan, met achter de versie de roadmappunten die erin zijn gebouwd.
 > **Niet hier:** waarom → [`DECISIONS.md`](DECISIONS.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md).
 
+## 3.9.0 — 25 november 2026
+
+- PWA-Core v1.4.0: twee QR- of tekstcodes voor beide actieve kluizen, zonder PIN of wachtwoord. Bestaande gegevens en kluispaden behouden.
+
 ## 3.8.5 — 18 november 2026
 - Beveiliging: de QR-koppeling gebruikt PWA-Core v1.3.0 en draagt uitsluitend GitHub Sync-instellingen over. Kluisgegevens en wachtwoorden worden niet meegestuurd; de gebruiker en wachtwoorden worden op het nieuwe apparaat apart gekozen en ingevoerd.
 

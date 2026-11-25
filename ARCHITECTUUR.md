@@ -3,7 +3,7 @@
 > **Dit bestand (heden):** opbouw van de code, datamodel, rekenregels, conventies en stijl.
 > **Niet hier:** wat de app doet en de stand van nu → [`README.md`](README.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md); wat er per versie veranderde → [`CHANGELOG.md`](CHANGELOG.md); waarom → [`DECISIONS.md`](DECISIONS.md); werkafspraken → [`CLAUDE.md`](CLAUDE.md).
 
-Bijgewerkt: 20 november 2026 · versie 3.8.5 met PWA-Core v1.3.0. Pas dit bestand alleen aan als de opbouw, het datamodel, de conventies of de stijl veranderen.
+Bijgewerkt: 25 november 2026 · kandidaat 3.9.0 met PWA-Core v1.4.0. Pas dit bestand alleen aan als de opbouw, het datamodel, de conventies of de stijl veranderen.
 
 ## 1. Wat is het
 
@@ -20,7 +20,7 @@ Sinds 3.0.0 regelt de gedeelde kern **PWA-Core** (`js/core/`) kluis, versleuteli
 | `js/vastelasten-core.js` | Brug tussen de Store-state van de app en de Core-kluizen, synchronisatie en vergrendeling. |
 | `js/multi-vault-adapter.js` | De drie kluisdomeinen (gezamenlijk, persoonlijk p1, persoonlijk p2) en hun regels. |
 | `js/bundle-biometric.js` | App-eigen passkey-sleutelbundel die de twee actieve datasleutels omhult (één Face ID-actie voor beide kluizen). |
-| `js/device-pairing.js` | Adapter voor de Core-QR-koppeling (PAIR-2): alleen GitHub Sync-instellingen, geen kluisgegevens. |
+| `js/device-pairing.js` | Adapter voor twee afzonderlijke Core PAIR-3-codes: domein, workspace en GitHub-configuratie controleren; gedeelde Core QR-weergave. PAIR-2-adapter blijft voor compatibiliteitstests. |
 | `js/backup-restore.js` | Back-up terugzetten als nieuwe snapshot, pas zichtbaar na bevestigde opslag. |
 | `js/conflict-review.js`, `js/cr06-fixture.js` | Conflictadministratie en synthetische testconflicten (CR-scenario's). |
 | `js/vendor/` | QR-code maken en lezen (met licenties). |

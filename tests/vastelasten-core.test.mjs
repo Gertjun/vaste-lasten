@@ -386,7 +386,7 @@ async function makeEncryptedEnvelope(password, payload) {
     key: (index) => [...values.keys()][index] ?? null,
     get length() { return values.size; },
   };
-  const fixture = createVault({ storagePrefix: `verify-fixture-${++fixtureVaultCounter}`, kdfIterations: 1000, storage: fixtureStorage });
+  const fixture = createVault({ storagePrefix: `verify-fixture-${++fixtureVaultCounter}`, kdfIterations: 100000, storage: fixtureStorage });
   await fixture.create(password, payload);
   const envelope = clone(fixture.getEnvelope());
   await fixture.dispose();

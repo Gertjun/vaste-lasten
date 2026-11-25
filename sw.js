@@ -1,4 +1,4 @@
-const CACHE='vaste-lasten-3.8.5-core-v1.3.0';
+const CACHE='vaste-lasten-3.9.0-core-v1.4.0';
 const PRECACHE=[
   "./index.html",
   "./manifest.webmanifest",
@@ -20,6 +20,8 @@ const PRECACHE=[
   "./js/core/github.js",
   "./js/core/nav.js",
   "./js/core/pair.js",
+  "./js/core/pairing-ui.js",
+  "./js/core/qrcode.js",
   "./js/core/records.js",
   "./js/core/session-lock-factory.js",
   "./js/core/session-lock.js",

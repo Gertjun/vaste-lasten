@@ -15,20 +15,28 @@ test('verlopen, beschadigde en oude codes worden geweigerd',async()=>{const c=aw
 test('een gebruikte pairing-ID kan op hetzelfde apparaat niet opnieuw worden geopend',async()=>{const c=await createPairingQrPayload({profile,token,pin,now});const s=new MemoryStorage();const opened=await openPairingQrPayload(c.payload,pin,now+1,s);markPairingNonceUsed(s,opened.nonce,now+2);await assert.rejects(openPairingQrPayload(c.payload,pin,now+3,s),/al gebruikt/)});
 test('de standaardadministratie gebruikt het bestaande standaardpad',async()=>{const c=await createPairingQrPayload({profile:{...profile,workspaceId:'default'},token,pin,now});const o=await openPairingQrPayload(c.payload,pin,now+1,new MemoryStorage());assert.equal(o.workspaceId,'default');assert.equal(o.syncConfig.path,'pwa-core-v1')});
 
-import { readFile } from 'node:fs/promises';
-const pairingUiSource = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
-test('QR en PIN worden in aparte schermen getoond',()=>{
-  const fn=pairingUiSource.slice(pairingUiSource.indexOf('async function createDevicePairingQr()'),pairingUiSource.indexOf('async function startDevicePairingScanner()'));
-  assert.match(fn,/id="core-pair-qr-panel"/);
-  assert.match(fn,/id="core-pair-pin-panel" hidden/);
-  assert.match(fn,/core-pair-show-pin/);
-  assert.match(fn,/core-pair-qr-panel'\)\.hidden=true/);
-  assert.match(fn,/core-pair-pin-panel'\)\.hidden=false/);
-  assert.match(fn,/core-pair-back-qr/);
+
+import { domainPairingContext, openDomainPairing, combineDomainPairings } from '../js/device-pairing.js';
+import { createFullPairingCode } from '../js/core/pair.js';
+import { generateDataKey } from '../js/core/crypto.js';
+async function domainCode(id, workspaceId=profile.workspaceId, at=now){
+  const path=(workspaceId==='default'?'pwa-core-v1':'workspaces/'+workspaceId+'/pwa-core-v1')+'/'+({shared:'samen','personal-p1':'eigen-p1','personal-p2':'eigen-p2'}[id])+'.json';
+  return (await createFullPairingCode({context:domainPairingContext(id),syncConfig:{owner:profile.owner,repo:profile.repo,branch:'main',path,token},dataKey:await generateDataKey(),now:at})).payload;
+}
+test('twee v3-codes koppelen uitsluitend shared en eigen, zonder PIN',async()=>{
+  const storage=new MemoryStorage();
+  const a=await openDomainPairing(await domainCode('shared'),{storage,now});
+  const b=await openDomainPairing(await domainCode('personal-p1'),{storage,now});
+  const combined=combineDomainPairings(b,a,now);
+  assert.equal(combined.me,'p1');
+  assert.deepEqual(Object.keys(combined.domains),['shared','personal-p1']);
+  assert.equal(combined.workspaceId,profile.workspaceId);
+  assert.throws(()=>combineDomainPairings(a,a,now));
+  assert.throws(()=>combineDomainPairings(a,b,a.expiresAt),/verlopen/);
+  const foreign=await openDomainPairing(await domainCode('personal-p2','default'),{storage,now});
+  assert.throws(()=>combineDomainPairings(a,foreign,now),/zelfde administratie/);
 });
-test('PIN is apart kopieerbaar en QR-code wordt verborgen voordat de PIN verschijnt',()=>{
-  const fn=pairingUiSource.slice(pairingUiSource.indexOf('async function createDevicePairingQr()'),pairingUiSource.indexOf('async function startDevicePairingScanner()'));
-  assert.match(fn,/core-pair-copy-pin/);
-  assert.match(fn,/navigator\.clipboard\.writeText\(pin\)/);
-  assert.match(fn,/Pincode tonen \(QR verbergen\)/);
+test('verlopen v3-code wordt geweigerd',async()=>{
+  const code=await domainCode('shared');
+  await assert.rejects(openDomainPairing(code,{storage:new MemoryStorage(),now:now+PAIRING_QR_TTL_MS}));
 });

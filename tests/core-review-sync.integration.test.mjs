@@ -138,9 +138,9 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     assert.ok(task, 'de twee oorspronkelijke lastversies moeten een reviewtaak opleveren');
     assert.ok(categoryTask, 'de twee oorspronkelijke categorieversies moeten een reviewtaak opleveren');
 
-    const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 1000, storage: storage() });
-    const seedPersonalA = createVault({ storagePrefix: 'pr9-seed-personal-a', kdfIterations: 1000, storage: storage() });
-    const seedPersonalB = createVault({ storagePrefix: 'pr9-seed-personal-b', kdfIterations: 1000, storage: storage() });
+    const seedShared = createVault({ storagePrefix: 'pr9-seed-shared', kdfIterations: 100000, storage: storage() });
+    const seedPersonalA = createVault({ storagePrefix: 'pr9-seed-personal-a', kdfIterations: 100000, storage: storage() });
+    const seedPersonalB = createVault({ storagePrefix: 'pr9-seed-personal-b', kdfIterations: 100000, storage: storage() });
     seedVaults.push(seedShared, seedPersonalA, seedPersonalB);
     await seedShared.create('synthetic-password', initial);
     await seedPersonalA.create('synthetic-password', {
@@ -159,7 +159,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     const connection = { owner: 'synthetic-owner', repo: 'synthetic-repo', token: 'synthetic-token' };
     core = createVasteLastenCore({
       storage: storage(),
-      kdfIterations: 1000,
+      kdfIterations: 100000,
       mergeStore,
       factories: {
         createSessionLock: () => ({ acquireSessionLock: async () => ({ release: async () => {} }) }),
@@ -183,7 +183,7 @@ test('Core persistState plus encrypted sync preserves a later stale-client choic
     // A en B zijn twee afzonderlijke Core-instanties met eigen lokale opslag.
     coreA = createVasteLastenCore({
       storage: storage(),
-      kdfIterations: 1000,
+      kdfIterations: 100000,
       mergeStore,
       factories: {
         createVault: options => createVault({
@@ -356,7 +356,7 @@ test('S01/S02 two independent clients retry a real stale-SHA race and preserve r
         : { items: [], del: {}, paid: {}, schema: 2, domain };
       const seed = createVault({
         storagePrefix: 's01-seed-' + domain,
-        kdfIterations: 1000,
+        kdfIterations: 100000,
         storage: storage(),
       });
       clients.push(seed);
@@ -367,7 +367,7 @@ test('S01/S02 two independent clients retry a real stale-SHA race and preserve r
       const makeClient = async suffix => {
         const vault = createVault({
           storagePrefix: 's01-' + suffix + '-' + domain,
-          kdfIterations: 1000,
+          kdfIterations: 100000,
           storage: storage(),
         });
         clients.push(vault);
@@ -482,9 +482,9 @@ test('S05 an offline edit survives a full local restart and merges with another 
     return new Response(null, { status: 405 });
   };
 
-  const seed = createVault({ storagePrefix: 's05-seed', kdfIterations: 1000, storage: storage() });
-  const vaultA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 1000, storage: localStorageA });
-  const vaultB = createVault({ storagePrefix: 's05-client-b', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: 's05-seed', kdfIterations: 100000, storage: storage() });
+  const vaultA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 100000, storage: localStorageA });
+  const vaultB = createVault({ storagePrefix: 's05-client-b', kdfIterations: 100000, storage: storage() });
   let restartedA;
   try {
     await seed.create('synthetic-password', {
@@ -525,7 +525,7 @@ test('S05 an offline edit survives a full local restart and merges with another 
     assert.equal(await syncB.syncNow(options), 'uploaded');
 
     // Een nieuwe vault-instantie met dezelfde lokale opslag simuleert sluiten en heropenen.
-    restartedA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 1000, storage: localStorageA });
+    restartedA = createVault({ storagePrefix: 's05-client-a', kdfIterations: 100000, storage: localStorageA });
     await restartedA.unlockWithPassword('synthetic-password');
     assert.deepEqual(restartedA.getData().items.map(item => item.id), ['offline-A'],
       'de offline wijziging moet na herstart lokaal aanwezig zijn');
@@ -551,8 +551,8 @@ test('S05 an offline edit survives a full local restart and merges with another 
 
 
 test('V05 wrong-key import is rejected without replacing the current local vault', async () => {
-  const seed = createVault({ storagePrefix: 'v05-wrong-key-seed', kdfIterations: 1000, storage: storage() });
-  const local = createVault({ storagePrefix: 'v05-wrong-key-local', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: 'v05-wrong-key-seed', kdfIterations: 100000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-wrong-key-local', kdfIterations: 100000, storage: storage() });
   try {
     await seed.create('remote-synthetic-password', base());
     await seed.flush();
@@ -587,8 +587,8 @@ test('V05 a validly encrypted payload for the wrong domain is rejected before lo
   const previousFetch = globalThis.fetch;
   const path = 'pwa-core-v1/samen.json';
   const remote = { sha: 'v05-domain-initial', envelope: null };
-  const seed = createVault({ storagePrefix: 'v05-domain-seed', kdfIterations: 1000, storage: storage() });
-  const local = createVault({ storagePrefix: 'v05-domain-local', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: 'v05-domain-seed', kdfIterations: 100000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-domain-local', kdfIterations: 100000, storage: storage() });
   try {
     await seed.create('synthetic-password', base());
     await seed.flush();
@@ -641,8 +641,8 @@ test('V05 a validly encrypted payload for the wrong domain is rejected before lo
 test('V05 a corrupted remote ciphertext is rejected without adopting or uploading it', async () => {
   const previousFetch = globalThis.fetch;
   const path = 'pwa-core-v1/samen.json';
-  const seed = createVault({ storagePrefix: 'v05-corrupt-seed', kdfIterations: 1000, storage: storage() });
-  const local = createVault({ storagePrefix: 'v05-corrupt-local', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: 'v05-corrupt-seed', kdfIterations: 100000, storage: storage() });
+  const local = createVault({ storagePrefix: 'v05-corrupt-local', kdfIterations: 100000, storage: storage() });
   let remote;
   let putCount = 0;
   try {
@@ -693,8 +693,8 @@ test('V05 a corrupted remote ciphertext is rejected without adopting or uploadin
 test('S06 a failed remote upload keeps local data dirty and an explicit retry recovers', async () => {
   const previousFetch = globalThis.fetch;
   const path = 'pwa-core-v1/samen.json';
-  const seed = createVault({ storagePrefix: 's06-seed', kdfIterations: 1000, storage: storage() });
-  const local = createVault({ storagePrefix: 's06-local', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: 's06-seed', kdfIterations: 100000, storage: storage() });
+  const local = createVault({ storagePrefix: 's06-local', kdfIterations: 100000, storage: storage() });
   let remote;
   let failNextPut = true;
   let putCount = 0;
@@ -776,7 +776,7 @@ test('S06 a failed remote upload keeps local data dirty and an explicit retry re
 
 async function createRemoteSyncHarness(label, initialData) {
   const path = 'pwa-core-v1/samen.json';
-  const seed = createVault({ storagePrefix: label + '-seed', kdfIterations: 1000, storage: storage() });
+  const seed = createVault({ storagePrefix: label + '-seed', kdfIterations: 100000, storage: storage() });
   await seed.create('synthetic-password', structuredClone(initialData));
   await seed.flush();
   let revision = 0;
@@ -786,8 +786,8 @@ async function createRemoteSyncHarness(label, initialData) {
   const storageA = storage(), storageB = storage();
   storageA.setItem(label + '-client-a:device-id', label + '-device-a');
   storageB.setItem(label + '-client-b:device-id', label + '-device-b');
-  const vaultA = createVault({ storagePrefix: label + '-client-a', kdfIterations: 1000, storage: storageA });
-  const vaultB = createVault({ storagePrefix: label + '-client-b', kdfIterations: 1000, storage: storageB });
+  const vaultA = createVault({ storagePrefix: label + '-client-a', kdfIterations: 100000, storage: storageA });
+  const vaultB = createVault({ storagePrefix: label + '-client-b', kdfIterations: 100000, storage: storageB });
   await vaultA.importEnvelope(structuredClone(remote.envelope), 'synthetic-password');
   await vaultB.importEnvelope(structuredClone(remote.envelope), 'synthetic-password');
   vaultA.setSyncMeta({ sha: remote.sha, dirty: false });
