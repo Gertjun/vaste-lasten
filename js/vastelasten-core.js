@@ -468,6 +468,77 @@ export function createVasteLastenCore({
     }
   }
 
+
+  // Both codes must be validated before any local vault is installed.
+  async function connectPaired({ pairing, isAuthorized = () => true, finalize = async () => {} } = {}) {
+    if (!pairing || pairing.workspaceId !== workspaceId || !['p1','p2'].includes(pairing.me)) throw new Error('Ongeldige administratie.');
+    const ids = activeIdsFor(pairing.me);
+    if (Object.keys(pairing.domains || {}).length !== 2 || ids.some(id => pairing.domains[id]?.id !== id)) throw new Error('Twee actieve kluizen vereist.');
+    const check = () => {
+      if (!isAuthorized() || !Number.isFinite(pairing.expiresAt) || Date.now() >= pairing.expiresAt) throw new Error('Koppeling geannuleerd of verlopen.');
+    };
+    check();
+    if (session) throw new Error('Vergrendel eerst de actieve administratie.');
+    const resolved = await resolveSettings(pairing.settings);
+    check();
+    await acquire(pairing.me);
+    settings = resolved;
+    const snapshots = new Map();
+    let writing = false;
+    try {
+      const remotes = {};
+      for (const id of ids) {
+        const vault = registry[id].vault;
+        if (storage.getItem(vault.KEYS.vault) !== null || vault.isUnlocked()) throw new Error('Op dit apparaat bestaat al een kluis; er wordt niets overschreven.');
+        const prefix = domains[id].storagePrefix + ':';
+        for (let i=0; i<storage.length; i++) {
+          const key=storage.key(i);
+          if(key?.startsWith(prefix)) snapshots.set(key,storage.getItem(key));
+        }
+        const remote = await clientFactory({...settings,path:domains[id].path}).getFile();
+        if(!remote || !remote.sha) throw new Error('Een van de twee kluizen ontbreekt op GitHub.');
+        vault.validateEnvelope(remote.envelope);
+        validateDomainPayload(await coreCrypto.decryptJSON(remote.envelope.payload,pairing.domains[id].dataKey),id,domains);
+        remotes[id]=remote;
+      }
+      check();
+      writing = true;
+      for(const id of ids) {
+        check();
+        const vault=registry[id].vault;
+        await vault.importEnvelopeWithKey(remotes[id].envelope,pairing.domains[id].dataKey,{syncMeta:{...vault.getSyncMeta(),sha:remotes[id].sha,dirty:false}});
+        await vault.flush();
+      }
+      check();
+      const state=getState();
+      await finalize(state);
+      return {complete:true,state};
+    } catch(error) {
+      // Only restore prefixes that were empty of vault data before import;
+      // never reset an existing administration or publish a remote file.
+      if(writing) {
+        try {
+          for(const id of ids) {
+            const vault=registry[id].vault;
+            await vault.reset();
+          }
+          for(const [key,value] of snapshots) storage.setItem(key,value);
+        } catch(rollbackError) {
+          try { await release(); } catch {}
+          throw new AggregateError([error,rollbackError],'Lokale herstelactie mislukt. Open de administratie niet; herstel via de normale herstelprocedure.');
+        }
+      }
+      await release();
+      throw error;
+    }
+  }
+
+  function getPairingDomains() {
+    requireSession();
+    if(!settings) throw new Error('GitHub Sync is niet actief.');
+    return activeIds().map(id=>({id,syncConfig:{owner:settings.owner,repo:settings.repo,branch:settings.branch,path:domains[id].path,token:settings.token},dataKey:registry[id].vault.getDataKey()}));
+  }
+
   async function initializeEmpty({ me: meValue, passwords, settings: inputSettings } = {}) {
     const resolved = await resolveSettings(inputSettings);
     await acquire(meValue);
@@ -739,6 +810,8 @@ export function createVasteLastenCore({
     connect,
     publishLocal,
     connectExisting,
+    connectPaired,
+    getPairingDomains,
     initializeEmpty,
     initializeEmptyLocal,
     migrate,

@@ -3,12 +3,11 @@
 > **Dit bestand (toekomst):** alles wat nog moet of kan gebeuren: wensen, praktijktests en open punten. Het is de enige takenlijst.
 > **Niet hier:** wat al gebouwd is → [`CHANGELOG.md`](CHANGELOG.md); waarom → [`DECISIONS.md`](DECISIONS.md); de stand van nu → [`README.md`](README.md); hoe het in elkaar zit → [`ARCHITECTUUR.md`](ARCHITECTUUR.md).
 
-Bijgewerkt: 20 november 2026 · versie 3.8.5
+Bijgewerkt: 25 november 2026 · kandidaat 3.9.0
 
-Elk punt houdt zijn W-nummer, ook in de app. Is een punt gebouwd, dan haal je het hier weg (`tools/release.py --wens W5` of `tools/wish.py W5`) en zet je het nummer in de changelog achter de versie. Tot 20 november 2026 heetten de nummers `#1`, `#3` enzovoort; het getal is gelijk gebleven. Volgende vrije nummer: W48.
+Elk punt houdt zijn W-nummer, ook in de app. Is een punt gebouwd, dan haal je het hier weg (`tools/release.py --wens W5` of `tools/wish.py W5`) en zet je het nummer in de changelog achter de versie. Tot 20 november 2026 heetten de nummers `#1`, `#3` enzovoort; het getal is gelijk gebleven. Volgende vrije nummer: W49.
 
 ## Eerst
-- W41 **Nieuwe versie voor PR #30 en #31** (klein) — De aangepaste indeling (#30) en de aparte weergave van QR-code en pincode (#31) zijn na 3.8.5 gemerged zonder nieuw versienummer. Geïnstalleerde apps halen ze daardoor misschien niet op. Versie ophogen met `tools/release.py` (zie `CLAUDE.md`).
 - W42 **Wishlist in de app op orde** (klein) — Bij de volgende versie: het commentaar bij `WISHLIST` in `index.html` naar `ROADMAP.md` laten verwijzen (doet `tools/release.py` vanzelf) en de nummers in de app als W-nummers tonen (nu `#1`). `CHANGELOG.md` is op 20 november op volgorde gezet en aangevuld met 3.8.5.
 - W47 **Code uit index.html en een strikte CSP** (middel, in uitvoering) — De eerste inventarisatie is gedaan. De app heeft één groot inline app-script (circa 259 kB), een inline CSS-blok (circa 44,5 kB), 39 style-attributen (waarvan een deel dynamisch opgebouwd), en externe bronnen (Google Fonts, GitHub API en SheetJS). Een strikte CSP vraagt daarom meer dan bestanden verplaatsen. Uitvoering in stappen:
   1. **Inventarisatie en testbasis:** alle inline scripts/styles, dynamische stijlwijzigingen, externe bronnen en laadvolgorde vastleggen; huidige tests als regressiebasis gebruiken.
@@ -19,6 +18,7 @@ Elk punt houdt zijn W-nummer, ook in de app. Is een punt gebouwd, dan haal je he
   6. **Release:** precache bijwerken, tests uitvoeren, versie verhogen en apparaten bijwerken.
 
 ## Testen
+- W48 **Praktijktest Core 1.4.0** — twee QR-codes op iPhone/iPad en Windows; tekstfallback, verkeerde administratie, verval, hergebruik, mislukte tweede import, herstart en passkey.
 - W44 **Tweede tabblad maakt de lijst leeg (oude synchronisatie)** (middel) — In de modus *Oude synchronisatie-instellingen openen* begint een tweede tabblad zonder lasten en maakt het daarna ook de lijst in het eerste tabblad leeg. In 2.x werden de tabbladen samengevoegd (`fromOtherTab()`). `tests/ui/test_tabbladen.py` laat het zien en staat daarom als bekend probleem in `tests/ui/alle_tests.py`. Uitzoeken of dit ook in Core-mode gebeurt; zo niet, besluiten of de oude modus dit nog moet kunnen.
 - W45 **Voorbeeldlasten weg na koppelen (oude synchronisatie)** (klein) — Na koppelen via de oude synchronisatie zijn de voorbeeldlasten weg; in 2.x bleven ze lokaal staan. `test_bundelen.py` en `test_bijwerken.py` vinken die voorbeelden af en lopen daardoor vast (bekend probleem in de runner). Besluiten of dit zo hoort; dan de tests eigen lasten laten aanmaken in plaats van voorbeelden te gebruiken.
 - W46 **UI-tests ook in Core-mode** (middel) — De Playwright-tests in `tests/ui/` sluiten het kluisscherm via *Oude synchronisatie-instellingen openen* en testen dus de schermen in de oude modus. Een hulpfunctie in `_vl.py` die een lokale Core-kluis aanmaakt en de voorbeeldgegevens laadt, maakt het mogelijk dezelfde schermtests in Core-mode te draaien, en twee tabbladen en vergrendelen/ontgrendelen in Core-mode te testen.

@@ -123,3 +123,7 @@ Besluiten die een volgende sessie moet kennen. Oude besluiten pas je niet aan; e
 - **Besluit:** Claude zet elke wijziging op een eigen branch (`claude/...`) en biedt die aan als pull request. Eerst draaien de tests lokaal (`node --test tests/*.test.mjs` en `python3 tests/ui/alle_tests.py`), daarna op GitHub. Mergen, een versie uitbrengen (`tools/release.py`) en publiceren gebeuren pas na een afzonderlijk, expliciet akkoord van Geert. Alleen documenten gewijzigd: geen nieuwe appversie, wel een pull request.
 - **Waarom:** zo staat het in de projectinstructies en zo werkt het bij de andere apps (Cryptotracker D64). D4 (Claude pusht zelf naar `main`) was nooit vervangen.
 - **Niet gekozen:** rechtstreeks naar `main` pushen (D4).
+
+### D21 – Twee afzonderlijke Core v3-koppelcodes (25 nov 2026)
+- Besluit: één code per actieve kluis, zonder PIN of wachtwoord. Beide moeten dezelfde workspace en GitHub-configuratie hebben; de persoonlijke code bepaalt de gebruiker. Geen overdracht van de andere persoonlijke kluis. Geen protocolwijziging in Core.
+- Beide codes geven volledige toegang; drie minuten acceptatieduur is geen intrekking van gekopieerde sleutels. Beide kluizen vooraf controleren, bestaande lokale kluizen weigeren en geen remote wijzigingen uitvoeren tijdens import. Bij fout lokale opslag herstellen. Handmatige koppeling behouden.
