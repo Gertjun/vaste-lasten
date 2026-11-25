@@ -605,3 +605,116 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .vl-core-settings .menu-row{color:var(--ink)}
 .vl-core-settings .menu-summary{font-size:.875rem}
 .vl-core-settings .settings-section{padding:0}
+
+/* Keep Core components on the shared typography and theme. */
+#coreGate,.vl-core-settings{font-family:var(--font);font-size:16px;line-height:1.5}
+#coreGate .auth-card h1{font-size:1.5rem}
+#coreGate .btn-block:not(.btn-primary){background:var(--surface-2);border-color:transparent}
+#coreGate .btn-ghost,.vl-core-settings .btn-ghost{background:transparent;border-color:var(--line)}
+.vl-core-settings .menu-summary{font-size:.9rem}
+.vl-core-settings .menu-label{min-width:0;overflow-wrap:anywhere}
+.vl-core-settings .menu-row{min-width:0}
+
+
+/* Scoped Core v1.4.0 presentation adapter; no global reset of existing UI. */
+:is(#coreGate,#v-instellingen.vl-core-settings){--radius:14px;--radius-sm:10px;--tap:44px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--shadow:0 1px 2px rgb(0 0 0 / .05),0 4px 16px rgb(0 0 0 / .05);font-family:var(--font)}
+:is(#coreGate, #v-instellingen.vl-core-settings) .auth-card {
+  width: 100%;
+  max-width: 400px;
+  display: grid;
+  gap: 18px;
+  text-align: center;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .auth-card form, :is(#coreGate, #v-instellingen.vl-core-settings) .auth-card .form-error { text-align: left; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .auth-logo { justify-self: center; border-radius: 18px; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .stack { display: grid; gap: 14px; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .segmented button {
+  min-height: 36px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .segmented button[aria-selected="true"] { color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.85rem; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .divider::before, :is(#coreGate, #v-instellingen.vl-core-settings) .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .settings-menu { display: grid; gap: 24px; padding: 16px 0; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-group li + li { border-top: 1px solid var(--border); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-row::after { content: '›'; color: var(--muted); font-size: 1.3rem; line-height: 1; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-row:active, :is(#coreGate, #v-instellingen.vl-core-settings) .menu-row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-label { flex: 1; font-weight: 500; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .menu-summary {
+  max-width: 55%;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .settings-section { display: grid; gap: 16px; padding: 16px 0; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: filter 0.15s, opacity 0.15s;
+}
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn:hover { filter: brightness(0.97); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn:active { filter: brightness(0.92); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn:disabled { opacity: 0.55; cursor: default; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn-primary { background: var(--accent); color: var(--accent-contrast); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn-ghost { background: transparent; border-color: var(--border); }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn-small { min-height: 34px; padding: 6px 12px; font-size: 0.875rem; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .btn-block { width: 100%; }
+:is(#coreGate, #v-instellingen.vl-core-settings) .muted { color: var(--muted); }
+#coreGate .auth-card{padding:0;background:transparent;border:0;box-shadow:none}
+#v-instellingen.vl-core-settings .menu-label{min-width:0;overflow-wrap:anywhere}
