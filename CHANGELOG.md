@@ -3,6 +3,10 @@
 > **Dit bestand (verleden):** per versie wat er voor de gebruiker veranderde, nieuwste bovenaan, met achter de versie de roadmappunten die erin zijn gebouwd.
 > **Niet hier:** waarom → [`DECISIONS.md`](DECISIONS.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md).
 
+## 3.10.0 — 25 november 2026
+
+- Landingspagina, inlogscherm en instellingen in Core-modus geharmoniseerd met de andere PWA-apps. Afzonderlijke pagina's voor beveiliging en back-up; bestaande multi-kluisfunctionaliteit behouden.
+
 ## 3.9.1 — 25 november 2026
 
 - Hersteld: grafiekklasse `vl-chart-stack` voorkomt dat Core QR-vensters tot 30 pixels worden versmald.

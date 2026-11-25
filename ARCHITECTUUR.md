@@ -136,3 +136,6 @@ De eerste inventarisatie op 20 november 2026:
 - De QR-codebibliotheken en de overige vendor-code staan al lokaal in `js/vendor/`.
 
 Daarom is alleen het script en CSS naar bestanden verplaatsen onvoldoende voor een strikte CSP. De migratie moet ook dynamische styling en externe afhankelijkheden aanpakken. Doel is scripts en styles uitsluitend vanaf de eigen origin, zonder `unsafe-inline`; noodzakelijke externe bronnen worden expliciet beperkt. SheetJS bij voorkeur lokaal, Google Fonts eventueel lokaal, en `connect-src` beperkt tot de GitHub API. De CSP wordt pas aangescherpt nadat inline stijlen zijn verwijderd en de volledige regressietest is uitgevoerd.
+
+### Core-modus: gedeelde vormgeving (3.10.0)
+De app gebruikt de gedeelde `auth-card`, `segmented`, `menu-group` en `menu-row` klassen. De app-adapter blijft verantwoordelijk voor de multi-kluisflow. Het Core-instellingenmenu opent één detailpagina tegelijk; bestaande panelen en handlers blijven behouden. De oude synchronisatiemodus behoudt haar bestaande layout.

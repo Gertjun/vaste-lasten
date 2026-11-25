@@ -576,3 +576,32 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .bar progress::-webkit-progress-bar{background:transparent}
 .bar progress::-webkit-progress-value{background:var(--ok);border-radius:99px;transition:width .3s}
 .bar progress::-moz-progress-bar{background:var(--ok);border-radius:99px;transition:width .3s}
+
+/* Core auth and settings: reuse the shared components, with the app's theme tokens. */
+#coreGate,.vl-core-settings{--text:var(--ink);--border:var(--line);--surface-2:var(--sunken);--accent-contrast:var(--accent-ink);--danger:var(--bad);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#coreGate{padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));align-items:safe center}
+#coreGate .auth-card{width:100%;max-width:400px;padding:0;margin:auto;background:transparent;border:0;box-shadow:none;gap:18px;text-align:center}
+#coreGate .auth-card h1{margin:0;font-size:1.6rem;font-weight:700}
+#coreGate .auth-card p{margin:0}
+#coreGate .vl-auth-form,#coreGate .hist,#coreGate .core-token-details{text-align:left;min-width:0}
+#coreGate .vl-auth-form .hist{margin:0;display:grid;gap:12px}
+#coreGate .vl-auth-form .hist h4{margin:0}
+#coreGate .btns{justify-content:center}
+#coreGate .btn-block{width:100%}
+#coreGate .auth-card .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+#coreGate .segmented button{min-width:0}
+#coreGate .field input,#coreGate .field select{background:var(--surface)}
+#v-instellingen.vl-core-settings:not([hidden]){display:block;width:100%;max-width:640px;margin-inline:auto}
+.vl-core-settings #setNav{display:none}
+.vl-core-settings .set-col{display:contents}
+.vl-core-settings .set-group{border:0;padding:0;margin:0}
+.vl-core-settings .set-group>summary{display:none}
+.vl-core-settings .set-body{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:0}
+.vl-core-settings .set-body .panel,.vl-core-settings .vl-settings-extra .panel{margin:0}
+.vl-core-settings .vl-settings-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.vl-core-settings .vl-settings-header h2{margin:0;font-size:1.2rem}
+.vl-core-settings .settings-menu{padding:0 0 16px}
+.vl-core-settings .menu-group{background:var(--surface);border-color:var(--line)}
+.vl-core-settings .menu-row{color:var(--ink)}
+.vl-core-settings .menu-summary{font-size:.875rem}
+.vl-core-settings .settings-section{padding:0}
