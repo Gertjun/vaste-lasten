@@ -3,6 +3,10 @@
 > **Dit bestand (verleden):** per versie wat er voor de gebruiker veranderde, nieuwste bovenaan, met achter de versie de roadmappunten die erin zijn gebouwd.
 > **Niet hier:** waarom → [`DECISIONS.md`](DECISIONS.md); wat er nog moet → [`ROADMAP.md`](ROADMAP.md).
 
+## 3.10.1 — 25 november 2026
+
+- Hersteld: het officiële Core-stylesheet wordt daadwerkelijk geladen vóór de app-stijl. Regressietests controleren nu de toegepaste menu- en loginopmaak.
+
 ## 3.10.0 — 25 november 2026
 
 - Landingspagina, inlogscherm en instellingen in Core-modus geharmoniseerd met de andere PWA-apps. Afzonderlijke pagina's voor beveiliging en back-up; bestaande multi-kluisfunctionaliteit behouden.

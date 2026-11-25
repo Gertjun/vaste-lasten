@@ -605,3 +605,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
 .vl-core-settings .menu-row{color:var(--ink)}
 .vl-core-settings .menu-summary{font-size:.875rem}
 .vl-core-settings .settings-section{padding:0}
+
+/* Keep Core components on the shared typography and theme. */
+#coreGate,.vl-core-settings{font-family:var(--font);font-size:16px;line-height:1.5}
+#coreGate .auth-card h1{font-size:1.5rem}
+#coreGate .btn-block:not(.btn-primary){background:var(--surface-2);border-color:transparent}
+#coreGate .btn-ghost,.vl-core-settings .btn-ghost{background:transparent;border-color:var(--line)}
+.vl-core-settings .menu-summary{font-size:.9rem}
+.vl-core-settings .menu-label{min-width:0;overflow-wrap:anywhere}
+.vl-core-settings .menu-row{min-width:0}
+:root{--text:var(--ink);--border:var(--line);--surface-2:var(--sunken);--accent-contrast:var(--accent-ink);--danger:var(--bad)}

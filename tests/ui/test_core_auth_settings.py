@@ -15,9 +15,13 @@ try:
             page = ctx.new_page()
             page.route('https://api.github.com/**', lambda route: route.abort())
             page.goto(f'http://127.0.0.1:{server.server_port}/index.html')
+            assert page.evaluate("Array.from(document.styleSheets).some(s => s.href && s.href.endsWith('/css/base.css') && s.cssRules.length > 0)")
             gate = page.locator('#coreGate')
             gate.locator('.auth-card .auth-logo').wait_for()
             assert gate.locator('.auth-card').bounding_box()['width'] <= 401
+            assert gate.locator('.auth-card').evaluate("(el) => getComputedStyle(el).display") == 'grid'
+            assert gate.locator('.segmented').evaluate("(el) => getComputedStyle(el).display") == 'grid'
+            assert gate.locator('.auth-logo').evaluate("(el) => getComputedStyle(el).justifySelf") == 'center'
             gate.get_by_role('tab', name='Bestaande koppelen').click()
             assert gate.locator('#core-pair-scan').is_visible()
             assert not gate.locator('#core-empty-name').is_visible()
@@ -31,6 +35,22 @@ try:
             page.locator('#t-instellingen').click()
             menu = page.locator('#vlCoreSettingsMenu')
             menu.wait_for()
+            for mode in ['light', 'dark']:
+                page.evaluate("(mode) => document.documentElement.dataset.theme = mode", mode)
+                for group in menu.locator('.menu-group').all():
+                    assert group.evaluate("(el) => getComputedStyle(el).listStyleType") == 'none'
+                    assert group.evaluate("(el) => parseFloat(getComputedStyle(el).borderTopLeftRadius)") >= 10
+                    for row in group.locator('.menu-row').all():
+                        styles = row.evaluate("""el => {
+                            const s = getComputedStyle(el), r = el.getBoundingClientRect(), g = el.closest('.menu-group').getBoundingClientRect();
+                            const a = el.querySelector('.menu-label').getBoundingClientRect(), b = el.querySelector('.menu-summary').getBoundingClientRect();
+                            return {display:s.display, height:r.height, width:r.width, groupWidth:g.width, border:s.borderTopWidth, gap:b.left-a.right, arrow:getComputedStyle(el,'::after').content};
+                        }""")
+                        assert styles['display'] == 'flex', styles
+                        assert styles['height'] >= 52 and styles['width'] >= styles['groupWidth'] - 4, styles
+                        assert styles['border'] == '0px' and styles['gap'] >= 0 and '›' in styles['arrow'], styles
+            page.evaluate("document.documentElement.dataset.theme = 'light'")
+            print(f'OK {width}x{height}: Core CSS, grouped menu, row geometry and theme')
             for target, panel in [('sync','#syncPanel'),('security','#vlSecurityPanel'),('backup','#backupPanel'),('over','#aboutPanel'),('huis','#incomePanel'),('data','#exportPanel'),('weer','#themePanel')]:
                 menu.locator(f'[data-vl-page="{target}"]').click()
                 page.locator(panel).wait_for()
